@@ -1,26 +1,37 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
+
+class Bus;
 
 class CPU
 {
+public:
+	CPU();
+
+	void clock();	// Clocks CPU
+
 private:
+	Bus *bus;
 
 	// ============== Registers ============== 
 	
 	// General Purpose Registers (GPR)
+
+	// Auxillary Registers
 	union
 	{
 		struct
 		{
-			uint8_t F : 8;
-			uint8_t A : 8;
-			uint8_t C : 8;
-			uint8_t B : 8;
-			uint8_t E : 8;
-			uint8_t D : 8;
-			uint8_t L : 8;
-			uint8_t H : 8;
+			uint8_t F;
+			uint8_t A;
+			uint8_t C;
+			uint8_t B;
+			uint8_t E;
+			uint8_t D;
+			uint8_t L;
+			uint8_t H;
 		};
 
 		struct
@@ -32,6 +43,8 @@ private:
 		};
 	};
 
+	uint8_t& GPR(uint8_t i);
+
 	uint16_t PC, SP; // Program Counter, Stack Pointer
 
 	// Flags
@@ -40,7 +53,7 @@ private:
 		struct
 		{
 			uint8_t _ : 4;
-			uint8_t C : 1;	// Carry
+			uint8_t CY : 1;	// Carry
 			uint8_t H : 1;	// Half Carry
 			uint8_t N : 1;	// Subtract
 			uint8_t Z : 1;	// Zero
@@ -51,6 +64,21 @@ private:
 
 	// ============== Instructions ==============
 
+	union
+	{
+		struct
+		{
+			uint8_t Op1 : 3;
+			uint8_t Op2 : 3;
+			uint8_t Op3 : 2;
+		};
 
+		uint8_t Opcode;
+	};
+
+	uint8_t cycles;		// Number of required cycles
+
+	// 8-bit Load Instructions
+	inline uint8_t ld(); void ldi(); void ldd();
 
 };

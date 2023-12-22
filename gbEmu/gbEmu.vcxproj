@@ -127,9 +127,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Bus.cpp" />
+    <ClCompile Include="cpu.cpp" />
     <ClCompile Include="gbEmu.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bus.hpp" />
     <ClInclude Include="cpu.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
