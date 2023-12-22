@@ -43,7 +43,7 @@ private:
 		};
 	};
 
-	uint8_t& GPR(uint8_t i);
+	inline uint8_t& GPR(uint8_t i);
 
 	uint16_t PC, SP; // Program Counter, Stack Pointer
 

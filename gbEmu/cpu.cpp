@@ -73,7 +73,7 @@ inline uint8_t& CPU::GPR(uint8_t i)
 
 uint8_t CPU::ld()
 {
-	// ============ 8-bit load ============
+	// ============  8-Bit Transfer/Input-Output Instructions ============
 
 	if (Op3 == 0b01)
 	{
@@ -100,6 +100,12 @@ uint8_t CPU::ld()
 	if (Op3 == 0b00 && Op1 == 0b110) // 00 r 110
 	{
 		// LD r,n (r <- n)
+		GPR(Op2) = bus->read(PC++);
+	}
+
+	if (Op3 == 0b00 && Op1 == 0b001) // 00 r 110
+	{
+		// LD dd, nn ( <- n)
 		GPR(Op2) = bus->read(PC++);
 	}
 	
@@ -171,6 +177,44 @@ uint8_t CPU::ld()
 		// LD (HLD), A ((HL) <- A, HL <- HL1)
 		bus->write(HL--, A);
 		return 2;
+
+	// ============ 16-Bit Transfer Instructions ============
+	case(0b00'000'001):
+		// LD dd, nn (BC <- nn)
+		LO = bus->read(PC++);
+		HI = bus->read(PC++);
+		BC = (HI << 8) | LO;
+		return 3;
+	case(0b00'010'001):
+		// LD dd, nn (DE <- nn)
+		LO = bus->read(PC++);
+		HI = bus->read(PC++);
+		DE = (HI << 8) | LO;
+		return 3;
+	case(0b00'100'001):
+		// LD dd, nn (HL <- nn)
+		LO = bus->read(PC++);
+		HI = bus->read(PC++);
+		HL = (HI << 8) | LO;
+		return 3;
+	case(0b00'110'001):
+		// LD dd, nn (SP <- nn)
+		LO = bus->read(PC++);
+		HI = bus->read(PC++);
+		SP = (HI << 8) | LO;
+		return 3;
+	case(0b11'111'001):
+		// LD SP 11 SP, HL (SP <- HL)
+		SP = HL;
+		return 2;
+	case(0b00'001'000):
+		// LD (nn), SP ((nn) <- SPL, (nn + 1) <- SPH)
+		LO = bus->read(PC++);
+		HI = bus->read(PC++);
+		uint8_t nn = (HI << 8) | LO;
+		bus->write(nn, SP & 0x0F);
+		bus->write(nn + 1, SP & 0xF0);
+		return 5;
 	}
 }
 
