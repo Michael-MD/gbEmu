@@ -18,7 +18,7 @@
     <ClCompile Include="gbEmu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cpu.cpp">
+    <ClCompile Include="CPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Bus.cpp">
@@ -26,7 +26,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="cpu.hpp">
+    <ClInclude Include="CPU.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Bus.hpp">

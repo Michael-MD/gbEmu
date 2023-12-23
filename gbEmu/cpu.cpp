@@ -231,17 +231,18 @@ void CPU::clock()
 		E = bus->read(SP++);
 		D = bus->read(SP++);
 		cycles = 3;
-	case(0b11'010'001):
+	case(0b11'100'001):
 		// POP HL (HLL <- (SP) HLH <- (SP + 1) SP <- SP + 2)
 		L = bus->read(SP++);
 		H = bus->read(SP++);
 		cycles = 3;
-	case(0b11'010'001):
+	case(0b11'110'001):
 		// POP AF (AFL <- (SP) AFH <- (SP + 1) SP <- SP + 2)
 		F = bus->read(SP++);
 		A = bus->read(SP++);
 		cycles = 3;
 	case(0b11'111'000):
+	{
 		// LDHL SP, e (HL <- SP+e)
 		int8_t e = bus->read(PC++);
 		uint32_t tmp = SP + e;
@@ -251,6 +252,7 @@ void CPU::clock()
 		HC = (((SP & 0x000F) + e) >> 8) != 0;
 		CY = (tmp >> 16) != 0;
 		cycles = 3;
+	}
 	case(0b00'001'000):
 		// LD (nn), SP ((nn) <- SPL (nn + 1) <- SPH)
 		LO = bus->read(PC++);
@@ -258,14 +260,6 @@ void CPU::clock()
 		uint8_t M = (HI << 8) | LO;
 		bus->write(M++, SP & 0x00FF);
 		bus->write(M, SP & 0xFF00);
-		cycles = 5;
-	case(0b00'001'000):
-		// LD (nn), SP ((nn) <- SPL, (nn + 1) <- SPH)
-		LO = bus->read(PC++);
-		HI = bus->read(PC++);
-		uint8_t nn = (HI << 8) | LO;
-		bus->write(nn, SP & 0x0F);
-		bus->write(nn + 1, SP & 0xF0);
 		cycles = 5;
 	}
 }
