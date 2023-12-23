@@ -78,8 +78,4 @@ private:
 
 	uint8_t cycles;		// Number of required cycles
 
-
-	inline uint8_t LD(); void LDI(); void LDD();
-
-	inline uint8_t PUSH();
 };
