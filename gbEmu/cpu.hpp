@@ -54,7 +54,7 @@ private:
 		{
 			uint8_t _ : 4;
 			uint8_t CY : 1;	// Carry
-			uint8_t H : 1;	// Half Carry
+			uint8_t HC : 1;	// Half Carry
 			uint8_t N : 1;	// Subtract
 			uint8_t Z : 1;	// Zero
 		};
@@ -78,7 +78,8 @@ private:
 
 	uint8_t cycles;		// Number of required cycles
 
-	// 8-bit Load Instructions
-	inline uint8_t ld(); void ldi(); void ldd();
 
+	inline uint8_t LD(); void LDI(); void LDD();
+
+	inline uint8_t PUSH();
 };
