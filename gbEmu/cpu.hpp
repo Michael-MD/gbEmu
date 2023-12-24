@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <string>
+#include <functional>
 
 class Bus;
 
@@ -64,18 +65,27 @@ private:
 
 	// ============== Instructions ==============
 
+	struct
+	{
+		std::string mnemonic;
+		std::function<void()> op;
+		uint8_t cycles;
+
+	} InstructionSet[256];
+
 	union
 	{
 		struct
 		{
-			uint8_t Op1 : 3;
-			uint8_t Op2 : 3;
-			uint8_t Op3 : 2;
+			uint8_t op0 : 3;
+			uint8_t op1 : 3;
+			uint8_t op2 : 2;
 		};
 
 		uint8_t Opcode;
 	};
 
-	uint8_t cycles;		// Number of required cycles
+	uint8_t cycle;		// Cycle number
+
 
 };
