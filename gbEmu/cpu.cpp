@@ -274,85 +274,30 @@ CPU::CPU()
 		2
 	};
 
-	InstructionSet[0b11'000'101] =
+	for (int i = 0; i <= 3; i++)
 	{
-		"PUSH BC ((SP-1) <- BCH (SP - 2) <- BCL SP <- SP - 2)",
-		[this]() {
-			bus->write(--SP, BC >> 8);
-			bus->write(--SP, BC & 0x0F);
-		},
-		4
-	};
+		uint16_t r = qq(i);
 
-	InstructionSet[0b11'010'101] =
-	{
-		"PUSH DE ((SP-1) <- DEH (SP - 2) <- DEL SP <- SP - 2)",
-		[this]() {
-			bus->write(--SP, DE >> 8);
-			bus->write(--SP, DE & 0x0F);
-		},
-		4
-	};
+		InstructionSet[0b11'000'101 | (i << 4)] =
+		{
+			"PUSH qq ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)",
+			[this, &r]() {
+				bus->write(--SP, r >> 8);
+				bus->write(--SP, r & 0x0F);
+			},
+			4
+		};
 
-	InstructionSet[0b11'100'101] =
-	{
-		"PUSH HL ((SP-1) <- HLH (SP - 2) <- HLL SP <- SP - 2)",
-		[this]() {
-			bus->write(--SP, HL >> 8);
-			bus->write(--SP, HL & 0x0F);
-		},
-		4
-	};
-
-	InstructionSet[0b11'110'101] =
-	{
-		"PUSH AF ((SP-1) <- AFH (SP - 2) <- AFL SP <- SP - 2)",
-		[this]() {
-			bus->write(--SP, AF >> 8);
-			bus->write(--SP, AF & 0x0F);
-		},
-		4
-	};
-
-	InstructionSet[0b11'000'001] =
-	{
-		"POP BC (BCL <- (SP) BCH <- (SP + 1) SP <- SP + 2)",
-		[this]() {
-			C = bus->read(SP++);
-			B = bus->read(SP++);
-		},
-		3
-	};
-
-	InstructionSet[0b11'010'001] =
-	{
-		"POP DE (DEL <- (SP) DEH <- (SP + 1) SP <- SP + 2)",
-		[this]() {
-			E = bus->read(SP++);
-			D = bus->read(SP++);
-		},
-		3
-	};
-
-	InstructionSet[0b11'100'001] =
-	{
-		"POP HL (HLL <- (SP) HLH <- (SP + 1) SP <- SP + 2)",
-		[this]() {
-			L = bus->read(SP++);
-			H = bus->read(SP++);
-		},
-		3
-	};
-
-	InstructionSet[0b11'110'001] =
-	{
-		"POP AF (AFL <- (SP) AFH <- (SP + 1) SP <- SP + 2)",
-		[this]() {
-			F = bus->read(SP++);
-			A = bus->read(SP++);
-		},
-		3
-	};
+		InstructionSet[0b11'000'001 | (i << 4)] =
+		{
+			"POP qq (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)",
+			[this, &r]() {
+				r = (r & 0xFF00) | bus->read(SP++);
+				r = (bus->read(SP++) << 8) | (r & 0x00FF);
+			},
+			3
+		};
+	}
 
 	InstructionSet[0b11'111'000] =
 	{
@@ -782,7 +727,7 @@ CPU::CPU()
 
 	InstructionSet[0b00'110'101] =
 	{
-		"DEC M (M <- M-1)",
+		"DEC (HL) ((HL) <- (HL)-1)",
 		[this]() {
 			uint8_t M = bus->read(HL);
 			HC = (M & 0xF) < (1 & 0xF);
@@ -793,6 +738,362 @@ CPU::CPU()
 		},
 		3
 	};
+
+	InstructionSet[0b00'001'001] =
+	{
+		"ADD HL,BC (HL <- HL+BC)",
+		[this]() {
+			HC = (((HL & 0xFFF) + (BC & 0xFFF)) >> 12) != 0;
+			CY = (((uint32_t)HL+(uint32_t)BC) >> 16) != 0;
+			HL += BC;
+			N = 0;
+		},
+		2
+	};
+
+	InstructionSet[0b00'011'001] =
+	{
+		"ADD HL,DE (HL <- HL+DE)",
+		[this]() {
+			HC = (((HL & 0xFFF) + (DE & 0xFFF)) >> 12) != 0;
+			CY = (((uint32_t)HL+(uint32_t)DE) >> 16) != 0;
+			HL += DE;
+			N = 0;
+		},
+		2
+	};
+
+	InstructionSet[0b00'101'001] =
+	{
+		"ADD HL,HL (HL <- HL+HL)",
+		[this]() {
+			HC = (((HL & 0xFFF) + (HL & 0xFFF)) >> 12) != 0;
+			CY = (((uint32_t)HL+(uint32_t)HL) >> 16) != 0;
+			HL += HL;
+			N = 0;
+		},
+		2
+	};
+
+	InstructionSet[0b00'111'001] =
+	{
+		"ADD HL,SP (HL <- HL+SP)",
+		[this]() {
+			HC = (((HL & 0xFFF) + (SP & 0xFFF)) >> 12) != 0;
+			CY = (((uint32_t)HL+(uint32_t)SP) >> 16) != 0;
+			HL += SP;
+			N = 0;
+		},
+		2
+	};
+
+	InstructionSet[0b11'101'000] =
+	{
+		"ADD SP,e (SP <- SP+e)",
+		[this]() {
+			int8_t e = bus->read(PC++);
+			HC = (((SP & 0xFFF) + (e & 0xFFF)) >> 12) != 0;
+			CY = (((uint32_t)SP + (uint32_t)e) >> 16) != 0;
+			SP += e;
+			N = 0;
+			Z = 0;
+		},
+		4
+	};
+	
+	for (int i = 0; i <= 3; i++)
+	{
+		uint16_t r = ss(i);
+
+		InstructionSet[0b00'000'011 | (i << 4)] =
+		{
+			"INC ss (ss <- ss + 1)",
+			[this, &r]() {
+				r += 1;
+			},
+			2
+		};
+
+		InstructionSet[0b00'001'011 | (i << 4)] =
+		{
+			"DEC ss (ss <- ss - 1)",
+			[this, &r]() {
+				r -= 1;
+			},
+			2
+		};
+	}
+
+	InstructionSet[0b00'000'111] =
+	{
+		"RLCA",
+		[this]() {
+			CY = A >> 7;
+			A <<= 1;
+			A |= CY;
+			HC = 0;
+			N = 0;
+			Z = 0;
+		},
+		1
+	};
+
+	InstructionSet[0b00'010'111] =
+	{
+		"RLA",
+		[this]() {
+			uint8_t tmp = A >> 7;
+			A <<= 1;
+			A |= CY;
+			CY = tmp;
+			HC = 0;
+			N = 0;
+			Z = 0;
+		},
+		1
+	};
+
+	InstructionSet[0b00'001'111] =
+	{
+		"RRCA",
+		[this]() {
+			CY = A & 0x01;
+			A >>= 1;
+			A |= CY << 7;
+			HC = 0;
+			N = 0;
+			Z = 0;
+		},
+		1
+	};
+
+	InstructionSet[0b00'011'111] =
+	{
+		"RRA",
+		[this]() {
+			uint8_t tmp = A & 0x01;
+			A >>= 1;
+			A |= CY;
+			CY = tmp;
+			HC = 0;
+			N = 0;
+			Z = 0;
+		},
+		1
+	};
+
+	InstructionSet[0b11'001'011] =
+	{
+		"Shift",
+		[this]() {
+			uint8_t M = bus->read(PC++);
+			uint8_t raddr = M & 0x03;
+			uint8_t opH = M >> 3;
+
+			switch (opH)
+			{
+			case 0b00'000:
+				if (raddr != 0b110)
+				{
+					// RLC r
+					uint8_t& r = GPR(raddr);
+					CY = r >> 7;
+					r <<= 1;
+					r |= CY;
+					HC = 0;
+					N = 0;
+					Z = r == 0;
+				}
+				else
+				{
+					// RLC (HL)
+					uint8_t M = bus->read(HL);
+					CY = M >> 7;
+					M <<= 1;
+					M |= CY;
+					bus->write(HL, M);
+					N = 0;
+					HC = 0;
+					Z = M == 0;
+					cycle += 2;
+				}
+
+			case 0b00'010:
+				if (raddr != 0b110)
+				{
+					// RL r
+					uint8_t& r = GPR(raddr);
+					uint8_t tmp = r >> 7;
+					r <<= 1;
+					r |= CY;
+					CY = tmp;
+					HC = 0;
+					N = 0;
+					Z = r == 0;
+				}
+				else
+				{
+					// RL (HL)
+					uint8_t M = bus->read(HL);
+					uint8_t tmp = M >> 7;
+					M <<= 1;
+					M |= CY;
+					bus->write(HL, M);
+					CY = tmp;
+					N = 0;
+					HC = 0;
+					Z = M == 0;
+					cycle += 2;
+				}
+
+			case 0b00'001:
+				if (raddr != 0b110)
+				{
+					// RRC r
+					uint8_t& r = GPR(raddr);
+					CY = r & 0x01;
+					r >>= 1;
+					r |= CY << 7;
+					HC = 0;
+					N = 0;
+					Z = r == 0;
+				}
+				else
+				{
+					// RRC (HL)
+					uint8_t M = bus->read(HL);
+					CY = M & 0x01;
+					M >>= 1;
+					M |= CY << 7;
+					bus->write(HL, M);
+					N = 0;
+					HC = 0;
+					Z = M == 0;
+					cycle += 2;
+				}
+
+			case 0b00'011:
+				if (raddr != 0b110)
+				{
+					// RR r
+					uint8_t& r = GPR(raddr);
+					uint8_t tmp = r & 0x01;
+					r >>= 1;
+					r |= CY << 7;
+					CY = tmp;
+					HC = 0;
+					N = 0;
+					Z = r == 0;
+				}
+				else
+				{
+					// RR (HL)
+					uint8_t M = bus->read(HL);
+					uint8_t tmp = M & 0x01;
+					M >>= 1;
+					M |= CY << 7;
+					CY = tmp;
+					bus->write(HL, M);
+					N = 0;
+					HC = 0;
+					Z = M == 0;
+					cycle += 2;
+				}
+
+			case 0b00'100:
+				if (raddr != 0b110)
+				{
+					// SLA r
+					uint8_t& r = GPR(raddr);
+					CY = r >> 7;
+					r <<= 1;
+					HC = 0;
+					N = 0;
+					Z = r == 0;
+				}
+				else
+				{
+					// SLA (HL)
+					uint8_t M = bus->read(HL);
+					CY = M >> 7;
+					M <<= 1;
+					HC = 0;
+					N = 0;
+					Z = M == 0;
+					cycle += 2;
+				}
+
+			case 0b00'101:
+				if (raddr != 0b110)
+				{
+					// SRA r
+					uint8_t& r = GPR(raddr);
+					uint8_t tmp = r & 0x80;
+					CY = r & 0x01;
+					r >>= 1;
+					r |= tmp;
+					HC = 0;
+					N = 0;
+					Z = r == 0;
+				}
+				else
+				{
+					// SRA (HL)
+					uint8_t M = bus->read(HL);
+					uint8_t tmp = M & 0x80;
+					CY = M & 0x01;
+					M >>= 1;
+					M |= tmp;
+					HC = 0;
+					N = 0;
+					Z = M == 0;
+					cycle += 2;
+				}
+			
+			case 0b00'111:
+				if (raddr != 0b110)
+				{
+					// SRL r
+					uint8_t& r = GPR(raddr);
+					CY = r & 0x01;
+					r >>= 1;
+					HC = 0;
+					N = 0;
+					Z = r == 0;
+				}
+				else
+				{
+					// SRL (HL)
+					uint8_t M = bus->read(HL);
+					CY = M & 0x01;
+					M >>= 1;
+					HC = 0;
+					N = 0;
+					Z = M == 0;
+					cycle += 2;
+				}
+
+			case 0b00'110:
+				if (raddr != 0b110)
+				{
+					// SWAP r
+					uint8_t& r = GPR(raddr);
+					uint8_t rH = r >> 4;
+					r = (r << 4) | rH;
+				}
+				else
+				{
+					// SWAP (HL)
+					uint8_t M = bus->read(HL);
+					uint8_t MH = M >> 4;
+					M = (M << 4) | MH;
+					cycle += 2;
+				}
+			}
+		},
+		2
+	};
+	
 }
 
 inline uint8_t& CPU::GPR(uint8_t i)
@@ -813,6 +1114,38 @@ inline uint8_t& CPU::GPR(uint8_t i)
 		return H;
 	case 0b101:
 		return L;
+	}
+}
+
+inline uint16_t& CPU::qq(uint8_t i)
+{
+	switch (i)
+	{
+	case 0b00:
+		return BC;
+	case 0b01:
+		return DE;
+	case 0b10:
+		return HL;
+	case 0b11:
+		return AF;
+
+	}
+}
+
+inline uint16_t& CPU::ss(uint8_t i)
+{
+	switch (i)
+	{
+	case 0b00:
+		return BC;
+	case 0b01:
+		return DE;
+	case 0b10:
+		return HL;
+	case 0b11:
+		return SP;
+
 	}
 }
 

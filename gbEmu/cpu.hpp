@@ -37,14 +37,16 @@ private:
 
 		struct
 		{
-			uint16_t AF : 16;
-			uint16_t BC : 16;
-			uint16_t DE : 16;
-			uint16_t HL : 16;
+			uint16_t AF;
+			uint16_t BC;
+			uint16_t DE;
+			uint16_t HL;
 		};
 	};
 
 	inline uint8_t& GPR(uint8_t i);
+	inline uint16_t& qq(uint8_t i);
+	inline uint16_t& ss(uint8_t i);
 
 	uint16_t PC, SP; // Program Counter, Stack Pointer
 
