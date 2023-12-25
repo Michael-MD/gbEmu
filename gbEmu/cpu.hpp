@@ -44,7 +44,7 @@ private:
 		};
 	};
 
-	bool EI;
+	bool IME; // Interrupt Mater Flag
 
 	inline uint8_t& GPR(uint8_t i);
 	inline uint16_t& qq(uint8_t i);

@@ -917,7 +917,7 @@ CPU::CPU()
 					Z = M == 0;
 					cycle += 2;
 				}
-
+				break;
 			case 0b00'010:
 				if (raddr != 0b110)
 				{
@@ -945,7 +945,7 @@ CPU::CPU()
 					Z = M == 0;
 					cycle += 2;
 				}
-
+				break;
 			case 0b00'001:
 				if (raddr != 0b110)
 				{
@@ -971,7 +971,7 @@ CPU::CPU()
 					Z = M == 0;
 					cycle += 2;
 				}
-
+				break;
 			case 0b00'011:
 				if (raddr != 0b110)
 				{
@@ -999,7 +999,7 @@ CPU::CPU()
 					Z = M == 0;
 					cycle += 2;
 				}
-
+				break;
 			case 0b00'100:
 				if (raddr != 0b110)
 				{
@@ -1022,7 +1022,7 @@ CPU::CPU()
 					Z = M == 0;
 					cycle += 2;
 				}
-
+				break;
 			case 0b00'101:
 				if (raddr != 0b110)
 				{
@@ -1049,7 +1049,7 @@ CPU::CPU()
 					Z = M == 0;
 					cycle += 2;
 				}
-			
+				break;
 			case 0b00'111:
 				if (raddr != 0b110)
 				{
@@ -1072,7 +1072,7 @@ CPU::CPU()
 					Z = M == 0;
 					cycle += 2;
 				}
-
+				break;
 			case 0b00'110:
 				if (raddr != 0b110)
 				{
@@ -1089,6 +1089,7 @@ CPU::CPU()
 					M = (M << 4) | MH;
 					cycle += 2;
 				}
+				break;
 			}
 		},
 		2
@@ -1124,7 +1125,7 @@ CPU::CPU()
 
 					cycle += 1;
 				}
-
+				break;
 			case 0b11:
 				if (raddr != 0b110)
 				{
@@ -1140,7 +1141,7 @@ CPU::CPU()
 
 					cycle += 2;
 				}
-
+				break;
 			case 0b10:
 				if (raddr != 0b110)
 				{
@@ -1156,6 +1157,7 @@ CPU::CPU()
 
 					cycle += 2;
 				}
+				break;
 			}
 		},
 		2
@@ -1424,6 +1426,18 @@ CPU::CPU()
 		4
 	};
 
+	InstructionSet[0b11'011'001] =
+	{
+		"RETI",
+		[this]() {
+			uint8_t LO = bus->read(SP++);
+			uint8_t HI = bus->read(SP++);
+			PC = (HI << 8) | LO;
+			IME = 1; // TODO: Double Check
+		},
+		4
+	};
+
 	InstructionSet[0b11'000'000] =
 	{
 		"RET ~Z",
@@ -1502,7 +1516,214 @@ CPU::CPU()
 		};
 	}
 
+	InstructionSet[0b00'100'111] =
+	{
+		"DAA",
+		[this]() {
+			switch (bus->read(PC - 2))
+			{
+			// ADD A, r
+			case 0b10'000'000:
+			case 0b10'000'001:
+			case 0b10'000'010:
+			case 0b10'000'011:
+			case 0b10'000'100:
+			case 0b10'000'101:
+			case 0b10'000'111:
+			// ADD A, n
+			case 0b11'000'110:
+			// ADD A, (HL)
+			case 0b10'000'110:
+			// ADC A, r
+			case 0b10'001'000:
+			case 0b10'001'001:
+			case 0b10'001'010:
+			case 0b10'001'011:
+			case 0b10'001'100:
+			case 0b10'001'101:
+			case 0b10'001'111:
+			// ADC A, (HL)
+			case 0b10'001'110:
+			// ADC A, nn
+			case 0b11'001'110:
+			{
+				// ADD/ADC
+				uint8_t AL = A & 0x0F, AH = A & 0xF0;
+				if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
+				{
+					A += 0x00;
+					CY = 0;
+				}
+				else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
+				{
+					A += 0x06;
+					CY = 0;
+				}
+				else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x9)
+				{
+					A += 0x06;
+					CY = 0;
+				}
+				else if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0xA && AH <= 0xF)
+				{
+					A += 0x60;
+					CY = 1;
+				}
+				else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x9 && AH <= 0xF)
+				{
+					A += 0x66;
+					CY = 1;
+				}
+				else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0xA && AH <= 0xF)
+				{
+					A += 0x66;
+					CY = 1;
+				}
+				else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x2)
+				{
+					A += 0x60;
+					CY = 1;
+				}
+				else if (CY == 1 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x2)
+				{
+					A += 0x66;
+					CY = 1;
+				}
+				else if (CY == 1 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x3)
+				{
+					A += 0x66;
+					CY = 1;
+				}
 
+
+				break;
+			}
+
+			// SUB r
+			case 0b10'010'000:
+			case 0b10'010'001:
+			case 0b10'010'010:
+			case 0b10'010'011:
+			case 0b10'010'100:
+			case 0b10'010'101:
+			case 0b10'010'111:
+			// SUB (HL)
+			case 0b10'010'110:
+			// SUB n
+			case 0b11'010'110:
+			// SBC A, r
+			case 0b10'011'000:
+			case 0b10'011'001:
+			case 0b10'011'010:
+			case 0b10'011'011:
+			case 0b10'011'100:
+			case 0b10'011'101:
+			case 0b10'011'111:
+			// SBC A. (HL)
+			case 0b10'011'110:
+			// SBC A, n
+			case 0b11'011'110:
+			{
+				// SUB/SBC
+				uint8_t AL = A & 0x0F, AH = A & 0xF0;
+				if (CY ==0 && H ==0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
+				{
+					A += 0x00;
+					CY = 0;
+				}
+				else if (CY ==0 && H ==1 && AL >= 0x6 && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
+				{
+					A += 0xFA;
+					CY = 0;
+				}
+				else if (CY == 1&& H == 0&& AL >= 0x0 && AL <= 0x9 && AH >= 0x7 && AH <= 0xF)
+				{
+					A += 0xA0;
+					CY = 1;
+				}
+				else if (CY == 1&& H == 1&& AL >= 0x6 && AL <= 0xF && AH >= 0x6 && AH <= 0xF)
+				{
+					A += 0x9A;
+					CY = 1;
+				}
+				break;
+			}
+			}
+
+			HC = 0;
+			Z = A == 0;
+		},
+		1
+	};
+
+	InstructionSet[0b00'101'111] =
+	{
+		"CPL (A <- ~A)",
+		[this]() {
+			A = ~A;
+			H = 1;
+			N = 1;
+		},
+		1
+	};
+
+	InstructionSet[0b00'111'111] =
+	{
+		"CCF (CY <- ~CY)",
+		[this]() {
+			CY = ~CY;
+			H = 1;
+			N = 1;
+		},
+		1
+	};
+
+	InstructionSet[0b00'110'111] =
+	{
+		"SCF (CY <- 1)",
+		[this]() {
+			CY = 1;
+			H = 0;
+			N = 0;
+		},
+		1
+	};
+
+	InstructionSet[0b11'110'011] =
+	{
+		"DI (IME <- 0)",
+		[this]() {
+			IME = 0;
+		},
+		1
+	};
+
+	InstructionSet[0b11'110'011] =
+	{
+		"EI (IME <- 1)",
+		[this]() {
+			IME = 1;
+		},
+		1
+	};
+
+	InstructionSet[0b01'110'110] =
+	{
+		"HALT",
+		[this]() {
+		// TODO
+	},
+	1
+	};
+
+	InstructionSet[0b00'010'000] =
+	{
+		"STOP",
+		[this]() {
+		// TODO
+	},
+	1
+	};
 }
 
 inline uint8_t& CPU::GPR(uint8_t i)
@@ -1560,5 +1781,5 @@ inline uint16_t& CPU::ss(uint8_t i)
 
 void CPU::clock()
 {
-	
+	// IME reset after interrupt occurs	
 }
