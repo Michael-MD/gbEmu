@@ -886,9 +886,9 @@ CPU::CPU()
 	{
 		"Shift",
 		[this]() {
-			uint8_t M = bus->read(PC++);
-			uint8_t raddr = M & 0x03;
-			uint8_t opH = M >> 3;
+			uint8_t D = bus->read(PC++);
+			uint8_t raddr = D & 0x03;
+			uint8_t opH = D >> 3;
 
 			switch (opH)
 			{
@@ -1093,7 +1093,79 @@ CPU::CPU()
 		},
 		2
 	};
+
+	InstructionSet[0b11'001'011] =
+	{
+		"BIT",
+		[this]() {
+			uint8_t D = bus->read(PC++);
+			uint8_t raddr = D & 0x03;
+			uint8_t& r = GPR(raddr);
+			uint8_t b = (D >> 3) & 0x03;
+			uint8_t opH = D >> 6;
+
+			switch (opH)
+			{
+			case 0b01:
+				if (raddr != 0b110)
+				{
+					// BIT b,r (Z <- ~rb)
+					Z = (~r >> b) & 0b1;
+					HC = 1;
+					N = 0;
+				}
+				else
+				{
+					// BIT b,(HL) (Z <- ~(HL)b)
+					uint8_t M = bus->read(HL);
+					Z = (~M >> b) & 0b1;
+					HC = 1;
+					N = 0;
+
+					cycle += 1;
+				}
+
+			case 0b11:
+				if (raddr != 0b110)
+				{
+					// SET b,r (rb <- 1)
+					r |= (1 << b);
+				}
+				else
+				{
+					// SET b,(HL) ((HL)b <- 1)
+					uint8_t M = bus->read(HL);
+					M |= (1 << b);
+					bus->write(HL, M);
+
+					cycle += 2;
+				}
+
+			case 0b10:
+				if (raddr != 0b110)
+				{
+					// RES b,r (rb <- 0)
+					r &= ~(1 << b);
+				}
+				else
+				{
+					// RES b,(HL) ((HL)b <- 0)
+					uint8_t M = bus->read(HL);
+					M &= ~(1 << b);
+					bus->write(HL, M);
+
+					cycle += 2;
+				}
+
+
+
+			}
+			
+		},
+		2
+	};
 	
+
 }
 
 inline uint8_t& CPU::GPR(uint8_t i)
