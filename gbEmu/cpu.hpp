@@ -44,6 +44,8 @@ private:
 		};
 	};
 
+	bool EI;
+
 	inline uint8_t& GPR(uint8_t i);
 	inline uint16_t& qq(uint8_t i);
 	inline uint16_t& ss(uint8_t i);

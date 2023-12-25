@@ -1322,6 +1322,187 @@ CPU::CPU()
 		},
 		1
 	};
+
+	InstructionSet[0b11'001'101] =
+	{
+		"CALL nn",
+		[this]() {
+			bus->write(--SP, PC >> 8);
+			bus->write(--SP, PC & 0x00FF);
+
+			uint8_t LO = bus->read(PC++);
+			uint8_t HI = bus->read(PC++);
+			PC = (HI << 8) | LO;
+		},
+		6
+	};
+
+	InstructionSet[0b11'000'100] =
+	{
+		"CALL cc, ~Z",
+		[this]() {
+			if (Z == 0)
+			{
+				bus->write(--SP, PC >> 8);
+				bus->write(--SP, PC & 0x00FF);
+
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b11'001'100] =
+	{
+		"CALL cc, Z",
+		[this]() {
+			if (Z == 1)
+			{
+				bus->write(--SP, PC >> 8);
+				bus->write(--SP, PC & 0x00FF);
+
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b11'010'100] =
+	{
+		"CALL cc, ~CY",
+		[this]() {
+			if (CY == 0)
+			{
+				bus->write(--SP, PC >> 8);
+				bus->write(--SP, PC & 0x00FF);
+
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b11'011'100] =
+	{
+		"CALL cc, CY",
+		[this]() {
+			if (CY == 1)
+			{
+				bus->write(--SP, PC >> 8);
+				bus->write(--SP, PC & 0x00FF);
+
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b11'001'001] =
+	{
+		"RET",
+		[this]() {
+			uint8_t LO = bus->read(SP++);
+			uint8_t HI = bus->read(SP++);
+			PC = (HI << 8) | LO;
+		},
+		4
+	};
+
+	InstructionSet[0b11'000'000] =
+	{
+		"RET ~Z",
+		[this]() {
+			if (Z == 0)
+			{
+				uint8_t LO = bus->read(SP++);
+				uint8_t HI = bus->read(SP++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		2
+	};
+
+	InstructionSet[0b11'001'000] =
+	{
+		"RET Z",
+		[this]() {
+			if (Z == 1)
+			{
+				uint8_t LO = bus->read(SP++);
+				uint8_t HI = bus->read(SP++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		2
+	};
+
+	InstructionSet[0b11'010'000] =
+	{
+		"RET ~CY",
+		[this]() {
+			if (CY == 0)
+			{
+				uint8_t LO = bus->read(SP++);
+				uint8_t HI = bus->read(SP++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		2
+	};
+
+	InstructionSet[0b11'011'000] =
+	{
+		"RET CY",
+		[this]() {
+			if (CY == 0)
+			{
+				uint8_t LO = bus->read(SP++);
+				uint8_t HI = bus->read(SP++);
+				PC = (HI << 8) | LO;
+
+				cycle += 3;
+			}
+		},
+		2
+	};
+
+	for(int t = 0; t <= 7; t++)
+	{
+		InstructionSet[0b11'000'111 | (t << 3)] =
+		{
+			"RST t",
+			[this, t]() {
+				bus->write(--SP, PC >> 8);
+				bus->write(--SP, PC & 0x00FF);
+				PC = t << 3;
+			},
+			4
+		};
+	}
+
+
 }
 
 inline uint8_t& CPU::GPR(uint8_t i)
