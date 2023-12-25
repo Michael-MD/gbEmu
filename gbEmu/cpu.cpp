@@ -1156,16 +1156,172 @@ CPU::CPU()
 
 					cycle += 2;
 				}
-
-
-
 			}
-			
 		},
 		2
 	};
 	
+	InstructionSet[0b11'000'011] =
+	{
+		"JP nn (PC <- nn)",
+		[this]() {
+			uint8_t LO = bus->read(PC++);
+			uint8_t HI = bus->read(PC++);
+			PC = (HI << 8) | LO;
+		},
+		4
+	};
 
+	InstructionSet[0b11'000'010] =
+	{
+		"JP ~Z, nn (If ~Z: PC <- nn)",
+		[this]() {
+			if (Z == 0)
+			{
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+				cycle += 1;
+			}
+			else
+			{
+				PC += 2;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b11'001'010] =
+	{
+		"JP Z, nn (If Z: PC <- nn)",
+		[this]() {
+			if (Z == 1)
+			{
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+				cycle += 1;
+			}
+			else
+			{
+				PC += 2;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b11'010'010] =
+	{
+		"JP ~CY, nn (If ~CY: PC <- nn)",
+		[this]() {
+			if (CY == 0)
+			{
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+				cycle += 1;
+			}
+			else
+			{
+				PC += 2;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b11'011'010] =
+	{
+		"JP CY, nn (If CY: PC <- nn)",
+		[this]() {
+			if (CY == 1)
+			{
+				uint8_t LO = bus->read(PC++);
+				uint8_t HI = bus->read(PC++);
+				PC = (HI << 8) | LO;
+				cycle += 1;
+			}
+			else
+			{
+				PC += 2;
+			}
+		},
+		3
+	};
+
+	InstructionSet[0b00'011'000] =
+	{
+		"JR e (PC <- PC+e)",
+		[this]() {
+			int8_t e = bus->read(PC++);
+			PC = e + 2;
+		},
+		3
+	};
+
+	InstructionSet[0b00'100'000] =
+	{
+		"JR ~Z, e (If ~Z: PC <- PC+e)",
+		[this]() {
+			if (Z == 0)
+			{
+				int8_t e = bus->read(PC++);
+				PC = e + 2;
+				cycle++;
+			}
+		},
+		2
+	};
+
+	InstructionSet[0b00'101'000] =
+	{
+		"JR Z, e (If Z: PC <- PC+e)",
+		[this]() {
+			if (Z == 1)
+			{
+				int8_t e = bus->read(PC++);
+				PC = e + 2;
+				cycle++;
+			}
+		},
+		2
+	};
+
+	InstructionSet[0b00'110'000] =
+	{
+		"JR ~CY, e (If ~CY: PC <- PC+e)",
+		[this]() {
+			if (CY == 0)
+			{
+				int8_t e = bus->read(PC++);
+				PC = e + 2;
+				cycle++;
+			}
+		},
+		2
+	};
+
+	InstructionSet[0b00'111'000] =
+	{
+		"JR CY, e (If CY: PC <- PC+e)",
+		[this]() {
+			if (CY == 1)
+			{
+				int8_t e = bus->read(PC++);
+				PC = e + 2;
+				cycle++;
+			}
+		},
+		2
+	};
+
+	InstructionSet[0b11'101'001] =
+	{
+		"JP (HL) (PC <- HL)",
+		[this]() {
+			PC = HL;
+		},
+		1
+	};
 }
 
 inline uint8_t& CPU::GPR(uint8_t i)
