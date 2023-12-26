@@ -7,14 +7,38 @@ CPU::CPU()
 
 	// TODO: Internal Checks
 
-	// ============== Initilizes Internal Registers and Memory ============== 
+	// ============== Initilizes Port and Mode Registers ============== 
 
-	SP = 0xFFFE;
-	F = 0xB0;
-	BC = 0X0013;
-	DE = 0X00D8;
-	HL = 0X014D;
-	SP = 0XFFFE;
+	bus->write(0xFF06, 0x00);  // TMA
+	bus->write(0xFF07, 0x00);  // TAC
+	bus->write(0xFF10, 0x80);  // NR10
+	bus->write(0xFF11, 0xBF);  // NR11
+	bus->write(0xFF12, 0xF3);  // NR12
+	bus->write(0xFF14, 0xBF);  // NR14
+	bus->write(0xFF16, 0x3F);  // NR21
+	bus->write(0xFF17, 0x00);  // NR22
+	bus->write(0xFF19, 0xBF);  // NR24
+	bus->write(0xFF1A, 0x7F);  // NR30
+	bus->write(0xFF1B, 0xFF);  // NR31
+	bus->write(0xFF1C, 0x9F);  // NR32
+	bus->write(0xFF1E, 0xBF);  // NR33
+	bus->write(0xFF20, 0xFF);  // NR41
+	bus->write(0xFF21, 0x00);  // NR42
+	bus->write(0xFF22, 0x00);  // NR43
+	bus->write(0xFF23, 0xBF);  // NR30
+	bus->write(0xFF24, 0x77);  // NR50
+	bus->write(0xFF25, 0xF3);  // NR51
+	bus->write(0xFF26, 0xF1);  // NR52
+	bus->write(0xFF40, 0x91);  // LCDC
+	bus->write(0xFF42, 0x00);  // SCY
+	bus->write(0xFF43, 0x00);  // SCX
+	bus->write(0xFF45, 0x00);  // LYC
+	bus->write(0xFF47, 0xFC);  // BGP
+	bus->write(0xFF48, 0xFF);  // OBP0
+	bus->write(0xFF49, 0xFF);  // OBP1
+	bus->write(0xFF4A, 0x00);  // WY
+	bus->write(0xFF4B, 0x00);  // WX
+	bus->write(0xFFFF, 0x00);  // IE
 
 	InstructionSet[0b00'000'000] =
 	{
@@ -1433,7 +1457,7 @@ CPU::CPU()
 			uint8_t LO = bus->read(SP++);
 			uint8_t HI = bus->read(SP++);
 			PC = (HI << 8) | LO;
-			IME = 1; // TODO: Double Check
+			bus->IME = 1; // TODO: Double Check
 		},
 		4
 	};
@@ -1693,7 +1717,7 @@ CPU::CPU()
 	{
 		"DI (IME <- 0)",
 		[this]() {
-			IME = 0;
+			bus->IME = 0;
 		},
 		1
 	};
@@ -1702,7 +1726,7 @@ CPU::CPU()
 	{
 		"EI (IME <- 1)",
 		[this]() {
-			IME = 1;
+			bus->IME = 1;
 		},
 		1
 	};
@@ -1779,7 +1803,109 @@ inline uint16_t& CPU::ss(uint8_t i)
 	}
 }
 
+void CPU::reset()
+{
+	SP = 0xFFFE;
+	F = 0xB0;
+	BC = 0X0013;
+	DE = 0X00D8;
+	HL = 0X014D;
+	SP = 0XFFFE;
+}
+
 void CPU::clock()
 {
+	// CPU::clock is called at 4MHz.
+
+	// Timer Unit
+	if(bus->TAC->Start)
+	{
+		uint16_t mod;
+		switch (bus->TAC->InputClockSelect)
+		{
+		case 0b00:	// f/2^10 (4.096kHz)
+			mod = 0x3FF;
+			break;
+		case 0b01:	// f/2^4 (262.144kHz)
+			mod = 0x03;
+			break;
+		case 0b10:	// f/2^6 (65.536kHz)
+			mod = 0x1F;
+			break;
+		case 0b11:	// f/2^8 (16.384kHz)
+			mod = 0x7F;
+			break;
+		}
+
+		if (*(bus->TIMA) == 0xFF)
+		{
+			// Overflow
+			*bus->TIMA = *bus->TIMA;
+			bus->IF->TimerOverflow = 1;	// Raise Timer Overflow interrupt flag
+		}
+		else
+		{
+			if(bus->nClockCycles % mod == 0)
+				(*bus->TIMA)++;
+		}
+	}
+
+	if (cycle == 0)
+	{
+		// Check for interrupts between intruction fetch cycles
+		if (bus->IME)
+		{
+			// Check if any interrupts have occured
+			if ((bus->IE->reg & 0x1F) != 0)
+			{
+				// Check interrupts in order of precedence
+				if (bus->IE->VerticalBlanking && bus->IF->VerticalBlanking)
+				{
+					bus->IME = 0;
+					bus->write(--SP, PC >> 8);
+					bus->write(--SP, PC & 0x00FF);
+					PC = 0x0040;
+				}
+				else if (bus->IE->LCDC && bus->IF->LCDC)
+				{
+					bus->IME = 0;
+					bus->write(--SP, PC >> 8);
+					bus->write(--SP, PC & 0x00FF);
+					PC = 0x0048;
+				}
+				else if (bus->IE->TimerOverflow && bus->IF->TimerOverflow)
+				{
+					bus->IME = 0;
+					bus->write(--SP, PC >> 8);
+					bus->write(--SP, PC & 0x00FF);
+					PC = 0x0050;
+				}
+				else if (bus->IE->SerialIOTransferCompletion && bus->IF->SerialIOTransferCompletion)
+				{
+					bus->IME = 0;
+					bus->write(--SP, PC >> 8);
+					bus->write(--SP, PC & 0x00FF);
+					PC = 0x0058;
+				}
+				else if (bus->IE->PNegEdge && bus->IF->PNegEdge)
+				{
+					bus->IME = 0;
+					bus->write(--SP, PC >> 8);
+					bus->write(--SP, PC & 0x00FF);
+					PC = 0x0060;
+				}
+			}
+		}
+
+		// Fetch Next Instruction
+		cycle += InstructionSet[PC].cycles;
+		InstructionSet[PC++].op();
+	}
+	else
+	{
+		// Continue Current Instruction Execution
+		cycle--;
+	}
+
 	// IME reset after interrupt occurs	
 }

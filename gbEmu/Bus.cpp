@@ -52,5 +52,28 @@ uint8_t Bus::read(uint16_t addr)
 
 void Bus::write(uint16_t addr, uint8_t data)
 {
+	if (addr == 0xFF04)
+	{
+		// Writing any value to Divider register
+		// sets it to 0x00.
+
+		*Div = 0x00;
+	}
+}
+
+void Bus::clock()
+{
+	// The system should be clocked in DMG mode
+	// at f=4MHz.
+
+	nClockCycles++;
+
+	cpu->clock();
+
+	// Increment Divider register at 8.192kHz.
+	if (nClockCycles % 0xFF == 0)
+		(*Div)++;
+
+
 
 }

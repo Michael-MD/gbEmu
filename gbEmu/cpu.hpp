@@ -10,11 +10,15 @@ class CPU
 {
 public:
 	CPU();
+	void reset();
 
 	void clock();	// Clocks CPU
 
 private:
 	Bus *bus;
+
+	uint8_t RAM[127]; // Working and Static RAM
+	uint8_t DisplayRAM[8 * 1024];	// LCD Display RAM
 
 	// ============== Registers ============== 
 	
@@ -43,8 +47,6 @@ private:
 			uint16_t HL;
 		};
 	};
-
-	bool IME; // Interrupt Mater Flag
 
 	inline uint8_t& GPR(uint8_t i);
 	inline uint16_t& qq(uint8_t i);
