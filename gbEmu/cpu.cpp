@@ -1,6 +1,96 @@
 #include "cpu.hpp"
 #include "Bus.hpp"
 
+
+void CPU::clock()
+{
+	// CPU::clock is called at 4MHz.
+
+	// Timer Unit
+	if (bus->TAC->Start)
+	{
+		uint16_t mod;
+		switch (bus->TAC->InputClockSelect)
+		{
+		case 0b00:	// f/2^10 (4.096kHz)
+			mod = 0x3FF;
+			break;
+		case 0b01:	// f/2^4 (262.144kHz)
+			mod = 0x03;
+			break;
+		case 0b10:	// f/2^6 (65.536kHz)
+			mod = 0x1F;
+			break;
+		case 0b11:	// f/2^8 (16.384kHz)
+			mod = 0x7F;
+			break;
+		}
+
+		if (*(bus->TIMA) == 0xFF)
+		{
+			// Overflow
+			*bus->TIMA = *bus->TIMA;
+			bus->IF->TimerOverflow = 1;	// Raise Timer Overflow interrupt flag
+		}
+		else
+		{
+			if (bus->nClockCycles % mod == 0)
+				(*bus->TIMA)++;
+		}
+	}
+
+	if (cycle == 0)
+	{
+		// Check for interrupts between intruction fetch cycles
+		if (bus->IME)
+		{
+			// Check if any interrupts have occured
+			if ((bus->IE->reg & 0x1F) != 0 && (bus->IF->reg & 0x1F) != 0)
+			{
+				// Check interrupts in order of precedence
+
+				bus->IME = 0;
+				bus->write(--SP, PC >> 8);
+				bus->write(--SP, PC & 0x00FF);
+
+				if (bus->IE->VerticalBlanking && bus->IF->VerticalBlanking)
+				{
+					PC = 0x0040;
+				}
+				else if (bus->IE->LCDC && bus->IF->LCDC)
+				{
+					PC = 0x0048;
+				}
+				else if (bus->IE->TimerOverflow && bus->IF->TimerOverflow)
+				{
+					PC = 0x0050;
+				}
+				else if (bus->IE->SerialIOTransferCompletion && bus->IF->SerialIOTransferCompletion)
+				{
+					PC = 0x0058;
+				}
+				else if (bus->IE->PNegEdge && bus->IF->PNegEdge)
+				{
+					PC = 0x0060;
+				}
+			}
+		}
+
+		// Fetch Next Instruction
+		uint8_t data = bus->read(PC++);
+		cycle += InstructionSet[data].cycles;
+		InstructionSet[data].op();
+	}
+	else
+	{
+		// Continue Current Instruction Execution
+		cycle--;
+	}
+
+	// IME reset after interrupt occurs	
+}
+
+
 CPU::CPU()
 {
 	PC = 0x100;
@@ -1806,106 +1896,8 @@ inline uint16_t& CPU::ss(uint8_t i)
 void CPU::reset()
 {
 	SP = 0xFFFE;
-	F = 0xB0;
+	//F = 0xB0;
 	BC = 0X0013;
 	DE = 0X00D8;
 	HL = 0X014D;
-	SP = 0XFFFE;
-}
-
-void CPU::clock()
-{
-	// CPU::clock is called at 4MHz.
-
-	// Timer Unit
-	if(bus->TAC->Start)
-	{
-		uint16_t mod;
-		switch (bus->TAC->InputClockSelect)
-		{
-		case 0b00:	// f/2^10 (4.096kHz)
-			mod = 0x3FF;
-			break;
-		case 0b01:	// f/2^4 (262.144kHz)
-			mod = 0x03;
-			break;
-		case 0b10:	// f/2^6 (65.536kHz)
-			mod = 0x1F;
-			break;
-		case 0b11:	// f/2^8 (16.384kHz)
-			mod = 0x7F;
-			break;
-		}
-
-		if (*(bus->TIMA) == 0xFF)
-		{
-			// Overflow
-			*bus->TIMA = *bus->TIMA;
-			bus->IF->TimerOverflow = 1;	// Raise Timer Overflow interrupt flag
-		}
-		else
-		{
-			if(bus->nClockCycles % mod == 0)
-				(*bus->TIMA)++;
-		}
-	}
-
-	if (cycle == 0)
-	{
-		// Check for interrupts between intruction fetch cycles
-		if (bus->IME)
-		{
-			// Check if any interrupts have occured
-			if ((bus->IE->reg & 0x1F) != 0)
-			{
-				// Check interrupts in order of precedence
-				if (bus->IE->VerticalBlanking && bus->IF->VerticalBlanking)
-				{
-					bus->IME = 0;
-					bus->write(--SP, PC >> 8);
-					bus->write(--SP, PC & 0x00FF);
-					PC = 0x0040;
-				}
-				else if (bus->IE->LCDC && bus->IF->LCDC)
-				{
-					bus->IME = 0;
-					bus->write(--SP, PC >> 8);
-					bus->write(--SP, PC & 0x00FF);
-					PC = 0x0048;
-				}
-				else if (bus->IE->TimerOverflow && bus->IF->TimerOverflow)
-				{
-					bus->IME = 0;
-					bus->write(--SP, PC >> 8);
-					bus->write(--SP, PC & 0x00FF);
-					PC = 0x0050;
-				}
-				else if (bus->IE->SerialIOTransferCompletion && bus->IF->SerialIOTransferCompletion)
-				{
-					bus->IME = 0;
-					bus->write(--SP, PC >> 8);
-					bus->write(--SP, PC & 0x00FF);
-					PC = 0x0058;
-				}
-				else if (bus->IE->PNegEdge && bus->IF->PNegEdge)
-				{
-					bus->IME = 0;
-					bus->write(--SP, PC >> 8);
-					bus->write(--SP, PC & 0x00FF);
-					PC = 0x0060;
-				}
-			}
-		}
-
-		// Fetch Next Instruction
-		cycle += InstructionSet[PC].cycles;
-		InstructionSet[PC++].op();
-	}
-	else
-	{
-		// Continue Current Instruction Execution
-		cycle--;
-	}
-
-	// IME reset after interrupt occurs	
 }

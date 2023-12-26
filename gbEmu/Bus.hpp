@@ -5,7 +5,9 @@
 class Bus
 {
 public:
-	CPU *cpu;
+	Bus();
+
+	CPU cpu;
 
 	int nClockCycles;
 
@@ -42,28 +44,6 @@ public:
 	} *P1 = reinterpret_cast<decltype(P1)>(RAM + 0xFF00);
 
 	// Divider (Read/Reset)
-	/*union
-	{
-		struct
-		{
-			uint8_t f9 : 1;
-			uint8_t f10 : 1;
-			uint8_t f11 : 1;
-			uint8_t f12 : 1;
-			uint8_t f13 : 1;
-			uint8_t f14 : 1;
-			uint8_t f15 : 1;
-			uint8_t f16 : 1;
-		};
-
-		uint8_t reg_;
-
-		void operator=(uint8_t reg)
-		{
-			reg_ = reg;
-		};
-
-	} *Div = reinterpret_cast<decltype(Div)>(RAM + 0xFF04);*/
 	uint8_t* Div = RAM + 0xFF04;
 
 	// TIMA Register
@@ -104,11 +84,11 @@ public:
 			uint8_t PNegEdge : 1;
 		};
 
-		uint8_t reg_;
+		uint8_t reg;
 
-		void operator=(uint8_t reg)
+		void operator=(uint8_t reg_)
 		{
-			reg_ = reg;
+			reg = reg_;
 		};
 
 	} *IF = reinterpret_cast<decltype(IF)>(RAM + 0xFF0F);

@@ -14,8 +14,10 @@ public:
 
 	void clock();	// Clocks CPU
 
+	Bus* bus;
+
 private:
-	Bus *bus;
+	
 
 	uint8_t RAM[127]; // Working and Static RAM
 	uint8_t DisplayRAM[8 * 1024];	// LCD Display RAM
@@ -91,7 +93,7 @@ private:
 		uint8_t Opcode;
 	};
 
-	uint8_t cycle;		// Cycle number
+	uint8_t cycle;		// Cycle Number
 
 
 };

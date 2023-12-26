@@ -1,5 +1,11 @@
 #include "Bus.hpp"
 
+Bus::Bus()
+{
+	// Connect CPU to remainder of system
+	cpu.bus = this;
+}
+
 uint8_t Bus::read(uint16_t addr)
 {
 	if (addr >= 0x0000 && addr < 0x4000)		// 16kB ROM bank #0 
@@ -68,7 +74,7 @@ void Bus::clock()
 
 	nClockCycles++;
 
-	cpu->clock();
+	cpu.clock();
 
 	// Increment Divider register at 8.192kHz.
 	if (nClockCycles % 0xFF == 0)
