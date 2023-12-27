@@ -175,4 +175,7 @@ public:
 	// Background Pixel Colour/Background Pallette Register
 	uint8_t* BGP = RAM + 0xFF47;
 
+
+private:
+	uint8_t Row; // Row currently being rendered
 };

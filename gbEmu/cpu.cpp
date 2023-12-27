@@ -1,7 +1,7 @@
 #include "cpu.hpp"
 #include "Bus.hpp"
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 #if DEBUG_MODE
 	#include <iostream>
@@ -88,7 +88,7 @@ void CPU::clock()
 			cycle += InstructionSet[data].cycles;
 
 			#if DEBUG_MODE
-			std::cout << InstructionSet[data].mnemonic << ' ' << std::hex << (int)(data) << std::dec << std::endl;
+				std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << InstructionSet[data].mnemonic << ' ' << std::hex << (int)(data) << std::dec << std::endl;
 			#endif
 
 			InstructionSet[data].op();
@@ -1365,6 +1365,8 @@ CPU::CPU()
 				PC += e;
 				cycle++;
 			}
+
+			PC++;
 		},
 		2
 	};
@@ -1379,6 +1381,8 @@ CPU::CPU()
 				PC += e;
 				cycle++;
 			}
+
+			PC++;
 		},
 		2
 	};
@@ -1393,6 +1397,8 @@ CPU::CPU()
 				PC += e;
 				cycle++;
 			}
+
+			PC++;
 		},
 		2
 	};
@@ -1407,6 +1413,8 @@ CPU::CPU()
 				PC += e;
 				cycle++;
 			}
+
+			PC++;
 		},
 		2
 	};

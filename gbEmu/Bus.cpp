@@ -5,7 +5,7 @@
 Bus::Bus(std::string gbFilename)
 {
 	nClockCycles = 0;
-	*LY = 0;
+	Row = 0;
 
 	// Connect CPU to remainder of system
 	cpu.bus = this;
@@ -31,6 +31,7 @@ Bus::Bus(std::string gbFilename)
 	*TMA = 0x00;
 	*TAC = 0x00;
 	*P1 = 0x00;
+	*LY = 0;
 	//bus->write(0xFF10, 0x80);  // NR10
 	//bus->write(0xFF11, 0xBF);  // NR11
 	//bus->write(0xFF12, 0xF3);  // NR12
@@ -79,42 +80,48 @@ void Bus::clock()
 	if (nClockCycles % 1890 == 0) // Do Entire Row at Once
 	{
 		// TODO: SCX
+		// TODO: Fix indexing into appropriate row
 
 		uint8_t BGStartAddr = LCDC->BGCodeArea ? 0x9C00 : 0x9800;
 
-		for (int ColBlock = 0; ColBlock < 20; ColBlock++)
+		// If not in vertical blanking period get pixel data
+		if (IF->VerticalBlanking == 0)
 		{
-			// Get CHR Code
-			uint8_t CHRCode = RAM[BGStartAddr + *LY * 20 + ColBlock];
-
-			// Find Corresponding Tile
-			uint8_t DotDataAddr = (CHRCode < 0x80 ? 0x9000 : 0x8800) + 0x0F * CHRCode;
-
-			// Parse Dot Data
-			uint8_t TileLO = RAM[DotDataAddr + 16 * *LY + 0];
-			uint8_t TileHI = RAM[DotDataAddr + 16 * *LY + 1];
-
-			// Get pixel Shade for entire row of pixels
-			for (int p = 0; p < 8; p++)
+			for (int ColBlock = 0; ColBlock < 20; ColBlock++)
 			{
-				uint8_t PixelPalette = ((TileHI & (1 << p)) >> (p - 1)) | (TileLO & (1 << p)) >> p;
+				// Get CHR Code
+				uint8_t CHRCode = RAM[BGStartAddr + *LY * 20 + ColBlock];
 
-				// Store Result Display Grid
-				Display[*LY][ColBlock + p] = (*BGP >> (PixelPalette * 2)) & 0b11;
+				// Find Corresponding Tile
+				uint8_t DotDataAddr = (CHRCode < 0x80 ? 0x9000 : 0x8800) + 0x0F * CHRCode;
+
+				// Parse Dot Data
+				uint8_t TileLO = RAM[DotDataAddr + 16 * *LY + 0];
+				uint8_t TileHI = RAM[DotDataAddr + 16 * *LY + 1];
+
+				// Get pixel Shade for entire row of pixels
+				for (int p = 0; p < 8; p++)
+				{
+					uint8_t PixelPalette = ((TileHI & (1 << p)) >> (p - 1)) | (TileLO & (1 << p)) >> p;
+
+					// Store Result Display Grid
+					Display[(*LY) * 8 + Row][ColBlock * 8 + p] = (*BGP >> (PixelPalette * 2)) & 0b11;
+				}
 			}
 		}
 
-		// Check if in Vertical Blanking Period
-		if (*LY == 17)
+		(*LY) = ((*LY) + 1) % 154;
+		Row = (Row + 1) % 8;
+
+		// Check if in Vertical Blanking Region
+		if (*LY == 18)
 		{
 			IF->VerticalBlanking = 1;
 		}
-		else if (*LY == (17 + 10))
+		else if (*LY == 0)
 		{
 			IF->VerticalBlanking = 0;
 		}
-
-		*LY++;
 		
 	}
 
