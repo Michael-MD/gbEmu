@@ -88,7 +88,7 @@ void CPU::clock()
 			cycle += InstructionSet[data].cycles;
 
 			#if DEBUG_MODE
-				std::cout << InstructionSet[data].mnemonic << std::endl;
+			std::cout << InstructionSet[data].mnemonic << ' ' << std::hex << (int)(data) << std::dec << std::endl;
 			#endif
 
 			InstructionSet[data].op();
@@ -735,7 +735,7 @@ CPU::CPU()
 	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		uint8_t r = GPR(i);
-		InstructionSet[0b10'101'000 | i] =
+		InstructionSet[0b10'111'000 | i] =
 		{
 			"CP r (A == r)",
 			[this, &r]() {
@@ -761,7 +761,7 @@ CPU::CPU()
 		1
 	};
 
-	InstructionSet[0b11'111'110] =
+	InstructionSet[0b10'111'110] =
 	{
 		"CP (HL) (A == (HL))",
 		[this]() {
@@ -1350,7 +1350,7 @@ CPU::CPU()
 		"JR e (PC <- PC+e)",
 		[this]() {
 			int8_t e = bus->read(PC++);
-			PC = e + 2;
+			PC += e + 2;
 		},
 		3
 	};
@@ -1362,7 +1362,7 @@ CPU::CPU()
 			if (Z == 0)
 			{
 				int8_t e = bus->read(PC++);
-				PC = e + 2;
+				PC += e + 2;
 				cycle++;
 			}
 		},
@@ -1376,7 +1376,7 @@ CPU::CPU()
 			if (Z == 1)
 			{
 				int8_t e = bus->read(PC++);
-				PC = e + 2;
+				PC += e + 2;
 				cycle++;
 			}
 		},
@@ -1390,7 +1390,7 @@ CPU::CPU()
 			if (CY == 0)
 			{
 				int8_t e = bus->read(PC++);
-				PC = e + 2;
+				PC += e + 2;
 				cycle++;
 			}
 		},
@@ -1404,7 +1404,7 @@ CPU::CPU()
 			if (CY == 1)
 			{
 				int8_t e = bus->read(PC++);
-				PC = e + 2;
+				PC += e + 2;
 				cycle++;
 			}
 		},
@@ -1793,7 +1793,7 @@ CPU::CPU()
 		1
 	};
 
-	InstructionSet[0b11'110'011] =
+	InstructionSet[0b11'111'011] =
 	{
 		"EI (IME <- 1)",
 		[this]() {
