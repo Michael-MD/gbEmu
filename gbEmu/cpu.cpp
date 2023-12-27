@@ -148,7 +148,7 @@ CPU::CPU()
 			2
 		};
 
-		InstructionSet[0x00 | (i << 3) | 0b110] =
+		InstructionSet[(0b01 << 6) | (i << 3) | 0b110] =
 		{
 			"LD r, (HL) (r <- (HL))",
 			[this, &r]() {
