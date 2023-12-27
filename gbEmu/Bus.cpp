@@ -2,17 +2,17 @@
 #include <fstream>
 #include <stdexcept>
 
-Bus::Bus()
+Bus::Bus(std::string gbFilename)
 {
 	nClockCycles = 0;
-	RowBlock = 0;
+	*LY = 0;
 
 	// Connect CPU to remainder of system
 	cpu.bus = this;
 
 	// Load gb Cartridge into Data Structure
 	std::ifstream ifs;
-	ifs.open("C:/Users/61481/Desktop/mb.gb", std::ifstream::binary);
+	ifs.open(gbFilename, std::ifstream::binary);
 
 	if (ifs.is_open())
 	{
@@ -85,14 +85,14 @@ void Bus::clock()
 		for (int ColBlock = 0; ColBlock < 20; ColBlock++)
 		{
 			// Get CHR Code
-			uint8_t CHRCode = RAM[BGStartAddr + RowBlock * 20 + ColBlock];
+			uint8_t CHRCode = RAM[BGStartAddr + *LY * 20 + ColBlock];
 
 			// Find Corresponding Tile
 			uint8_t DotDataAddr = (CHRCode < 0x80 ? 0x9000 : 0x8800) + 0x0F * CHRCode;
 
 			// Parse Dot Data
-			uint8_t TileLO = RAM[DotDataAddr + 16 * RowBlock + 0];
-			uint8_t TileHI = RAM[DotDataAddr + 16 * RowBlock + 1];
+			uint8_t TileLO = RAM[DotDataAddr + 16 * *LY + 0];
+			uint8_t TileHI = RAM[DotDataAddr + 16 * *LY + 1];
 
 			// Get pixel Shade for entire row of pixels
 			for (int p = 0; p < 8; p++)
@@ -100,21 +100,21 @@ void Bus::clock()
 				uint8_t PixelPalette = ((TileHI & (1 << p)) >> (p - 1)) | (TileLO & (1 << p)) >> p;
 
 				// Store Result Display Grid
-				Display[RowBlock][ColBlock + p] = (*BGP >> (PixelPalette * 2)) & 0b11;
+				Display[*LY][ColBlock + p] = (*BGP >> (PixelPalette * 2)) & 0b11;
 			}
 		}
 
 		// Check if in Vertical Blanking Period
-		if (RowBlock == 17)
+		if (*LY == 17)
 		{
 			IF->VerticalBlanking = 1;
 		}
-		else if (RowBlock == (17 + 10))
+		else if (*LY == (17 + 10))
 		{
 			IF->VerticalBlanking = 0;
 		}
 
-		RowBlock++;
+		*LY++;
 		
 	}
 

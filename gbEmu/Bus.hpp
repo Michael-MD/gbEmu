@@ -1,11 +1,12 @@
 #pragma once
 #include <cstdint>
 #include "CPU.hpp"
+#include <string>
 
 class Bus
 {
 public:
-	Bus();
+	Bus(std::string gbFilename);
 
 	CPU cpu;
 
@@ -119,7 +120,8 @@ public:
 	// ================== LCD Display Registers ==================
 	uint8_t Display[18 * 8][20 * 8];
 
-	uint8_t RowBlock;
+	// Line of Data being copied to LCD Driver
+	uint8_t* LY = RAM + 0xFF44;
 
 	// LCD Control Register
 	union
@@ -171,25 +173,6 @@ public:
 	uint8_t* SCX = RAM + 0xFF43;	// Scroll X
 
 	// Background Pixel Colour/Background Pallette Register
-	/*union
-	{
-		struct
-		{
-			uint8_t DotData00 : 2;
-			uint8_t DotData01 : 2;
-			uint8_t DotData10 : 2;
-			uint8_t DotData11 : 2;
-		};
-
-		uint8_t reg;
-
-		void operator=(uint8_t reg_)
-		{
-			reg = reg_;
-		};
-
-	} *BGP = reinterpret_cast<decltype(BGP)>(RAM + 0xFF47);*/
-
 	uint8_t* BGP = RAM + 0xFF47;
 
 };

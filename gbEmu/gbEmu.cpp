@@ -11,8 +11,8 @@ int main()
 
 
     
-    Bus bus;
-    for (int i = 0; i < 100; i++)
+    Bus bus("C:/Users/61481/Desktop/mb.gb");
+    for (int i = 0; i < 1000000; i++)
     {
         bus.clock();
     }

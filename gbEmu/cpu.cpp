@@ -1350,7 +1350,7 @@ CPU::CPU()
 		"JR e (PC <- PC+e)",
 		[this]() {
 			int8_t e = bus->read(PC++);
-			PC += e + 2;
+			PC += e;
 		},
 		3
 	};
@@ -1362,7 +1362,7 @@ CPU::CPU()
 			if (Z == 0)
 			{
 				int8_t e = bus->read(PC++);
-				PC += e + 2;
+				PC += e;
 				cycle++;
 			}
 		},
@@ -1376,7 +1376,7 @@ CPU::CPU()
 			if (Z == 1)
 			{
 				int8_t e = bus->read(PC++);
-				PC += e + 2;
+				PC += e;
 				cycle++;
 			}
 		},
@@ -1390,7 +1390,7 @@ CPU::CPU()
 			if (CY == 0)
 			{
 				int8_t e = bus->read(PC++);
-				PC += e + 2;
+				PC += e;
 				cycle++;
 			}
 		},
@@ -1404,7 +1404,7 @@ CPU::CPU()
 			if (CY == 1)
 			{
 				int8_t e = bus->read(PC++);
-				PC += e + 2;
+				PC += e;
 				cycle++;
 			}
 		},
