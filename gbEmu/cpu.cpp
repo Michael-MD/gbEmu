@@ -1,6 +1,11 @@
 #include "cpu.hpp"
 #include "Bus.hpp"
 
+#define DEBUG_MODE 1
+
+#if DEBUG_MODE
+	#include <iostream>
+#endif
 
 void CPU::clock()
 {
@@ -81,6 +86,11 @@ void CPU::clock()
 			// Fetch Next Instruction
 			uint8_t data = bus->read(PC++);
 			cycle += InstructionSet[data].cycles;
+
+			#if DEBUG_MODE
+				std::cout << InstructionSet[data].mnemonic << std::endl;
+			#endif
+
 			InstructionSet[data].op();
 		}
 		else
@@ -117,7 +127,7 @@ CPU::CPU()
 			uint8_t r = GPR(i), rp = GPR(j);
 			InstructionSet[0x40|(i<<3)|j] =
 			{
-				"LD r,r’ (r <- r')",
+				"LD r,r' (r <- r')",
 				[this, &r, &rp]() {
 					r = rp;
 				},

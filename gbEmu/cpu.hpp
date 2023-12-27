@@ -8,6 +8,8 @@ class Bus;
 
 class CPU
 {
+	friend Bus;
+
 public:
 	CPU();
 	void reset();

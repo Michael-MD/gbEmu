@@ -1,4 +1,6 @@
 #include "Bus.hpp"
+#include <fstream>
+#include <stdexcept>
 
 Bus::Bus()
 {
@@ -8,9 +10,27 @@ Bus::Bus()
 	// Connect CPU to remainder of system
 	cpu.bus = this;
 
+	// Load gb Cartridge into Data Structure
+	std::ifstream ifs;
+	ifs.open("C:/Users/61481/Desktop/mb.gb", std::ifstream::binary);
+
+	if (ifs.is_open())
+	{
+		ifs.read((char*)RAM, sizeof(RAM));
+		ifs.close();
+	}
+	else
+	{
+		throw std::invalid_argument(".gb File Not Found.");
+	}
+
+	// At Power Up, a 256-byte program is executed starting at 0
+	cpu.PC = 0x0000;
+
 	// ============== Initilizes Registers ==============
-	* TMA = 0x00;
-	* TAC = 0x00;
+	*TMA = 0x00;
+	*TAC = 0x00;
+	*P1 = 0x00;
 	//bus->write(0xFF10, 0x80);  // NR10
 	//bus->write(0xFF11, 0xBF);  // NR11
 	//bus->write(0xFF12, 0xF3);  // NR12
@@ -29,16 +49,16 @@ Bus::Bus()
 	//bus->write(0xFF24, 0x77);  // NR50
 	//bus->write(0xFF25, 0xF3);  // NR51
 	//bus->write(0xFF26, 0xF1);  // NR52
-	* LCDC = 0x91;
-	* SCY = 0x00;
-	* SCX = 0x00;
+	//*LCDC = 0x91;
+	*SCY = 0x00;
+	*SCX = 0x00;
 	//bus->write(0xFF45, 0x00);  // LYC
 	//bus->write(0xFF47, 0xFC);  // BGP
 	//bus->write(0xFF48, 0xFF);  // OBP0
 	//bus->write(0xFF49, 0xFF);  // OBP1
 	//bus->write(0xFF4A, 0x00);  // WY
 	//bus->write(0xFF4B, 0x00);  // WX
-	* IE = 0x00;
+	*IE = 0x00;
 }
 
 
@@ -121,9 +141,9 @@ uint8_t Bus::read(uint16_t addr)
 	{
 
 	}
-	else if (addr >= 0xC000 && addr < 0xE000 || addr >= 0xE000 && addr < 0xFE00)	// 8kB Internal RAM
+	else if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
 	{
-
+		
 	}
 	else if (addr >= 0xFE00 && addr < 0xFEA0)	// Sprite Attrib Memory (OAM)
 	{
@@ -150,16 +170,33 @@ uint8_t Bus::read(uint16_t addr)
 
 	}
 
-	return 0x00;
+	return RAM[addr];
 }
 
 void Bus::write(uint16_t addr, uint8_t data)
 {
-	if (addr == 0xFF04)
+	if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
 	{
-		// Writing any value to Divider register
-		// sets it to 0x00.
+		// Echo 8kB Internal RAM
 
+		if (addr >= 0xC000 && addr < 0xE000)
+		{
+			RAM[addr] = data;
+			RAM[0xE000 + addr & 0xC000] = data;
+		}
+		else
+		{
+			RAM[0xC000 + addr & 0xE000] = data;
+			RAM[addr] = data;
+		}
+	}
+	else if (addr == 0xFF04)	// Divider Register
+	{
+		// Writing any value to Divider register sets it to 0x00.
 		*Div = 0x00;
+	}
+	else
+	{
+		RAM[addr] = data;
 	}
 }
