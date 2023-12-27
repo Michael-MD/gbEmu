@@ -2,9 +2,15 @@
 //
 
 #include <iostream>
+#include "Bus.hpp"
 
 int main()
 {
+    Bus bus;
+    for (int i = 0; i < 100; i++)
+    {
+        bus.clock();
+    }
     std::cout << "Hello World!\n";
 }
 

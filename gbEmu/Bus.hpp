@@ -117,6 +117,9 @@ public:
 	bool IME; // Interrupt Mater Flag
 
 	// ================== LCD Display Registers ==================
+	uint8_t Display[18 * 8][20 * 8];
+
+	uint8_t RowBlock;
 
 	// LCD Control Register
 	union
@@ -167,5 +170,24 @@ public:
 	uint8_t* SCY = RAM + 0xFF42;	// Scroll Y
 	uint8_t* SCX = RAM + 0xFF43;	// Scroll X
 
+	// Background Pixel Colour/Background Pallette Register
+	union
+	{
+		struct
+		{
+			uint8_t DotData00 : 2;
+			uint8_t DotData01 : 2;
+			uint8_t DotData10 : 2;
+			uint8_t DotData11 : 2;
+		};
+
+		uint8_t reg;
+
+		void operator=(uint8_t reg_)
+		{
+			reg = reg_;
+		};
+
+	} *BGP = reinterpret_cast<decltype(BGP)>(RAM + 0xFF47);
 
 };

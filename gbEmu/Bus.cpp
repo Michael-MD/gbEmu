@@ -2,8 +2,119 @@
 
 Bus::Bus()
 {
+	nClockCycles = 0;
+	RowBlock = 0;
+
 	// Connect CPU to remainder of system
 	cpu.bus = this;
+
+	// ============== Initilizes Registers ==============
+	* TMA = 0x00;
+	* TAC = 0x00;
+	//bus->write(0xFF10, 0x80);  // NR10
+	//bus->write(0xFF11, 0xBF);  // NR11
+	//bus->write(0xFF12, 0xF3);  // NR12
+	//bus->write(0xFF14, 0xBF);  // NR14
+	//bus->write(0xFF16, 0x3F);  // NR21
+	//bus->write(0xFF17, 0x00);  // NR22
+	//bus->write(0xFF19, 0xBF);  // NR24
+	//bus->write(0xFF1A, 0x7F);  // NR30
+	//bus->write(0xFF1B, 0xFF);  // NR31
+	//bus->write(0xFF1C, 0x9F);  // NR32
+	//bus->write(0xFF1E, 0xBF);  // NR33
+	//bus->write(0xFF20, 0xFF);  // NR41
+	//bus->write(0xFF21, 0x00);  // NR42
+	//bus->write(0xFF22, 0x00);  // NR43
+	//bus->write(0xFF23, 0xBF);  // NR30
+	//bus->write(0xFF24, 0x77);  // NR50
+	//bus->write(0xFF25, 0xF3);  // NR51
+	//bus->write(0xFF26, 0xF1);  // NR52
+	* LCDC = 0x91;
+	* SCY = 0x00;
+	* SCX = 0x00;
+	//bus->write(0xFF45, 0x00);  // LYC
+	//bus->write(0xFF47, 0xFC);  // BGP
+	//bus->write(0xFF48, 0xFF);  // OBP0
+	//bus->write(0xFF49, 0xFF);  // OBP1
+	//bus->write(0xFF4A, 0x00);  // WY
+	//bus->write(0xFF4B, 0x00);  // WX
+	* IE = 0x00;
+}
+
+
+void Bus::clock()
+{
+	// The system should be clocked in DMG mode
+	// at 4f where f=4.1943MHz i.e. machine cycles.
+
+	nClockCycles++;
+
+	cpu.clock();
+
+	// Increment Divider register at 8.192kHz.
+	if (nClockCycles % 0xFF == 0 && nClockCycles % 4 == 0)
+		(*Div)++;
+
+	// ============= LCD Display ============= 
+	if (nClockCycles % 1890 == 0) // Do Entire Row at Once
+	{
+		// TODO: SCX
+
+		uint8_t BGStartAddr = LCDC->BGCodeArea ? 0x9C00 : 0x9800;
+
+		for (int ColBlock = 0; ColBlock < 20; ColBlock++)
+		{
+			// Get CHR Code
+			uint8_t CHRCode = RAM[BGStartAddr + RowBlock * 20 + ColBlock];
+
+			// Find Corresponding Tile
+			uint8_t DotDataAddr = (CHRCode < 0x80 ? 0x9000 : 0x8800) + 0x0F * CHRCode;
+
+			// Parse Dot Data
+			uint8_t TileLO = RAM[DotDataAddr + 16 * RowBlock + 0];
+			uint8_t TileHI = RAM[DotDataAddr + 16 * RowBlock + 1];
+
+			// Get pixel Shade for entire row of pixels
+			for (int p = 0; p < 8; p++)
+			{
+				uint8_t PixelPalette = ((TileHI & (1 << p)) >> (p - 1)) | (TileLO & (1 << p)) >> p;
+
+				switch (PixelPalette)
+				{
+				case 0b00:
+					Display[RowBlock][ColBlock + p] = BGP->DotData00;
+					break;
+				case 0b01:
+					Display[RowBlock][ColBlock + p] = BGP->DotData01;
+					break;
+				case 0b10:
+					Display[RowBlock][ColBlock + p] = BGP->DotData10;
+					break;
+				case 0b11:
+					Display[RowBlock][ColBlock + p] = BGP->DotData11;
+					break;
+				}
+			}
+		}
+
+		// Check if in Vertical Blanking Period
+		if (RowBlock > 17)
+		{
+			IF->VerticalBlanking = 1;
+		}
+		else if (RowBlock == (17 + 10))
+		{
+			IF->VerticalBlanking = 0;
+		}
+
+		RowBlock++;
+		
+
+	}
+
+
+	// TODO: window display
+
 }
 
 uint8_t Bus::read(uint16_t addr)
@@ -65,21 +176,4 @@ void Bus::write(uint16_t addr, uint8_t data)
 
 		*Div = 0x00;
 	}
-}
-
-void Bus::clock()
-{
-	// The system should be clocked in DMG mode
-	// at f=4MHz.
-
-	nClockCycles++;
-
-	cpu.clock();
-
-	// Increment Divider register at 8.192kHz.
-	if (nClockCycles % 0xFF == 0)
-		(*Div)++;
-
-
-
 }

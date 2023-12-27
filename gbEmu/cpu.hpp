@@ -20,6 +20,8 @@ private:
 	
 
 	uint8_t RAM[127]; // Working and Static RAM
+
+	// DMG mode has only 8kB of built-in display RAM
 	uint8_t DisplayRAM[8 * 1024];	// LCD Display RAM
 
 	// ============== Registers ============== 
