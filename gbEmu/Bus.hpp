@@ -171,7 +171,7 @@ public:
 	uint8_t* SCX = RAM + 0xFF43;	// Scroll X
 
 	// Background Pixel Colour/Background Pallette Register
-	union
+	/*union
 	{
 		struct
 		{
@@ -188,6 +188,8 @@ public:
 			reg = reg_;
 		};
 
-	} *BGP = reinterpret_cast<decltype(BGP)>(RAM + 0xFF47);
+	} *BGP = reinterpret_cast<decltype(BGP)>(RAM + 0xFF47);*/
+
+	uint8_t* BGP = RAM + 0xFF47;
 
 };

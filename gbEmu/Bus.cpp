@@ -79,26 +79,13 @@ void Bus::clock()
 			{
 				uint8_t PixelPalette = ((TileHI & (1 << p)) >> (p - 1)) | (TileLO & (1 << p)) >> p;
 
-				switch (PixelPalette)
-				{
-				case 0b00:
-					Display[RowBlock][ColBlock + p] = BGP->DotData00;
-					break;
-				case 0b01:
-					Display[RowBlock][ColBlock + p] = BGP->DotData01;
-					break;
-				case 0b10:
-					Display[RowBlock][ColBlock + p] = BGP->DotData10;
-					break;
-				case 0b11:
-					Display[RowBlock][ColBlock + p] = BGP->DotData11;
-					break;
-				}
+				// Store Result Display Grid
+				Display[RowBlock][ColBlock + p] = (*BGP >> (PixelPalette * 2)) & 0b11;
 			}
 		}
 
 		// Check if in Vertical Blanking Period
-		if (RowBlock > 17)
+		if (RowBlock == 17)
 		{
 			IF->VerticalBlanking = 1;
 		}
@@ -109,7 +96,6 @@ void Bus::clock()
 
 		RowBlock++;
 		
-
 	}
 
 
