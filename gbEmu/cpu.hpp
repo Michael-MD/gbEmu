@@ -4,11 +4,11 @@
 #include <string>
 #include <functional>
 
-class Bus;
+class GB;
 
 class CPU
 {
-	friend Bus;
+	friend GB;
 
 public:
 	CPU();
@@ -16,7 +16,7 @@ public:
 
 	void clock();	// Clocks CPU
 
-	Bus* bus;
+	GB* gb;
 
 private:
 	

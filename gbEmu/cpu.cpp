@@ -1,5 +1,5 @@
 #include "cpu.hpp"
-#include "Bus.hpp"
+#include "GB.hpp"
 
 #define DEBUG_MODE 0
 
@@ -11,13 +11,13 @@ void CPU::clock()
 {
 	// CPU::clock is called at ~16MHz.
 
-	if(bus->nClockCycles % 4 ==0) // Machine cycles to clock cycles
+	if(gb->nClockCycles % 4 ==0) // Machine cycles to clock cycles
 	{
 		// Timer Unit
-		if (bus->TAC->Start)
+		if (gb->TAC->Start)
 		{
 			uint16_t mod;
-			switch (bus->TAC->InputClockSelect)
+			switch (gb->TAC->InputClockSelect)
 			{
 			case 0b00:	// f/2^10 (4.096kHz)
 				mod = 0x3FF;
@@ -33,50 +33,50 @@ void CPU::clock()
 				break;
 			}
 
-			if (*(bus->TIMA) == 0xFF)
+			if (*(gb->TIMA) == 0xFF)
 			{
 				// Overflow
-				*bus->TIMA = *bus->TIMA;
-				bus->IF->TimerOverflow = 1;	// Raise Timer Overflow interrupt flag
+				*gb->TIMA = *gb->TIMA;
+				gb->IF->TimerOverflow = 1;	// Raise Timer Overflow interrupt flag
 			}
 			else
 			{
-				if (bus->nClockCycles % mod == 0)
-					(*bus->TIMA)++;
+				if (gb->nClockCycles % mod == 0)
+					(*gb->TIMA)++;
 			}
 		}
 
 		if (cycle == 0)
 		{
 			// Check for interrupts between intruction fetch cycles
-			if (bus->IME)
+			if (gb->IME)
 			{
 				// Check if any interrupts have occured
-				if ((bus->IE->reg & bus->IF->reg & 0x1F) != 0)
+				if ((gb->IE->reg & gb->IF->reg & 0x1F) != 0)
 				{
 					// Check interrupts in order of precedence
 
-					bus->IME = 0;
-					bus->write(--SP, PC >> 8);
-					bus->write(--SP, PC & 0x00FF);
+					gb->IME = 0;
+					gb->write(--SP, PC >> 8);
+					gb->write(--SP, PC & 0x00FF);
 
-					if (bus->IE->VerticalBlanking && bus->IF->VerticalBlanking)
+					if (gb->IE->VerticalBlanking && gb->IF->VerticalBlanking)
 					{
 						PC = 0x0040;
 					}
-					else if (bus->IE->LCDC && bus->IF->LCDC)
+					else if (gb->IE->LCDC && gb->IF->LCDC)
 					{
 						PC = 0x0048;
 					}
-					else if (bus->IE->TimerOverflow && bus->IF->TimerOverflow)
+					else if (gb->IE->TimerOverflow && gb->IF->TimerOverflow)
 					{
 						PC = 0x0050;
 					}
-					else if (bus->IE->SerialIOTransferCompletion && bus->IF->SerialIOTransferCompletion)
+					else if (gb->IE->SerialIOTransferCompletion && gb->IF->SerialIOTransferCompletion)
 					{
 						PC = 0x0058;
 					}
-					else if (bus->IE->PNegEdge && bus->IF->PNegEdge)
+					else if (gb->IE->PNegEdge && gb->IF->PNegEdge)
 					{
 						PC = 0x0060;
 					}
@@ -84,7 +84,7 @@ void CPU::clock()
 			}
 
 			// Fetch Next Instruction
-			uint8_t data = bus->read(PC++);
+			uint8_t data = gb->read(PC++);
 			cycle += InstructionSet[data].cycles;
 
 			#if DEBUG_MODE
@@ -143,7 +143,7 @@ CPU::CPU()
 		{
 			"LD r,n (r <- n)",
 			[this, &r]() {
-				r = bus->read(PC++);
+				r = gb->read(PC++);
 			},
 			2
 		};
@@ -152,7 +152,7 @@ CPU::CPU()
 		{
 			"LD r, (HL) (r <- (HL))",
 			[this, &r]() {
-				r = bus->read(HL);
+				r = gb->read(HL);
 			},
 			2
 		};
@@ -165,7 +165,7 @@ CPU::CPU()
 		{
 			"LD (HL),r ((HL) <- r)",
 			[this, &r]() {
-				bus->write(HL, r);
+				gb->write(HL, r);
 			},
 			2
 		};
@@ -175,7 +175,7 @@ CPU::CPU()
 	{
 		"LD (HL), n ((HL) <- n)",
 		[this]() {
-			bus->write(HL, bus->read(PC++));
+			gb->write(HL, gb->read(PC++));
 		},
 		3
 	};
@@ -184,7 +184,7 @@ CPU::CPU()
 	{
 		"LD A, (BC) (A <- (BC))",
 		[this]() {
-			A = bus->read(BC);
+			A = gb->read(BC);
 		},
 		2
 	};
@@ -193,7 +193,7 @@ CPU::CPU()
 	{
 		"LD A, (DE)  (A <- (DE))",
 		[this]() {
-			A = bus->read(DE);
+			A = gb->read(DE);
 		},
 		2
 	};
@@ -202,7 +202,7 @@ CPU::CPU()
 	{
 		"LD A, (C) (A <- (0xFF00 + C))",
 		[this]() {
-			A = bus->read(0xFF00 + C);
+			A = gb->read(0xFF00 + C);
 		},
 		2
 	};
@@ -211,7 +211,7 @@ CPU::CPU()
 	{
 		"LD (C), A ((0xFF00H+C) <- A)",
 		[this]() {
-			bus->write(0xFF00 + C, A);
+			gb->write(0xFF00 + C, A);
 		},
 		2
 	};
@@ -220,7 +220,7 @@ CPU::CPU()
 	{
 		"LD A, (n) (A <- (n))",
 		[this]() {
-			A = bus->read(0xFF00 + bus->read(PC++));
+			A = gb->read(0xFF00 + gb->read(PC++));
 		},
 		3
 	};
@@ -229,7 +229,7 @@ CPU::CPU()
 	{
 		"LD (n), A ((n) <- A)",
 		[this]() {
-			bus->write(0xFF00 + bus->read(PC++), A);
+			gb->write(0xFF00 + gb->read(PC++), A);
 		},
 		3
 	};
@@ -239,8 +239,8 @@ CPU::CPU()
 		"LD A, (nn)(A <- (nn))",
 		[this]() {
 			uint8_t LO, HI;
-			LO = bus->read(PC++);
-			HI = bus->read(PC++);
+			LO = gb->read(PC++);
+			HI = gb->read(PC++);
 			A = (HI << 8) | LO;
 		},
 		4
@@ -251,9 +251,9 @@ CPU::CPU()
 		"LD (nn), A ((nn) <- A)",
 		[this]() {
 			uint8_t LO, HI;
-			LO = bus->read(PC++);
-			HI = bus->read(PC++);
-			bus->write((HI << 8) | LO, A);
+			LO = gb->read(PC++);
+			HI = gb->read(PC++);
+			gb->write((HI << 8) | LO, A);
 		},
 		4
 	};
@@ -262,7 +262,7 @@ CPU::CPU()
 	{
 		"LD A, (HLI) (A <- (HL), HL <- HL + 1)",
 		[this]() {
-			A = bus->read(HL++);
+			A = gb->read(HL++);
 		},
 		2
 	};
@@ -271,7 +271,7 @@ CPU::CPU()
 	{
 		"LD A, (HLD) (A <- (HL), HL <- HL1)",
 		[this]() {
-			A = bus->read(HL--);
+			A = gb->read(HL--);
 		},
 		2
 	};
@@ -280,7 +280,7 @@ CPU::CPU()
 	{
 		"LD (BC), A ((BC) <- A)",
 		[this]() {
-			bus->write(BC, A);
+			gb->write(BC, A);
 		},
 		2
 	};
@@ -289,7 +289,7 @@ CPU::CPU()
 	{
 		"LD (DE), A ((DE) <- A)",
 		[this]() {
-			bus->write(DE, A);
+			gb->write(DE, A);
 		},
 		2
 	};
@@ -298,7 +298,7 @@ CPU::CPU()
 	{
 		"LD (HLI), A ((HL) <- A HL <- HL + 1)",
 		[this]() {
-			bus->write(HL++, A);
+			gb->write(HL++, A);
 		},
 		2
 	};
@@ -307,7 +307,7 @@ CPU::CPU()
 	{
 		"LD (HLD), A ((HL) <- A, HL <- HL",
 		[this]() {
-			bus->write(HL--, A);
+			gb->write(HL--, A);
 		},
 		2
 	};
@@ -317,8 +317,8 @@ CPU::CPU()
 		"LD dd, nn (BC <- nn)",
 		[this]() {
 			uint8_t LO, HI;
-			LO = bus->read(PC++);
-			HI = bus->read(PC++);
+			LO = gb->read(PC++);
+			HI = gb->read(PC++);
 			BC = (HI << 8) | LO;
 		},
 		3
@@ -329,8 +329,8 @@ CPU::CPU()
 		"LD dd, nn (DE <- nn)",
 		[this]() {
 			uint8_t LO, HI;
-			LO = bus->read(PC++);
-			HI = bus->read(PC++);
+			LO = gb->read(PC++);
+			HI = gb->read(PC++);
 			DE = (HI << 8) | LO;
 		},
 		3
@@ -341,8 +341,8 @@ CPU::CPU()
 		"LD dd, nn (HL <- nn)",
 		[this]() {
 			uint8_t LO, HI;
-			LO = bus->read(PC++);
-			HI = bus->read(PC++);
+			LO = gb->read(PC++);
+			HI = gb->read(PC++);
 			HL = (HI << 8) | LO;
 		},
 		3
@@ -353,8 +353,8 @@ CPU::CPU()
 		"LD dd, nn (SP <- nn)",
 		[this]() {
 			uint8_t LO, HI;
-			LO = bus->read(PC++);
-			HI = bus->read(PC++);
+			LO = gb->read(PC++);
+			HI = gb->read(PC++);
 			SP = (HI << 8) | LO;
 		},
 		3
@@ -377,8 +377,8 @@ CPU::CPU()
 		{
 			"PUSH qq ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)",
 			[this, &r]() {
-				bus->write(--SP, r >> 8);
-				bus->write(--SP, r & 0x0F);
+				gb->write(--SP, r >> 8);
+				gb->write(--SP, r & 0x0F);
 			},
 			4
 		};
@@ -387,8 +387,8 @@ CPU::CPU()
 		{
 			"POP qq (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)",
 			[this, &r]() {
-				r = (r & 0xFF00) | bus->read(SP++);
-				r = (bus->read(SP++) << 8) | (r & 0x00FF);
+				r = (r & 0xFF00) | gb->read(SP++);
+				r = (gb->read(SP++) << 8) | (r & 0x00FF);
 			},
 			3
 		};
@@ -398,7 +398,7 @@ CPU::CPU()
 	{
 		"LDHL SP, e (HL <- SP+e)",
 		[this]() {
-			int8_t e = bus->read(PC++);
+			int8_t e = gb->read(PC++);
 			uint32_t tmp = SP + e;
 			HL = tmp & 0xFFFF;
 			Z = 0;
@@ -414,11 +414,11 @@ CPU::CPU()
 		"LD (nn), SP ((nn) <- SPL (nn + 1) <- SPH)",
 		[this]() {
 			uint8_t LO, HI;
-			LO = bus->read(PC++);
-			HI = bus->read(PC++);
+			LO = gb->read(PC++);
+			HI = gb->read(PC++);
 			uint16_t M = (HI << 8) | LO;
-			bus->write(M++, SP & 0x00FF);
-			bus->write(M, SP & 0xFF00);
+			gb->write(M++, SP & 0x00FF);
+			gb->write(M, SP & 0xFF00);
 		},
 		5
 	};
@@ -427,7 +427,7 @@ CPU::CPU()
 	{
 		"ADD A,n (A <- A+n)",
 		[this]() {
-			uint8_t n = bus->read(PC++);
+			uint8_t n = gb->read(PC++);
 			uint16_t tmp = A + n;
 			uint8_t tmp2 = ((A & 0xF) + (n & 0xF)) >> 4;
 
@@ -444,7 +444,7 @@ CPU::CPU()
 	{
 		"ADD A, (HL) (A <- A+(HL))",
 		[this]() {
-			A += bus->read(HL);
+			A += gb->read(HL);
 		},
 		2
 	};
@@ -473,7 +473,7 @@ CPU::CPU()
 	{
 		" ADC A, n (A <- A+n+CY)",
 		[this]() {
-			uint8_t n = bus->read(PC++);
+			uint8_t n = gb->read(PC++);
 			uint16_t tmp = A + n + CY;
 			uint8_t tmp2 = ((A & 0xF) + (n & 0xF) + CY) >> 4;
 
@@ -490,7 +490,7 @@ CPU::CPU()
 	{
 		" ADC A, (HL) (A <- A+n+CY)",
 		[this]() {
-			uint8_t M = bus->read(HL);
+			uint8_t M = gb->read(HL);
 			uint16_t tmp = A + M + CY;
 			uint8_t tmp2 = ((A & 0xF) + (M & 0xF) + CY) >> 4;
 
@@ -525,7 +525,7 @@ CPU::CPU()
 	{
 		"SUB n ( A <- A-n)",
 		[this]() {
-			uint8_t n = bus->read(PC++);
+			uint8_t n = gb->read(PC++);
 
 			HC = (A & 0xF) < (n & 0xF);
 			CY = A < n;
@@ -541,7 +541,7 @@ CPU::CPU()
 	{
 		"SUB (HL) ( A <- A-(HL))",
 		[this]() {
-			uint8_t M = bus->read(HL);
+			uint8_t M = gb->read(HL);
 
 			HC = (A & 0xF) < (M & 0xF);
 			CY = A < M;
@@ -575,7 +575,7 @@ CPU::CPU()
 	{
 		"SBC A, n (A <- A - n - CY)",
 		[this]() {
-			uint8_t n = bus->read(PC++);
+			uint8_t n = gb->read(PC++);
 
 			HC = (A & 0xF) < ((n + 1) & 0xF);
 			CY = A < (n + 1);
@@ -591,7 +591,7 @@ CPU::CPU()
 	{
 		"SBC A, (HL) (A <- A - (HL) - CY)",
 		[this]() {
-			uint8_t M = bus->read(HL);
+			uint8_t M = gb->read(HL);
 
 			HC = (A & 0xF) < ((M + 1) & 0xF);
 			CY = A < (M + 1);
@@ -624,7 +624,7 @@ CPU::CPU()
 	{
 		"AND n (A & n)",
 		[this]() {
-			A &= bus->read(PC++);
+			A &= gb->read(PC++);
 			CY = 0;
 			HC = 0;
 			N = 0;
@@ -637,7 +637,7 @@ CPU::CPU()
 	{
 		"AND (HL) (A & (HL))",
 		[this]() {
-			A &= bus->read(HL);
+			A &= gb->read(HL);
 			CY = 0;
 			HC = 0;
 			N = 0;
@@ -667,7 +667,7 @@ CPU::CPU()
 	{
 		"OR n (A | n)",
 		[this]() {
-			A |= bus->read(PC++);
+			A |= gb->read(PC++);
 			CY = 0;
 			HC = 0;
 			N = 0;
@@ -680,7 +680,7 @@ CPU::CPU()
 	{
 		"OR (HL) (A | (HL))",
 		[this]() {
-			A |= bus->read(HL);
+			A |= gb->read(HL);
 			CY = 0;
 			HC = 0;
 			N = 0;
@@ -710,7 +710,7 @@ CPU::CPU()
 	{
 		"XOR n (A ^ n)",
 		[this]() {
-			A ^= bus->read(PC++);
+			A ^= gb->read(PC++);
 			CY = 0;
 			HC = 0;
 			N = 0;
@@ -723,7 +723,7 @@ CPU::CPU()
 	{
 		"XOR (HL) (A ^ (HL))",
 		[this]() {
-			A ^= bus->read(HL);
+			A ^= gb->read(HL);
 			CY = 0;
 			HC = 0;
 			N = 0;
@@ -752,7 +752,7 @@ CPU::CPU()
 	{
 		"CP n (A == n)",
 		[this]() {
-			uint8_t n = bus->read(PC++);
+			uint8_t n = gb->read(PC++);
 			Z = A == n;
 			HC = (A & 0xF) < (n & 0xF);
 			N = 1;
@@ -765,7 +765,7 @@ CPU::CPU()
 	{
 		"CP (HL) (A == (HL))",
 		[this]() {
-			uint8_t M = bus->read(HL);
+			uint8_t M = gb->read(HL);
 			Z = A == M;
 			HC = (A & 0xF) < (M & 0xF);
 			N = 1;
@@ -794,12 +794,12 @@ CPU::CPU()
 	{
 		"INC (HL) ((HL) <- (HL)+1)",
 		[this]() {
-			uint8_t M = bus->read(HL);
+			uint8_t M = gb->read(HL);
 			HC = ((M & 0xF) + (1 & 0xF)) >> 4;
 			N = 0;
 			M += 1;
 			Z = M == 0;
-			bus->write(HL, M);
+			gb->write(HL, M);
 		},
 		3
 	};
@@ -824,12 +824,12 @@ CPU::CPU()
 	{
 		"DEC (HL) ((HL) <- (HL)-1)",
 		[this]() {
-			uint8_t M = bus->read(HL);
+			uint8_t M = gb->read(HL);
 			HC = (M & 0xF) < (1 & 0xF);
 			N = 1;
 			M -= 1;
 			Z = M == 0;
-			bus->write(HL, M);
+			gb->write(HL, M);
 		},
 		3
 	};
@@ -886,7 +886,7 @@ CPU::CPU()
 	{
 		"ADD SP,e (SP <- SP+e)",
 		[this]() {
-			int8_t e = bus->read(PC++);
+			int8_t e = gb->read(PC++);
 			HC = (((SP & 0xFFF) + (e & 0xFFF)) >> 12) != 0;
 			CY = (((uint32_t)SP + (uint32_t)e) >> 16) != 0;
 			SP += e;
@@ -981,7 +981,7 @@ CPU::CPU()
 	{
 		"Shift",
 		[this]() {
-			uint8_t D = bus->read(PC++);
+			uint8_t D = gb->read(PC++);
 			uint8_t raddr = D & 0x03;
 			uint8_t opH = D >> 3;
 
@@ -1002,11 +1002,11 @@ CPU::CPU()
 				else
 				{
 					// RLC (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					CY = M >> 7;
 					M <<= 1;
 					M |= CY;
-					bus->write(HL, M);
+					gb->write(HL, M);
 					N = 0;
 					HC = 0;
 					Z = M == 0;
@@ -1029,11 +1029,11 @@ CPU::CPU()
 				else
 				{
 					// RL (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					uint8_t tmp = M >> 7;
 					M <<= 1;
 					M |= CY;
-					bus->write(HL, M);
+					gb->write(HL, M);
 					CY = tmp;
 					N = 0;
 					HC = 0;
@@ -1056,11 +1056,11 @@ CPU::CPU()
 				else
 				{
 					// RRC (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					CY = M & 0x01;
 					M >>= 1;
 					M |= CY << 7;
-					bus->write(HL, M);
+					gb->write(HL, M);
 					N = 0;
 					HC = 0;
 					Z = M == 0;
@@ -1083,12 +1083,12 @@ CPU::CPU()
 				else
 				{
 					// RR (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					uint8_t tmp = M & 0x01;
 					M >>= 1;
 					M |= CY << 7;
 					CY = tmp;
-					bus->write(HL, M);
+					gb->write(HL, M);
 					N = 0;
 					HC = 0;
 					Z = M == 0;
@@ -1109,7 +1109,7 @@ CPU::CPU()
 				else
 				{
 					// SLA (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					CY = M >> 7;
 					M <<= 1;
 					HC = 0;
@@ -1134,7 +1134,7 @@ CPU::CPU()
 				else
 				{
 					// SRA (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					uint8_t tmp = M & 0x80;
 					CY = M & 0x01;
 					M >>= 1;
@@ -1159,7 +1159,7 @@ CPU::CPU()
 				else
 				{
 					// SRL (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					CY = M & 0x01;
 					M >>= 1;
 					HC = 0;
@@ -1179,7 +1179,7 @@ CPU::CPU()
 				else
 				{
 					// SWAP (HL)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					uint8_t MH = M >> 4;
 					M = (M << 4) | MH;
 					cycle += 2;
@@ -1194,7 +1194,7 @@ CPU::CPU()
 	{
 		"BIT",
 		[this]() {
-			uint8_t D = bus->read(PC++);
+			uint8_t D = gb->read(PC++);
 			uint8_t raddr = D & 0x03;
 			uint8_t& r = GPR(raddr);
 			uint8_t b = (D >> 3) & 0x03;
@@ -1213,7 +1213,7 @@ CPU::CPU()
 				else
 				{
 					// BIT b,(HL) (Z <- ~(HL)b)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					Z = (~M >> b) & 0b1;
 					HC = 1;
 					N = 0;
@@ -1230,9 +1230,9 @@ CPU::CPU()
 				else
 				{
 					// SET b,(HL) ((HL)b <- 1)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					M |= (1 << b);
-					bus->write(HL, M);
+					gb->write(HL, M);
 
 					cycle += 2;
 				}
@@ -1246,9 +1246,9 @@ CPU::CPU()
 				else
 				{
 					// RES b,(HL) ((HL)b <- 0)
-					uint8_t M = bus->read(HL);
+					uint8_t M = gb->read(HL);
 					M &= ~(1 << b);
-					bus->write(HL, M);
+					gb->write(HL, M);
 
 					cycle += 2;
 				}
@@ -1262,8 +1262,8 @@ CPU::CPU()
 	{
 		"JP nn (PC <- nn)",
 		[this]() {
-			uint8_t LO = bus->read(PC++);
-			uint8_t HI = bus->read(PC++);
+			uint8_t LO = gb->read(PC++);
+			uint8_t HI = gb->read(PC++);
 			PC = (HI << 8) | LO;
 		},
 		4
@@ -1275,8 +1275,8 @@ CPU::CPU()
 		[this]() {
 			if (Z == 0)
 			{
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 				cycle += 1;
 			}
@@ -1294,8 +1294,8 @@ CPU::CPU()
 		[this]() {
 			if (Z == 1)
 			{
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 				cycle += 1;
 			}
@@ -1313,8 +1313,8 @@ CPU::CPU()
 		[this]() {
 			if (CY == 0)
 			{
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 				cycle += 1;
 			}
@@ -1332,8 +1332,8 @@ CPU::CPU()
 		[this]() {
 			if (CY == 1)
 			{
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 				cycle += 1;
 			}
@@ -1349,7 +1349,7 @@ CPU::CPU()
 	{
 		"JR e (PC <- PC+e)",
 		[this]() {
-			int8_t e = bus->read(PC++);
+			int8_t e = gb->read(PC++);
 			PC += e;
 		},
 		3
@@ -1361,7 +1361,7 @@ CPU::CPU()
 		[this]() {
 			if (Z == 0)
 			{
-				int8_t e = bus->read(PC++);
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1377,7 +1377,7 @@ CPU::CPU()
 		[this]() {
 			if (Z == 1)
 			{
-				int8_t e = bus->read(PC++);
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1393,7 +1393,7 @@ CPU::CPU()
 		[this]() {
 			if (CY == 0)
 			{
-				int8_t e = bus->read(PC++);
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1409,7 +1409,7 @@ CPU::CPU()
 		[this]() {
 			if (CY == 1)
 			{
-				int8_t e = bus->read(PC++);
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1432,11 +1432,11 @@ CPU::CPU()
 	{
 		"CALL nn",
 		[this]() {
-			bus->write(--SP, PC >> 8);
-			bus->write(--SP, PC & 0x00FF);
+			gb->write(--SP, PC >> 8);
+			gb->write(--SP, PC & 0x00FF);
 
-			uint8_t LO = bus->read(PC++);
-			uint8_t HI = bus->read(PC++);
+			uint8_t LO = gb->read(PC++);
+			uint8_t HI = gb->read(PC++);
 			PC = (HI << 8) | LO;
 		},
 		6
@@ -1448,11 +1448,11 @@ CPU::CPU()
 		[this]() {
 			if (Z == 0)
 			{
-				bus->write(--SP, PC >> 8);
-				bus->write(--SP, PC & 0x00FF);
+				gb->write(--SP, PC >> 8);
+				gb->write(--SP, PC & 0x00FF);
 
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1467,11 +1467,11 @@ CPU::CPU()
 		[this]() {
 			if (Z == 1)
 			{
-				bus->write(--SP, PC >> 8);
-				bus->write(--SP, PC & 0x00FF);
+				gb->write(--SP, PC >> 8);
+				gb->write(--SP, PC & 0x00FF);
 
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1486,11 +1486,11 @@ CPU::CPU()
 		[this]() {
 			if (CY == 0)
 			{
-				bus->write(--SP, PC >> 8);
-				bus->write(--SP, PC & 0x00FF);
+				gb->write(--SP, PC >> 8);
+				gb->write(--SP, PC & 0x00FF);
 
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1505,11 +1505,11 @@ CPU::CPU()
 		[this]() {
 			if (CY == 1)
 			{
-				bus->write(--SP, PC >> 8);
-				bus->write(--SP, PC & 0x00FF);
+				gb->write(--SP, PC >> 8);
+				gb->write(--SP, PC & 0x00FF);
 
-				uint8_t LO = bus->read(PC++);
-				uint8_t HI = bus->read(PC++);
+				uint8_t LO = gb->read(PC++);
+				uint8_t HI = gb->read(PC++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1522,8 +1522,8 @@ CPU::CPU()
 	{
 		"RET",
 		[this]() {
-			uint8_t LO = bus->read(SP++);
-			uint8_t HI = bus->read(SP++);
+			uint8_t LO = gb->read(SP++);
+			uint8_t HI = gb->read(SP++);
 			PC = (HI << 8) | LO;
 		},
 		4
@@ -1533,10 +1533,10 @@ CPU::CPU()
 	{
 		"RETI",
 		[this]() {
-			uint8_t LO = bus->read(SP++);
-			uint8_t HI = bus->read(SP++);
+			uint8_t LO = gb->read(SP++);
+			uint8_t HI = gb->read(SP++);
 			PC = (HI << 8) | LO;
-			bus->IME = 1; // TODO: Double Check
+			gb->IME = 1; // TODO: Double Check
 		},
 		4
 	};
@@ -1547,8 +1547,8 @@ CPU::CPU()
 		[this]() {
 			if (Z == 0)
 			{
-				uint8_t LO = bus->read(SP++);
-				uint8_t HI = bus->read(SP++);
+				uint8_t LO = gb->read(SP++);
+				uint8_t HI = gb->read(SP++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1563,8 +1563,8 @@ CPU::CPU()
 		[this]() {
 			if (Z == 1)
 			{
-				uint8_t LO = bus->read(SP++);
-				uint8_t HI = bus->read(SP++);
+				uint8_t LO = gb->read(SP++);
+				uint8_t HI = gb->read(SP++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1579,8 +1579,8 @@ CPU::CPU()
 		[this]() {
 			if (CY == 0)
 			{
-				uint8_t LO = bus->read(SP++);
-				uint8_t HI = bus->read(SP++);
+				uint8_t LO = gb->read(SP++);
+				uint8_t HI = gb->read(SP++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1595,8 +1595,8 @@ CPU::CPU()
 		[this]() {
 			if (CY == 0)
 			{
-				uint8_t LO = bus->read(SP++);
-				uint8_t HI = bus->read(SP++);
+				uint8_t LO = gb->read(SP++);
+				uint8_t HI = gb->read(SP++);
 				PC = (HI << 8) | LO;
 
 				cycle += 3;
@@ -1611,8 +1611,8 @@ CPU::CPU()
 		{
 			"RST t",
 			[this, t]() {
-				bus->write(--SP, PC >> 8);
-				bus->write(--SP, PC & 0x00FF);
+				gb->write(--SP, PC >> 8);
+				gb->write(--SP, PC & 0x00FF);
 				PC = t << 3;
 			},
 			4
@@ -1623,7 +1623,7 @@ CPU::CPU()
 	{
 		"DAA",
 		[this]() {
-			switch (bus->read(PC - 2))
+			switch (gb->read(PC - 2))
 			{
 			// ADD A, r
 			case 0b10'000'000:
@@ -1796,7 +1796,7 @@ CPU::CPU()
 	{
 		"DI (IME <- 0)",
 		[this]() {
-			bus->IME = 0;
+			gb->IME = 0;
 		},
 		1
 	};
@@ -1805,7 +1805,7 @@ CPU::CPU()
 	{
 		"EI (IME <- 1)",
 		[this]() {
-			bus->IME = 1;
+			gb->IME = 1;
 		},
 		1
 	};

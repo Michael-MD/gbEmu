@@ -3,10 +3,10 @@
 #include "CPU.hpp"
 #include <string>
 
-class Bus
+class GB
 {
 public:
-	Bus(std::string gbFilename);
+	GB(std::string gbFilename);
 
 	CPU cpu;
 

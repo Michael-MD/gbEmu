@@ -1,14 +1,14 @@
-#include "Bus.hpp"
+#include "GB.hpp"
 #include <fstream>
 #include <stdexcept>
 
-Bus::Bus(std::string gbFilename)
+GB::GB(std::string gbFilename)
 {
 	nClockCycles = 0;
 	Row = 0;
 
 	// Connect CPU to remainder of system
-	cpu.bus = this;
+	cpu.gb = this;
 
 	// Load gb Cartridge into Data Structure
 	std::ifstream ifs;
@@ -32,38 +32,38 @@ Bus::Bus(std::string gbFilename)
 	*TAC = 0x00;
 	*P1 = 0x00;
 	*LY = 0;
-	//bus->write(0xFF10, 0x80);  // NR10
-	//bus->write(0xFF11, 0xBF);  // NR11
-	//bus->write(0xFF12, 0xF3);  // NR12
-	//bus->write(0xFF14, 0xBF);  // NR14
-	//bus->write(0xFF16, 0x3F);  // NR21
-	//bus->write(0xFF17, 0x00);  // NR22
-	//bus->write(0xFF19, 0xBF);  // NR24
-	//bus->write(0xFF1A, 0x7F);  // NR30
-	//bus->write(0xFF1B, 0xFF);  // NR31
-	//bus->write(0xFF1C, 0x9F);  // NR32
-	//bus->write(0xFF1E, 0xBF);  // NR33
-	//bus->write(0xFF20, 0xFF);  // NR41
-	//bus->write(0xFF21, 0x00);  // NR42
-	//bus->write(0xFF22, 0x00);  // NR43
-	//bus->write(0xFF23, 0xBF);  // NR30
-	//bus->write(0xFF24, 0x77);  // NR50
-	//bus->write(0xFF25, 0xF3);  // NR51
-	//bus->write(0xFF26, 0xF1);  // NR52
+	//gb->write(0xFF10, 0x80);  // NR10
+	//gb->write(0xFF11, 0xBF);  // NR11
+	//gb->write(0xFF12, 0xF3);  // NR12
+	//gb->write(0xFF14, 0xBF);  // NR14
+	//gb->write(0xFF16, 0x3F);  // NR21
+	//gb->write(0xFF17, 0x00);  // NR22
+	//gb->write(0xFF19, 0xBF);  // NR24
+	//gb->write(0xFF1A, 0x7F);  // NR30
+	//gb->write(0xFF1B, 0xFF);  // NR31
+	//gb->write(0xFF1C, 0x9F);  // NR32
+	//gb->write(0xFF1E, 0xBF);  // NR33
+	//gb->write(0xFF20, 0xFF);  // NR41
+	//gb->write(0xFF21, 0x00);  // NR42
+	//gb->write(0xFF22, 0x00);  // NR43
+	//gb->write(0xFF23, 0xBF);  // NR30
+	//gb->write(0xFF24, 0x77);  // NR50
+	//gb->write(0xFF25, 0xF3);  // NR51
+	//gb->write(0xFF26, 0xF1);  // NR52
 	//*LCDC = 0x91;
 	*SCY = 0x00;
 	*SCX = 0x00;
-	//bus->write(0xFF45, 0x00);  // LYC
-	//bus->write(0xFF47, 0xFC);  // BGP
-	//bus->write(0xFF48, 0xFF);  // OBP0
-	//bus->write(0xFF49, 0xFF);  // OBP1
-	//bus->write(0xFF4A, 0x00);  // WY
-	//bus->write(0xFF4B, 0x00);  // WX
+	//gb->write(0xFF45, 0x00);  // LYC
+	//gb->write(0xFF47, 0xFC);  // BGP
+	//gb->write(0xFF48, 0xFF);  // OBP0
+	//gb->write(0xFF49, 0xFF);  // OBP1
+	//gb->write(0xFF4A, 0x00);  // WY
+	//gb->write(0xFF4B, 0x00);  // WX
 	*IE = 0x00;
 }
 
 
-void Bus::clock()
+void GB::clock()
 {
 	// The system should be clocked in DMG mode
 	// at 4f where f=4.1943MHz i.e. machine cycles.
@@ -130,7 +130,7 @@ void Bus::clock()
 
 }
 
-uint8_t Bus::read(uint16_t addr)
+uint8_t GB::read(uint16_t addr)
 {
 	if (addr >= 0x0000 && addr < 0x4000)		// 16kB ROM bank #0 
 	{
@@ -180,7 +180,7 @@ uint8_t Bus::read(uint16_t addr)
 	return RAM[addr];
 }
 
-void Bus::write(uint16_t addr, uint8_t data)
+void GB::write(uint16_t addr, uint8_t data)
 {
 	if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
 	{

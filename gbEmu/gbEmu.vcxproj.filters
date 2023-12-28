@@ -21,7 +21,7 @@
     <ClCompile Include="CPU.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Bus.cpp">
+    <ClCompile Include="GB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -29,7 +29,7 @@
     <ClInclude Include="CPU.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Bus.hpp">
+    <ClInclude Include="GB.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
