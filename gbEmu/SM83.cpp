@@ -239,8 +239,10 @@ SM83::SM83()
 
 	InstructionSet[0b11'110'000] =
 	{
-		[]() {
-			return "LD A, (n) (A <- (n))";
+		[this]() {
+			std::stringstream s;
+			s << "LD A, [$" << std::hex << (int)(0xFF00 + gb->read(PC)) << std::dec << "] = $" << std::hex << (int)gb->read(0xFF00 + gb->read(PC)) << std::dec << " (A <-(n))";
+			return s.str();
 		},
 		[this]() {
 			A = gb->read(0xFF00 + gb->read(PC++));
@@ -1502,7 +1504,7 @@ SM83::SM83()
 			return "JR e (PC <- PC+e)";
 		},
 		[this]() {
-			int8_t e = gb->read(PC++);
+			int8_t e = gb->read(PC++) - 1;
 			PC += e;
 		},
 		3
@@ -1516,7 +1518,7 @@ SM83::SM83()
 		[this]() {
 			if (Z == 0)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}
@@ -1534,7 +1536,7 @@ SM83::SM83()
 		[this]() {
 			if (Z == 1)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}
@@ -1552,7 +1554,7 @@ SM83::SM83()
 		[this]() {
 			if (CY == 0)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}
@@ -1570,7 +1572,7 @@ SM83::SM83()
 		[this]() {
 			if (CY == 1)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}

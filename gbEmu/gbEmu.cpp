@@ -6,14 +6,16 @@
 
 #include <cstdint>
 
-int main()
+#include "SDL.h"
+
+int main(int argc, char* argv[])
 {
-
-
     
     GB gb("C:/Users/61481/Desktop/mb.gb");
-    for (int i = 0; i < 1000000; i++)
+    /*for (int i = 0; i < 1000000; i++)
     {
         gb.clock();
-    }
+    }*/
+
+    return 0;
 }
