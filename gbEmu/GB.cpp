@@ -64,7 +64,8 @@ GB::GB(std::string gbFilename)
 			delta = a - b;
 
 			handleEvents();
-			if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
+			//if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
+			if (delta > 1000 / (50))	// 4.19 * 4 MHz
 			{
 				b = a;
 
@@ -92,9 +93,11 @@ void GB::handleEvents()
 	SDL_PollEvent(&event);
 	switch (event.type)
 	{
-	case(SDL_QUIT):
+	case SDL_QUIT:
 		bIsRunning = false;
 		break;
+	case SDL_KEYDOWN:
+
 
 	default:
 		break;

@@ -79,7 +79,7 @@ private:
 
 	struct
 	{
-		std::string mnemonic;
+		std::function<std::string()> mnemonic;
 		std::function<void()> op;
 		uint8_t cycles;
 
