@@ -6,15 +6,15 @@
 
 class GB;
 
-class CPU
+class SM83
 {
 	friend GB;
 
 public:
-	CPU();
+	SM83();
 	void reset();
 
-	void clock();	// Clocks CPU
+	void clock();	// Clocks SM83
 
 	GB* gb;
 

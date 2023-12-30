@@ -2,12 +2,13 @@
 #include <fstream>
 #include <stdexcept>
 
+
 GB::GB(std::string gbFilename)
 {
 	nClockCycles = 0;
 	Row = 0;
 
-	// Connect CPU to remainder of system
+	// Connect SM83 to remainder of system
 	cpu.gb = this;
 
 	// Load gb Cartridge into Data Structure
@@ -32,34 +33,91 @@ GB::GB(std::string gbFilename)
 	*TAC = 0x00;
 	*P1 = 0x00;
 	*LY = 0;
-	//gb->write(0xFF10, 0x80);  // NR10
-	//gb->write(0xFF11, 0xBF);  // NR11
-	//gb->write(0xFF12, 0xF3);  // NR12
-	//gb->write(0xFF14, 0xBF);  // NR14
-	//gb->write(0xFF16, 0x3F);  // NR21
-	//gb->write(0xFF17, 0x00);  // NR22
-	//gb->write(0xFF19, 0xBF);  // NR24
-	//gb->write(0xFF1A, 0x7F);  // NR30
-	//gb->write(0xFF1B, 0xFF);  // NR31
-	//gb->write(0xFF1C, 0x9F);  // NR32
-	//gb->write(0xFF1E, 0xBF);  // NR33
-	//gb->write(0xFF20, 0xFF);  // NR41
-	//gb->write(0xFF21, 0x00);  // NR42
-	//gb->write(0xFF22, 0x00);  // NR43
-	//gb->write(0xFF23, 0xBF);  // NR30
-	//gb->write(0xFF24, 0x77);  // NR50
-	//gb->write(0xFF25, 0xF3);  // NR51
-	//gb->write(0xFF26, 0xF1);  // NR52
-	//*LCDC = 0x91;
 	*SCY = 0x00;
 	*SCX = 0x00;
-	//gb->write(0xFF45, 0x00);  // LYC
-	//gb->write(0xFF47, 0xFC);  // BGP
-	//gb->write(0xFF48, 0xFF);  // OBP0
-	//gb->write(0xFF49, 0xFF);  // OBP1
-	//gb->write(0xFF4A, 0x00);  // WY
-	//gb->write(0xFF4B, 0x00);  // WX
 	*IE = 0x00;
+
+	// ============== Start Game Loop ==============
+	int ScreenWidth = 300;
+	int ScreenHeight = GB_SCREEN_RATIO * ScreenWidth;
+	
+	if (SDL_Init(SDL_INIT_EVERYTHING) == 0)
+	{
+		window = SDL_CreateWindow("gbEmu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, ScreenWidth, ScreenHeight, 0);
+		if (window)
+		{
+			//throw;
+		}
+
+		renderer = SDL_CreateRenderer(window, -1, 0);
+		if (renderer)
+		{
+			//throw ;
+		}
+
+		unsigned int a, b = 0, delta, i = 0;
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, GridWidth, GridHeight);
+
+		while (bIsRunning)
+		{
+			a = SDL_GetTicks();
+			delta = a - b;
+
+			handleEvents();
+			if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
+			{
+				b = a;
+
+				// Clock System
+				clock();
+
+				i++;
+				if(i % 280'000 == 0)	// Update Screen at ~60Hz
+				{
+					update();
+					render();
+				}
+			}
+
+		}
+
+	}
+
+}
+
+
+void GB::handleEvents()
+{
+	SDL_Event event;
+	SDL_PollEvent(&event);
+	switch (event.type)
+	{
+	case(SDL_QUIT):
+		bIsRunning = false;
+		break;
+
+	default:
+		break;
+	}
+}
+
+void GB::update()
+{
+	SDL_UpdateTexture(texture, NULL, Display, GridWidth * sizeof(Uint32));
+}
+
+void GB::render()
+{
+	SDL_RenderClear(renderer);
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+	SDL_RenderPresent(renderer);
+}
+
+void GB::clean()
+{
+	SDL_DestroyWindow(window);
+	SDL_DestroyRenderer(renderer);
+	SDL_Quit();
 }
 
 
@@ -105,7 +163,11 @@ void GB::clock()
 					uint8_t PixelPalette = ((TileHI & (1 << p)) >> (p - 1)) | (TileLO & (1 << p)) >> p;
 
 					// Store Result Display Grid
-					Display[(*LY) * 8 + Row][ColBlock * 8 + p] = (*BGP >> (PixelPalette * 2)) & 0b11;
+					uint8_t value = ((*BGP >> (PixelPalette * 2)) & 0b11) * 255;
+					Display[(*LY) * 8 + Row][ColBlock * 8 + p][0] = 255;
+					Display[(*LY) * 8 + Row][ColBlock * 8 + p][1] = value;
+					Display[(*LY) * 8 + Row][ColBlock * 8 + p][2] = value;
+					Display[(*LY) * 8 + Row][ColBlock * 8 + p][3] = value;
 				}
 			}
 		}

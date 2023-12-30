@@ -1,4 +1,4 @@
-#include "cpu.hpp"
+#include "SM83.hpp"
 #include "GB.hpp"
 
 #define DEBUG_MODE 0
@@ -7,9 +7,9 @@
 	#include <iostream>
 #endif
 
-void CPU::clock()
+void SM83::clock()
 {
-	// CPU::clock is called at ~16MHz.
+	// SM83::clock is called at ~16MHz.
 
 	if(gb->nClockCycles % 4 ==0) // Machine cycles to clock cycles
 	{
@@ -104,7 +104,7 @@ void CPU::clock()
 }
 
 
-CPU::CPU()
+SM83::SM83()
 {
 	PC = 0x100;
 
@@ -1829,7 +1829,7 @@ CPU::CPU()
 	};
 }
 
-inline uint8_t& CPU::GPR(uint8_t i)
+inline uint8_t& SM83::GPR(uint8_t i)
 {
 	switch (i)
 	{
@@ -1850,7 +1850,7 @@ inline uint8_t& CPU::GPR(uint8_t i)
 	}
 }
 
-inline uint16_t& CPU::qq(uint8_t i)
+inline uint16_t& SM83::qq(uint8_t i)
 {
 	switch (i)
 	{
@@ -1866,7 +1866,7 @@ inline uint16_t& CPU::qq(uint8_t i)
 	}
 }
 
-inline uint16_t& CPU::ss(uint8_t i)
+inline uint16_t& SM83::ss(uint8_t i)
 {
 	switch (i)
 	{
@@ -1882,7 +1882,7 @@ inline uint16_t& CPU::ss(uint8_t i)
 	}
 }
 
-void CPU::reset()
+void SM83::reset()
 {
 	SP = 0xFFFE;
 	//F = 0xB0;

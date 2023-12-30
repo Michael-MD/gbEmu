@@ -1,14 +1,15 @@
 #pragma once
 #include <cstdint>
-#include "CPU.hpp"
+#include "SM83.hpp"
 #include <string>
+#include "SDL.h"
 
 class GB
 {
 public:
 	GB(std::string gbFilename);
 
-	CPU cpu;
+	SM83 cpu;
 
 	int nClockCycles;
 
@@ -118,7 +119,9 @@ public:
 	bool IME; // Interrupt Mater Flag
 
 	// ================== LCD Display Registers ==================
-	uint8_t Display[18 * 8][20 * 8];
+	const int GridWidth = 20 * 8;
+	const int GridHeight = 18 * 8;
+	uint8_t Display[18 * 8][20 * 8][4];		// ABGR
 
 	// Line of Data being copied to LCD Driver
 	uint8_t* LY = RAM + 0xFF44;
@@ -178,4 +181,15 @@ public:
 
 private:
 	uint8_t Row; // Row currently being rendered
+	
+	void handleEvents();
+	void update();
+	void render();
+	void clean();
+
+	bool bIsRunning = true;
+	SDL_Window* window;
+	SDL_Renderer* renderer;
+	SDL_Texture* texture;
+	const float GB_SCREEN_RATIO = 20 / 18;	// height / width
 };
