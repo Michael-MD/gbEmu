@@ -54,7 +54,9 @@ private:
 		};
 	};
 
-	inline uint8_t& GPR(uint8_t i);
+	inline uint8_t& GPR(uint8_t i); 
+	inline char GPRString(uint8_t i); // For Disassembly
+	
 	inline uint16_t& qq(uint8_t i);
 	inline uint16_t& ss(uint8_t i);
 
@@ -82,7 +84,6 @@ private:
 		std::function<std::string()> mnemonic;
 		std::function<void()> op;
 		uint8_t cycles;
-
 	} InstructionSet[256];
 
 	union

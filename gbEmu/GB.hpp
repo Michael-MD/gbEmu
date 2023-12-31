@@ -179,9 +179,7 @@ public:
 	uint8_t* BGP = RAM + 0xFF47;
 
 
-private:
-	uint8_t Row; // Row currently being rendered
-	
+private:	
 	void handleEvents();
 	void update();
 	void render();

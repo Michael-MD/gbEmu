@@ -6,7 +6,6 @@
 GB::GB(std::string gbFilename)
 {
 	nClockCycles = 0;
-	Row = 0;
 
 	// Connect SM83 to remainder of system
 	cpu.gb = this;
@@ -64,8 +63,8 @@ GB::GB(std::string gbFilename)
 			delta = a - b;
 
 			handleEvents();
-			//if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
-			if (delta > 1000 / (50))	// 4.19 * 4 MHz
+			if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
+			//if (delta > 1000 / (10'000))	// 4.19 * 4 MHz
 			{
 				b = a;
 
@@ -138,7 +137,8 @@ void GB::clock()
 		(*Div)++;
 
 	// ============= LCD Display ============= 
-	if (nClockCycles % 1890 == 0) // Do Entire Row at Once
+	//if (nClockCycles % 1890 == 0) // Do Entire Row at Once
+	if (nClockCycles % 8 == 0) // Do Entire Row at Once
 	{
 		// TODO: SCX
 		// TODO: Fix indexing into appropriate row
@@ -151,14 +151,14 @@ void GB::clock()
 			for (int ColBlock = 0; ColBlock < 20; ColBlock++)
 			{
 				// Get CHR Code
-				uint8_t CHRCode = RAM[BGStartAddr + *LY * 20 + ColBlock];
+				uint8_t CHRCode = RAM[BGStartAddr + (int)(*LY / 8) * 32 + ColBlock];
 
 				// Find Corresponding Tile
 				uint8_t DotDataAddr = (CHRCode < 0x80 ? 0x9000 : 0x8800) + 0x0F * CHRCode;
 
 				// Parse Dot Data
-				uint8_t TileLO = RAM[DotDataAddr + 16 * *LY + 0];
-				uint8_t TileHI = RAM[DotDataAddr + 16 * *LY + 1];
+				uint8_t TileLO = RAM[DotDataAddr + 16 * (CHRCode & 0x80) + 0];
+				uint8_t TileHI = RAM[DotDataAddr + 16 * (CHRCode & 0x80) + 1];
 
 				// Get pixel Shade for entire row of pixels
 				for (int p = 0; p < 8; p++)
@@ -167,19 +167,18 @@ void GB::clock()
 
 					// Store Result Display Grid
 					uint8_t value = ((*BGP >> (PixelPalette * 2)) & 0b11) * 255;
-					Display[(*LY) * 8 + Row][ColBlock * 8 + p][0] = 255;
-					Display[(*LY) * 8 + Row][ColBlock * 8 + p][1] = value;
-					Display[(*LY) * 8 + Row][ColBlock * 8 + p][2] = value;
-					Display[(*LY) * 8 + Row][ColBlock * 8 + p][3] = value;
+					Display[*LY][ColBlock * 8 + p][0] = 255;
+					Display[*LY][ColBlock * 8 + p][1] = value;
+					Display[*LY][ColBlock * 8 + p][2] = value;
+					Display[*LY][ColBlock * 8 + p][3] = value;
 				}
 			}
 		}
 
 		(*LY) = ((*LY) + 1) % 154;
-		Row = (Row + 1) % 8;
 
 		// Check if in Vertical Blanking Region
-		if (*LY == 18)
+		if (*LY == 18 * 8 - 1)
 		{
 			IF->VerticalBlanking = 1;
 		}
