@@ -24,12 +24,18 @@
     <ClCompile Include="GB.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Cartridge.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SM83.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GB.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Cartridge.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

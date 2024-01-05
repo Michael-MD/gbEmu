@@ -137,11 +137,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="GB.cpp" />
     <ClCompile Include="SM83.cpp" />
     <ClCompile Include="gbEmu.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cartridge.hpp" />
     <ClInclude Include="GB.hpp" />
     <ClInclude Include="SM83.hpp" />
   </ItemGroup>

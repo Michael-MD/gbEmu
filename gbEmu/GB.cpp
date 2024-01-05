@@ -1,7 +1,7 @@
 #include "GB.hpp"
-#include <fstream>
 #include <stdexcept>
-
+#include <sstream>
+#include <iostream>
 
 GB::GB(std::string gbFilename)
 {
@@ -10,22 +10,8 @@ GB::GB(std::string gbFilename)
 	// Connect SM83 to remainder of system
 	cpu.gb = this;
 
-	// Load gb Cartridge into Data Structure
-	std::ifstream ifs;
-	ifs.open(gbFilename, std::ifstream::binary);
-
-	if (ifs.is_open())
-	{
-		ifs.read((char*)RAM, sizeof(RAM));
-		ifs.close();
-	}
-	else
-	{
-		throw std::invalid_argument(".gb File Not Found.");
-	}
-
-	// At Power Up, a 256-byte program is executed starting at 0
-	cpu.PC = 0x0000;
+	// Insert Cartridge
+	Cartridge cart(gbFilename);
 
 	// ============== Initilizes Registers ==============
 	*TMA = 0x00;

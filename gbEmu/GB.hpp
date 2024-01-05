@@ -1,8 +1,10 @@
 #pragma once
 #include <cstdint>
 #include "SM83.hpp"
+#include "Cartridge.hpp"
 #include <string>
 #include "SDL.h"
+
 
 class GB
 {
@@ -10,13 +12,14 @@ public:
 	GB(std::string gbFilename);
 
 	SM83 cpu;
+	Cartridge *cart;
+
 
 	int nClockCycles;
 
 	uint8_t read(uint16_t addr);
 	void write(uint16_t addr, uint8_t data);
 	void clock();
-	
 
 	// RAM for Memory Mapping
 	uint8_t RAM[0xFFFF + 1];
