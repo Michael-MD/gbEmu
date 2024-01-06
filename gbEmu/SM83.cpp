@@ -1,7 +1,7 @@
 #include "SM83.hpp"
 #include "GB.hpp"
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 #if DEBUG_MODE
 	#include <iostream>
@@ -91,14 +91,17 @@ void SM83::clock()
 
 			// Fetch Next Instruction
 			uint8_t data = gb->read(PC++);
-			cycle += InstructionSet[data].cycles;
+			CurrentInstruction = InstructionSet[data];
+			cycle += CurrentInstruction.cycles;
+			a = CurrentInstruction.a;
+			b = CurrentInstruction.b;
 
 			#if DEBUG_MODE
-				std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << InstructionSet[data].mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
+				std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << CurrentInstruction.mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
 				std::cout << std::hex << ' ' << (int)B << std::endl;
 			#endif
 
-			InstructionSet[data].op();
+			CurrentInstruction.op();
 		}
 		else
 		{
@@ -127,40 +130,43 @@ SM83::SM83()
 		1
 	};
 	
-	for (int i = 0; i <= 7; i+1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i+1 == 0b110 ? i += 2 : i++)
 	{
-		for (int j = 0; j <= 7; j + 1 == 0b110 ? j += 2 : j++)
+		for (uint8_t j = 0; j <= 7; j + 1 == 0b110 ? j += 2 : j++)
 		{
 			InstructionSet[0x40|(i<<3)|j] =
 			{
 				[]() {
 					return "LD r,r' (r <- r')"
 	;			},
-				[this, i, j]() {
-					uint8_t& r = GPR(i), &rp = GPR(j);
+				[this]() {
+					uint8_t& r = GPR(a), &rp = GPR(b);
 					r = rp;
 				},
-				1
+				1,
+				i,
+				j
 			};
 		}
 	}
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0x00 | (i << 3) | 0b110] =
 		{
-			[this, i]() {
-				uint8_t r = GPR(i);
-				uint8_t rStr = GPRString(i);
+			[this]() {
+				uint8_t r = GPR(a);
+				uint8_t rStr = GPRString(a);
 				std::stringstream s;
 				s << "LD " << rStr << ", [$" << std::hex << (int)PC << std::dec << "] = $" << std::hex << (int)gb->read(PC) << std::dec << " (r <- n)";
 				return s.str();
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 				r = gb->read(PC++);
 			},
-			2
+			2,
+			i
 		};
 
 		InstructionSet[(0b01 << 6) | (i << 3) | 0b110] =
@@ -168,15 +174,16 @@ SM83::SM83()
 			[]() {
 				return "LD r, (HL) (r <- (HL))"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 				r = gb->read(HL);
 			},
-			2
+			2,
+			i
 		};
 	}
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		
 		InstructionSet[0b01'110'000 | i] =
@@ -184,11 +191,12 @@ SM83::SM83()
 			[]() {
 				return "LD (HL),r ((HL) <- r)"
 ;			},
-			[this, i]() {
-				uint8_t &r = GPR(i);
+			[this]() {
+				uint8_t &r = GPR(a);
 				gb->write(HL, r);
 			},
-			2
+			2,
+			i
 		};
 	}
 
@@ -434,7 +442,7 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 3; i++)
+	for (uint8_t i = 0; i <= 3; i++)
 	{
 		
 
@@ -443,8 +451,8 @@ SM83::SM83()
 			[]() {
 				return "PUSH qq ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)"
 ;			},
-			[this, i]() {
-				uint16_t& r = qq(i);
+			[this]() {
+				uint16_t r = qq(a);
 				gb->write(--SP, r >> 8);
 				gb->write(--SP, r & 0x0F);
 			},
@@ -456,8 +464,8 @@ SM83::SM83()
 			[]() {
 				return "POP qq (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)"
 ;			},
-			[this, i]() {
-				uint16_t& r = qq(i);
+			[this]() {
+				uint16_t r = qq(a);
 
 				r = (r & 0xFF00) | gb->read(SP++);
 				r = (gb->read(SP++) << 8) | (r & 0x00FF);
@@ -529,7 +537,7 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		
 		InstructionSet[0b10'001'000 | i] =
@@ -537,8 +545,8 @@ SM83::SM83()
 			[]() {
 				return "ADC A, r (A <- A+s+CY)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				uint16_t tmp = A + r + CY;
 				uint8_t tmp2 = ((A & 0xF) + (r & 0xF) + CY) >> 4;
@@ -549,7 +557,8 @@ SM83::SM83()
 				Z = A == 0;
 				N = 0;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -591,15 +600,15 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0b10'010'000 | i] =
 		{
 			[]() {
 				return "SUB r (A <- A-r)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				HC = (A & 0xF) < (r & 0xF);
 				CY = A < r;
@@ -608,7 +617,8 @@ SM83::SM83()
 				Z = A == 0;
 				N = 1;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -648,7 +658,7 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		
 		InstructionSet[0b10'011'000 | i] =
@@ -656,8 +666,8 @@ SM83::SM83()
 			[]() {
 				return "SBC A, r (A <- A-r-CY)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				HC = (A & 0xF) < ((r + 1) & 0xF);
 				CY = A < (r + 1);
@@ -666,7 +676,8 @@ SM83::SM83()
 				Z = A == 0;
 				N = 1;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -706,15 +717,15 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0b10'100'000 | i] =
 		{
 			[]() {
 				return "AND r (A & r)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				A &= r;
 				CY = 0;
@@ -722,7 +733,8 @@ SM83::SM83()
 				N = 0;
 				Z = A == 0;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -756,15 +768,15 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0b10'110'000 | i] =
 		{
 			[]() {
 				return "OR r (A | r)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				A |= r;
 				CY = 0;
@@ -772,7 +784,8 @@ SM83::SM83()
 				N = 0;
 				Z = A == 0;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -806,15 +819,15 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0b10'101'000 | i] =
 		{
 			[]() {
 				return "XOR r (A ^ r)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				A ^= r;
 				CY = 0;
@@ -822,7 +835,8 @@ SM83::SM83()
 				N = 0;
 				Z = A == 0;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -856,22 +870,23 @@ SM83::SM83()
 		2
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0b10'111'000 | i] =
 		{
 			[]() {
 				return "CP r (A == r)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				Z = A == r;
 				HC = (A & 0xF) < (r & 0xF);
 				N = 1;
 				CY = A < r;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -907,22 +922,23 @@ SM83::SM83()
 		1
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0b00'000'100 | (i << 3)] =
 		{
 			[]() {
 				return "INC r (r <- r+1)"
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 
 				HC = ((r & 0xF) + (1 & 0xF)) >> 4;
 				N = 0;
 				r += 1;
 				Z = r == 0;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -942,25 +958,26 @@ SM83::SM83()
 		3
 	};
 
-	for (int i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		InstructionSet[0b00'000'101 | (i << 3)] =
 		{
-			[this, i]() {
+			[this]() {
 				std::stringstream s;
-				uint8_t r = GPR(i);
-				char rStr = GPRString(i);
+				uint8_t r = GPR(a);
+				char rStr = GPRString(a);
 				s << "DEC " << rStr << " = $" << std::hex << (int)r << std::dec << " (r <- r-1)";
 				return s.str();
 ;			},
-			[this, i]() {
-				uint8_t& r = GPR(i);
+			[this]() {
+				uint8_t& r = GPR(a);
 				HC = (r & 0xF) < (1 & 0xF);
 				N = 1;
 				r--;
 				Z = r == 0;
 			},
-			1
+			1,
+			i
 		};
 	}
 
@@ -1052,19 +1069,20 @@ SM83::SM83()
 		4
 	};
 	
-	for (int i = 0; i <= 3; i++)
+	for (uint8_t i = 0; i <= 3; i++)
 	{
 		InstructionSet[0b00'000'011 | (i << 4)] =
 		{
 			[]() {
 				return "INC ss (ss <- ss + 1)"
 ;			},
-			[this, i]() {
-				uint16_t& r = ss(i);
+			[this]() {
+				uint16_t r = ss(a);
 
 				r += 1;
 			},
-			2
+			2,
+			i
 		};
 
 		InstructionSet[0b00'001'011 | (i << 4)] =
@@ -1072,8 +1090,8 @@ SM83::SM83()
 			[]() {
 				return "DEC ss (ss <- ss - 1)"
 ;			},
-			[this, i]() {
-				uint16_t& r = ss(i);
+			[this]() {
+				uint16_t r = ss(a);
 
 				r -= 1;
 			},
@@ -1823,7 +1841,7 @@ SM83::SM83()
 		2
 	};
 
-	for(int t = 0; t <= 7; t++)
+	for(uint8_t t = 0; t <= 7; t++)
 	{
 		InstructionSet[0b11'000'111 | (t << 3)] =
 		{
@@ -1835,7 +1853,8 @@ SM83::SM83()
 				gb->write(--SP, PC & 0x00FF);
 				PC = t << 3;
 			},
-			4
+			4,
+			t
 		};
 	}
 

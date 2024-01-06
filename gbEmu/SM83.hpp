@@ -80,13 +80,16 @@ private:
 	};
 
 	// ============== Instructions ==============
+	uint8_t a, b;
 
 	struct
 	{
 		std::function<std::string()> mnemonic;
 		std::function<void()> op;
+		uint8_t a;
+		uint8_t b;
 		uint8_t cycles;
-	} InstructionSet[256];
+	} InstructionSet[256], CurrentInstruction;
 
 	union
 	{

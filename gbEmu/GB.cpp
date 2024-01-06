@@ -81,10 +81,12 @@ GB::GB(std::string gbFilename)
 		{
 			a = SDL_GetTicks();
 			delta = a - b;
-
+			
+			// FOR DEBUGGING
+			clock();
+			
 			handleEvents();
 			if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
-			//if (delta > 1000 / (10'000))	// 4.19 * 4 MHz
 			{
 				b = a;
 

@@ -12,6 +12,7 @@ void Display::connectGB(GB* gb)
 	SCY = gb->RAM + 0xFF42;
 	SCX = gb->RAM + 0xFF43;
 	BGP = gb->RAM + 0xFF47;
+
 }
 
 void Display::clock()
