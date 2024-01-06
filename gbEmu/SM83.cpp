@@ -8,6 +8,11 @@
 #endif
 #include <sstream>
 
+void SM83::connectGB(GB* gb)
+{
+	this->gb = gb;
+}
+
 void SM83::clock()
 {
 	// SM83::clock is called at ~16MHz.
@@ -108,7 +113,6 @@ void SM83::clock()
 
 SM83::SM83()
 {
-	PC = 0x100;
 
 	// TODO: Internal Checks
  

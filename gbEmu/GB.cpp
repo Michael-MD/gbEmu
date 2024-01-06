@@ -8,19 +8,53 @@ GB::GB(std::string gbFilename)
 	nClockCycles = 0;
 
 	// Connect SM83 to remainder of system
-	cpu.gb = this;
+	cpu.connectGB(this);
 
 	// Insert Cartridge
-	cart = Cartridge(gbFilename);
+	cart = new Cartridge(gbFilename);
+
+	// Initialize display
+	disp.connectGB(this);
 
 	// ============== Initilizes Registers ==============
+	// CPU Internal Registers
+	cpu.BC = 0x0013;
+	cpu.DE = 0x00D8;
+	cpu.HL = 0x014D;
+	cpu.SP = 0xFFFE;
+	cpu.PC = 0x0100;
+
+	*TIMA = 0x00;
 	*TMA = 0x00;
 	*TAC = 0x00;
+	*NR10 = 0x80;
+	*NR11 = 0xBF;
+	*NR12 = 0xF3;
+	*NR14 = 0xBF;
+	*NR21 = 0x3F;
+	*NR22 = 0x00;
+	*NR24 = 0xBF;
+	*NR30 = 0x7F;
+	*NR31 = 0xFF;
+	*NR32 = 0x9F;
+	*NR33 = 0xBF;
+	*NR41 = 0xFF;
+	*NR42 = 0x00;
+	*NR43 = 0x00;
+	*NR44 = 0xBF;
+	*NR50 = 0x77;
+	*NR51 = 0xF3;
+	*NR52 = cart->Header->SuperGB ? 0xF0 : 0xF1;
+
+	*disp.LCDC = 0x91;
 	*P1 = 0x00;
-	*LY = 0;
-	*SCY = 0x00;
-	*SCX = 0x00;
+	*disp.LY = 0;
+	*disp.SCY = 0x00;
+	*disp.SCX = 0x00;
+	*disp.BGP = 0xFC;
 	*IE = 0x00;
+
+	// TODO: Finish remaining initialization
 
 	// ============== Start Game Loop ==============
 	int ScreenWidth = 300;
@@ -41,7 +75,7 @@ GB::GB(std::string gbFilename)
 		}
 
 		unsigned int a, b = 0, delta, i = 0;
-		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, GridWidth, GridHeight);
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, disp.GridWidth, disp.GridHeight);
 
 		while (bIsRunning)
 		{
@@ -91,7 +125,7 @@ void GB::handleEvents()
 
 void GB::update()
 {
-	SDL_UpdateTexture(texture, NULL, Display, GridWidth * sizeof(Uint32));
+	SDL_UpdateTexture(texture, NULL, disp.DotMatrix, disp.GridWidth * sizeof(uint32_t));
 }
 
 void GB::render()
@@ -117,66 +151,11 @@ void GB::clock()
 	nClockCycles++;
 
 	cpu.clock();
+	disp.clock();
 
 	// Increment Divider register at 8.192kHz.
 	if (nClockCycles % 0xFF == 0 && nClockCycles % 4 == 0)
 		(*Div)++;
-
-	// ============= LCD Display ============= 
-	//if (nClockCycles % 1890 == 0) // Do Entire Row at Once
-	if (nClockCycles % 8 == 0) // Do Entire Row at Once
-	{
-		// TODO: SCX
-		// TODO: Fix indexing into appropriate row
-
-		uint8_t BGStartAddr = LCDC->BGCodeArea ? 0x9C00 : 0x9800;
-
-		// If not in vertical blanking period get pixel data
-		if (IF->VerticalBlanking == 0)
-		{
-			for (int ColBlock = 0; ColBlock < 20; ColBlock++)
-			{
-				// Get CHR Code
-				uint8_t CHRCode = RAM[BGStartAddr + (int)(*LY / 8) * 32 + ColBlock];
-
-				// Find Corresponding Tile
-				uint8_t DotDataAddr = (CHRCode < 0x80 ? 0x9000 : 0x8800) + 0x0F * CHRCode;
-
-				// Parse Dot Data
-				uint8_t TileLO = RAM[DotDataAddr + 16 * (CHRCode & 0x80) + 0];
-				uint8_t TileHI = RAM[DotDataAddr + 16 * (CHRCode & 0x80) + 1];
-
-				// Get pixel Shade for entire row of pixels
-				for (int p = 0; p < 8; p++)
-				{
-					uint8_t PixelPalette = ((TileHI & (1 << p)) >> (p - 1)) | (TileLO & (1 << p)) >> p;
-
-					// Store Result Display Grid
-					uint8_t value = ((*BGP >> (PixelPalette * 2)) & 0b11) * 255;
-					Display[*LY][ColBlock * 8 + p][0] = 255;
-					Display[*LY][ColBlock * 8 + p][1] = value;
-					Display[*LY][ColBlock * 8 + p][2] = value;
-					Display[*LY][ColBlock * 8 + p][3] = value;
-				}
-			}
-		}
-
-		(*LY) = ((*LY) + 1) % 154;
-
-		// Check if in Vertical Blanking Region
-		if (*LY == 18 * 8 - 1)
-		{
-			IF->VerticalBlanking = 1;
-		}
-		else if (*LY == 0)
-		{
-			IF->VerticalBlanking = 0;
-		}
-		
-	}
-
-
-	// TODO: window display
 
 }
 
@@ -184,7 +163,7 @@ uint8_t GB::read(uint16_t addr)
 {
 	if (addr < 0x8000)		// Cartridge
 	{
-		return cart.read(addr);
+		return cart->read(addr);
 	}
 	else if (addr >= 0x8000 && addr < 0xA000)	// 8kB Video RAM
 	{
@@ -230,7 +209,7 @@ void GB::write(uint16_t addr, uint8_t data)
 {
 	if (addr < 0x8000)		// Cartridge
 	{
-		cart.write(addr, data);
+		cart->write(addr, data);
 	}
 	else if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
 	{

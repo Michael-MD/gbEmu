@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "SM83.hpp"
 #include "Cartridge.hpp"
+#include "Display.hpp"
 #include <string>
 #include "SDL.h"
 
@@ -12,8 +13,8 @@ public:
 	GB(std::string gbFilename);
 
 	SM83 cpu;
-	Cartridge cart;
-
+	Cartridge* cart;
+	Display disp;
 
 	int nClockCycles;
 
@@ -75,6 +76,61 @@ public:
 
 	} *TAC = reinterpret_cast<decltype(TAC)>(RAM + 0xFF07);
 
+	// NR10 Register
+	uint8_t* NR10 = RAM + 0xFF10;
+
+	// NR11 Register
+	uint8_t* NR11 = RAM + 0xFF11;
+
+	// NR12 Register
+	uint8_t* NR12 = RAM + 0xFF12;
+
+	// NR14 Register
+	uint8_t* NR14 = RAM + 0xFF14;
+
+	// NR21 Register
+	uint8_t* NR21 = RAM + 0xFF16;
+
+	// NR22 Register
+	uint8_t* NR22 = RAM + 0xFF17;
+
+	// NR24 Register
+	uint8_t* NR24 = RAM + 0xFF19;
+
+	// NR30 Register
+	uint8_t* NR30 = RAM + 0xFF1A;
+
+	// NR31 Register
+	uint8_t* NR31 = RAM + 0xFF1B;
+
+	// NR32 Register
+	uint8_t* NR32 = RAM + 0xFF1C;
+
+	// NR33 Register
+	uint8_t* NR33 = RAM + 0xFF1E;
+
+	// NR41 Register
+	uint8_t* NR41 = RAM + 0xFF20;
+
+	// NR42 Register
+	uint8_t* NR42 = RAM + 0xFF21;
+
+	// NR43 Register
+	uint8_t* NR43 = RAM + 0xFF22;
+
+	// NR44 Register
+	uint8_t* NR44 = RAM + 0xFF23;
+
+	// NR50 Register
+	uint8_t* NR50 = RAM + 0xFF24;
+
+	// NR51 Register
+	uint8_t* NR51 = RAM + 0xFF25;
+
+	// NR52 Register
+	uint8_t* NR52 = RAM + 0xFF26;
+
+
 	// ================== Interrupt Registers ==================
 
 	// Interrupt Request
@@ -119,68 +175,7 @@ public:
 
 	} *IE = reinterpret_cast<decltype(IE)>(RAM + 0xFFFF);
 
-	bool IME; // Interrupt Mater Flag
-
-	// ================== LCD Display Registers ==================
-	const int GridWidth = 20 * 8;
-	const int GridHeight = 18 * 8;
-	uint8_t Display[18 * 8][20 * 8][4];		// ABGR
-
-	// Line of Data being copied to LCD Driver
-	uint8_t* LY = RAM + 0xFF44;
-
-	// LCD Control Register
-	union
-	{
-		struct
-		{
-			
-			uint8_t bBG : 1;
-			uint8_t bOBJ : 1;
-			uint8_t OBJBlockComposition : 1;
-			uint8_t BGCodeArea : 1;
-			uint8_t BGCharData : 1;
-			uint8_t bWindowing : 1;
-			uint8_t WindowCodeArea : 1;
-			uint8_t bLCDC : 1;
-		};
-
-		uint8_t reg_;
-
-		void operator=(uint8_t reg)
-		{
-			reg_ = reg;
-		};
-
-	} *LCDC = reinterpret_cast<decltype(LCDC)>(RAM + 0xFF40);
-
-	// STAT
-	union
-	{
-		struct
-		{
-
-			uint8_t ModeFlag : 2;
-			uint8_t MatchFlag : 1;
-			uint8_t InterruptSelection : 3;
-
-		};
-
-		uint8_t reg_;
-
-		void operator=(uint8_t reg)
-		{
-			reg_ = reg;
-		};
-
-	} *STAT = reinterpret_cast<decltype(STAT)>(RAM + 0xFF41);
-
-	uint8_t* SCY = RAM + 0xFF42;	// Scroll Y
-	uint8_t* SCX = RAM + 0xFF43;	// Scroll X
-
-	// Background Pixel Colour/Background Pallette Register
-	uint8_t* BGP = RAM + 0xFF47;
-
+	bool IME; // Interrupt Master Flag
 
 private:	
 	void handleEvents();

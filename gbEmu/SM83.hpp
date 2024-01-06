@@ -14,6 +14,8 @@ public:
 	SM83();
 	void reset();
 
+	void connectGB(GB *gb);
+
 	void clock();	// Clocks SM83
 
 	GB* gb;
