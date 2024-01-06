@@ -3,11 +3,10 @@
 #include <string>
 #include <cstring>
 
-class GB;
-
 class Cartridge
 {
 public:
+	Cartridge() {};
 	Cartridge(std::string gbFilename);
 
 	void write(uint16_t addr, uint8_t data);
@@ -69,5 +68,6 @@ public:
 	} *Header = reinterpret_cast<decltype(Header)>(ROM + 0x143);
 
 private:
-	uint8_t ROM[0x7FF + 1];
+	uint8_t ROM[0x7FFF + 1];
+	
 };

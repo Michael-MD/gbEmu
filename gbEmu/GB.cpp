@@ -11,7 +11,7 @@ GB::GB(std::string gbFilename)
 	cpu.gb = this;
 
 	// Insert Cartridge
-	Cartridge cart(gbFilename);
+	cart = Cartridge(gbFilename);
 
 	// ============== Initilizes Registers ==============
 	*TMA = 0x00;
@@ -182,13 +182,9 @@ void GB::clock()
 
 uint8_t GB::read(uint16_t addr)
 {
-	if (addr >= 0x0000 && addr < 0x4000)		// 16kB ROM bank #0 
+	if (addr < 0x8000)		// Cartridge
 	{
-
-	}
-	else if (addr >= 0x4000 && addr < 0x8000)	// 16kB switchable ROM bank
-	{
-
+		return cart.read(addr);
 	}
 	else if (addr >= 0x8000 && addr < 0xA000)	// 8kB Video RAM
 	{
@@ -232,7 +228,11 @@ uint8_t GB::read(uint16_t addr)
 
 void GB::write(uint16_t addr, uint8_t data)
 {
-	if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
+	if (addr < 0x8000)		// Cartridge
+	{
+		cart.write(addr, data);
+	}
+	else if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
 	{
 		// Echo 8kB Internal RAM
 

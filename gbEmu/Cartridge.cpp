@@ -12,7 +12,7 @@ Cartridge::Cartridge(std::string gbFilename)
 
 	if (ifs.is_open())
 	{
-		ifs.read((char*)ROM, sizeof(ROM));
+		ifs.read(reinterpret_cast<char*>(ROM), sizeof(ROM));
 		ifs.close();
 	}
 	else
@@ -55,8 +55,10 @@ void Cartridge::write(uint16_t addr, uint8_t data)
 
 uint8_t Cartridge::read(uint16_t addr)
 {
-	if (addr <= 0x7FF)
+	if (addr < 0x8000)
 	{
 		return ROM[addr];
 	}
+
+	return 0x00;
 }

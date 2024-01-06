@@ -12,7 +12,7 @@ public:
 	GB(std::string gbFilename);
 
 	SM83 cpu;
-	Cartridge *cart;
+	Cartridge cart;
 
 
 	int nClockCycles;
