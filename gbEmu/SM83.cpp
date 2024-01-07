@@ -1,7 +1,7 @@
 #include "SM83.hpp"
 #include "GB.hpp"
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 #if DEBUG_MODE
 	#include <iostream>
@@ -452,11 +452,12 @@ SM83::SM83()
 				return "PUSH qq ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)"
 ;			},
 			[this]() {
-				uint16_t r = qq(a);
+				uint16_t& r = qq(a);
 				gb->write(--SP, r >> 8);
 				gb->write(--SP, r & 0x0F);
 			},
-			4
+			4,
+			i
 		};
 
 		InstructionSet[0b11'000'001 | (i << 4)] =
@@ -465,12 +466,13 @@ SM83::SM83()
 				return "POP qq (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)"
 ;			},
 			[this]() {
-				uint16_t r = qq(a);
+				uint16_t& r = qq(a);
 
 				r = (r & 0xFF00) | gb->read(SP++);
 				r = (gb->read(SP++) << 8) | (r & 0x00FF);
 			},
-			3
+			3,
+			i
 		};
 	}
 
@@ -1077,7 +1079,7 @@ SM83::SM83()
 				return "INC ss (ss <- ss + 1)"
 ;			},
 			[this]() {
-				uint16_t r = ss(a);
+				uint16_t& r = ss(a);
 
 				r += 1;
 			},
@@ -1091,11 +1093,12 @@ SM83::SM83()
 				return "DEC ss (ss <- ss - 1)"
 ;			},
 			[this]() {
-				uint16_t r = ss(a);
+				uint16_t& r = ss(a);
 
 				r -= 1;
 			},
-			2
+			2,
+			i
 		};
 	}
 
@@ -2154,7 +2157,6 @@ inline uint16_t& SM83::ss(uint8_t i)
 		return HL;
 	case 0b11:
 		return SP;
-
 	}
 }
 

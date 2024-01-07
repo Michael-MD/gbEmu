@@ -53,7 +53,6 @@ public:
 			uint8_t ModeFlag : 2;
 			uint8_t MatchFlag : 1;
 			uint8_t InterruptSelection : 3;
-
 		};
 
 		uint8_t reg_;

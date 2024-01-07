@@ -83,10 +83,9 @@ GB::GB(std::string gbFilename)
 			delta = a - b;
 			
 			// FOR DEBUGGING
-			clock();
 			
 			handleEvents();
-			if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
+			//if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
 			{
 				b = a;
 
@@ -94,7 +93,8 @@ GB::GB(std::string gbFilename)
 				clock();
 
 				i++;
-				if(i % 280'000 == 0)	// Update Screen at ~60Hz
+				//if (i % 280'000 == 0)	// Update Screen at ~60Hz
+				if(i % 28000 == 0)	// Update Screen at ~60Hz
 				{
 					update();
 					render();
