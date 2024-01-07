@@ -1,7 +1,7 @@
 #include "SM83.hpp"
 #include "GB.hpp"
 
-#define DEBUG_MODE 0
+#define DEBUG_MODE 1
 
 #if DEBUG_MODE
 	#include <iostream>
@@ -96,8 +96,11 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 			#if DEBUG_MODE
-				std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << CurrentInstruction.mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
-				std::cout << std::hex << ' ' << (int)B << std::endl;
+				if (gb->nClockCycles % 100'000 == 0)
+				{
+					std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << CurrentInstruction.mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
+					std::cout << std::hex << ' ' << (int)B << std::endl;
+				}
 			#endif
 
 			CurrentInstruction.op();

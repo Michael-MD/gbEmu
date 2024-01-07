@@ -1,11 +1,11 @@
-#include "Display.hpp"
+#include "PPU.hpp"
 #include "GB.hpp"
 
-void Display::connectGB(GB* gb)
+void PPU::connectGB(GB* gb)
 {
 	this->gb = gb;
 
-	// Reference Display Registers to Main Registers Block
+	// Reference PPU Registers to Main Registers Block
 	LY = gb->RAM + 0xFF44;
 	LCDC = reinterpret_cast<LCDCRegister*>(gb->RAM + 0xFF40);
 	STAT = reinterpret_cast<STATRegister*>(gb->RAM + 0xFF41);
@@ -20,9 +20,9 @@ void Display::connectGB(GB* gb)
 	CurrentPixelRendered = 0;
 }
 
-void Display::clock()
+void PPU::clock()
 {
-	// ============= LCD Display ============= 
+	// ============= LCD PPU ============= 
 	DotsTotal++;
 
 	if (DotsRemaining == 0)
@@ -90,7 +90,7 @@ void Display::clock()
 			int p = (*LY) & 8;
 			uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
 
-			// Store Result Display Grid
+			// Store Result PPU Grid
 			uint8_t value = (((*BGP) >> (PixelPalette * 2)) & 0b11) * 255;
 
 			DotMatrix[*LY][CurrentPixelRendered][0] = 255;

@@ -3,7 +3,7 @@
 
 class GB;
 
-class Display
+class PPU
 {
 public:
 	GB* gb;
@@ -23,7 +23,7 @@ public:
 		VerticalBlank = 1,
 	} Mode;
 
-	// ================== LCD Display Registers ==================
+	// ================== LCD PPU Registers ==================
 	const int GridWidth = 20 * 8;
 	const int GridHeight = 18 * 8;
 	uint8_t DotMatrix[18 * 8][20 * 8][4];		// ABGR

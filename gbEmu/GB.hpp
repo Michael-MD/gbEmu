@@ -2,7 +2,7 @@
 #include <cstdint>
 #include "SM83.hpp"
 #include "Cartridge.hpp"
-#include "Display.hpp"
+#include "PPU.hpp"
 #include <string>
 #include "SDL.h"
 
@@ -14,7 +14,7 @@ public:
 
 	SM83 cpu;
 	Cartridge* cart;
-	Display disp;
+	PPU ppu;
 
 	int nClockCycles;
 

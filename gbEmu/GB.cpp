@@ -13,8 +13,8 @@ GB::GB(std::string gbFilename)
 	// Insert Cartridge
 	cart = new Cartridge(gbFilename);
 
-	// Initialize display
-	disp.connectGB(this);
+	// Initialize ppulay
+	ppu.connectGB(this);
 
 	// ============== Initilizes Registers ==============
 	// CPU Internal Registers
@@ -46,12 +46,12 @@ GB::GB(std::string gbFilename)
 	*NR51 = 0xF3;
 	*NR52 = cart->Header->SuperGB ? 0xF0 : 0xF1;
 
-	*disp.LCDC = 0x91;
+	*ppu.LCDC = 0x91;
 	*P1 = 0x00;
-	*disp.LY = 0;
-	*disp.SCY = 0x00;
-	*disp.SCX = 0x00;
-	*disp.BGP = 0xFC;
+	*ppu.LY = 0;
+	*ppu.SCY = 0x00;
+	*ppu.SCX = 0x00;
+	*ppu.BGP = 0xFC;
 	*IE = 0x00;
 
 	// TODO: Finish remaining initialization
@@ -75,7 +75,7 @@ GB::GB(std::string gbFilename)
 		}
 
 		unsigned int a, b = 0, delta, i = 0;
-		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, disp.GridWidth, disp.GridHeight);
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, ppu.GridWidth, ppu.GridHeight);
 
 		while (bIsRunning)
 		{
@@ -127,7 +127,7 @@ void GB::handleEvents()
 
 void GB::update()
 {
-	SDL_UpdateTexture(texture, NULL, disp.DotMatrix, disp.GridWidth * sizeof(uint32_t));
+	SDL_UpdateTexture(texture, NULL, ppu.DotMatrix, ppu.GridWidth * sizeof(uint32_t));
 }
 
 void GB::render()
@@ -153,7 +153,7 @@ void GB::clock()
 	nClockCycles++;
 
 	cpu.clock();
-	disp.clock();
+	ppu.clock();
 
 	// Increment Divider register at 8.192kHz.
 	if (nClockCycles % 0xFF == 0 && nClockCycles % 4 == 0)

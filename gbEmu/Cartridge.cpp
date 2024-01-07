@@ -41,7 +41,7 @@ Cartridge::Cartridge(std::string gbFilename)
 	memcpy(GameTitle, ROM + 0x134, 16);
 	GameTitle[16] = '\n';
 
-	// Display some Information about the game
+	// PPU some Information about the game
 	std::cout << "Title: " << GameTitle << std::endl;
 	std::cout << "GB Color: " << (Header->GBColor == 0x80 ? "true" : "false") << std::endl;
 	std::cout << "License Code: " << ((Header->LicenseCodeH << 8) | Header->LicenseCodeL) << std::endl;
