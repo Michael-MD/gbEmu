@@ -11,6 +11,18 @@ public:
 	void connectGB(GB* gb);
 	void clock();
 
+	int DotsRemaining;
+	int DotsTotal;
+	int CurrentPixelRendered;
+
+	enum
+	{
+		OAMScan = 2,
+		DrawingPixels = 3,
+		HorizontalBlank = 0,
+		VerticalBlank = 1,
+	} Mode;
+
 	// ================== LCD Display Registers ==================
 	const int GridWidth = 20 * 8;
 	const int GridHeight = 18 * 8;

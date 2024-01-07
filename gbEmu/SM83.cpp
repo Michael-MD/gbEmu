@@ -15,11 +15,9 @@ void SM83::connectGB(GB* gb)
 
 void SM83::clock()
 {
-	// SM83::clock is called at ~16MHz.
-
-	if(gb->nClockCycles % 4 ==0) // Machine cycles to clock cycles
+	if (gb->nClockCycles % 4 == 0) // CPU instructuctions defined in machine cycles
 	{
-		// Timer Unit
+		// =============== Timer Unit =============== 
 		if (gb->TAC->Start)
 		{
 			uint16_t mod;
@@ -52,6 +50,7 @@ void SM83::clock()
 			}
 		}
 
+		// =============== Intsruction Execution =============== 
 		if (cycle == 0)
 		{
 			// Check for interrupts between intruction fetch cycles
