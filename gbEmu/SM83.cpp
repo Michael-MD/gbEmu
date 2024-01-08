@@ -67,6 +67,8 @@ void SM83::clock()
 				{
 					std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << CurrentInstruction.mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
 					std::cout << std::hex << ' ' << (int)B << std::endl;
+				
+					std::cout << "Debug Message: " << gb->SerialOut << std::endl;
 				}
 			#endif
 

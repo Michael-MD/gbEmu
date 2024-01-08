@@ -104,6 +104,29 @@ public:
 	// NR52 Register
 	uint8_t* NR52 = RAM + 0xFF26;
 
+	// ================== Serial Transfer ================== 
+	char SerialOut[100] = {0};
+	int MessageSize = 0;
+
+	uint8_t* SB = RAM + 0xFF01;	// Serial transfer data
+
+	// Serial transfer control
+	union
+	{
+		struct
+		{
+			uint8_t TransferEnable : 1;
+			uint8_t ClockSpeed : 1;
+			uint8_t ClockSelect : 1;
+		};
+
+		uint8_t reg;
+
+		void operator=(uint8_t reg_)
+		{
+			reg = reg_;
+		};
+	} *SC = reinterpret_cast<decltype(SC)>(RAM + 0xFF02);
 
 	// ================== Interrupt Registers ==================
 

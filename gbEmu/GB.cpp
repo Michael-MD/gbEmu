@@ -161,42 +161,6 @@ uint8_t GB::read(uint16_t addr)
 	{
 		return cart->read(addr);
 	}
-	else if (addr >= 0x8000 && addr < 0xA000)	// 8kB Video RAM
-	{
-
-	}
-	else if (addr >= 0xA000 && addr < 0xC000)	// 8kB switchable RAM bank
-	{
-
-	}
-	else if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
-	{
-		
-	}
-	else if (addr >= 0xFE00 && addr < 0xFEA0)	// Sprite Attrib Memory (OAM)
-	{
-
-	}
-	else if (addr >= 0xFEA0 && addr < 0xFF00)	// Empty but unusable for I/O
-	{
-
-	}
-	else if (addr >= 0xFF00 && addr < 0xFF4C)	// I/O ports
-	{
-
-	}
-	else if (addr >= 0xFF4C && addr < 0xFF80)	// Empty but unusable for I/O
-	{
-
-	}
-	else if (addr >= 0xFF80 && addr < 0xFFFF)	// Internal RAM
-	{
-
-	}
-	else if (addr == 0xFFFF)					// Interrupt Enable Register
-	{
-
-	}
 
 	return RAM[addr];
 }
@@ -222,10 +186,38 @@ void GB::write(uint16_t addr, uint8_t data)
 			RAM[addr] = data;
 		}
 	}
+	else if (addr == 0xFF02)	// Serial I/O
+	{
+		*SC = data;
+		if (SC->TransferEnable)
+		{
+			SerialOut[MessageSize++] = *SB;
+			SC->TransferEnable = 0;
+		}
+	}
 	else if (addr == 0xFF04)	// Divider Register
 	{
 		// Writing any value to Divider register sets it to 0x00.
 		*timer.Div = 0x00;
+	}
+	else if (addr == 0xFF07)	// TAC
+	{
+		// Set rate at which clock is incremented
+		switch (timer.TAC->InputClockSelect)
+		{
+		case 0b00:
+			timer.TickRate = 1024;		// 4096 Hz
+			break;
+		case 0b01:
+			timer.TickRate = 16;		// 262144 Hz
+			break;
+		case 0b10:
+			timer.TickRate = 64;		// 65536 Hz
+			break;
+		case 0b11:
+			timer.TickRate = 256;		// 16384 Hz
+			break;
+		}
 	}
 	else
 	{

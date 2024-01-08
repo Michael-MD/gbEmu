@@ -25,22 +25,7 @@ void Timer::connectGB(GB* gb)
 
 void Timer::clock()
 {
-	// Select rate at which clock is incremented
-	switch (TAC->InputClockSelect)
-	{
-	case 0b00:
-		TickRate = 1024;	// 4096 Hz
-			break;
-	case 0b01:
-		TickRate = 16;		// 262144 Hz
-			break;
-	case 0b10:
-		TickRate = 64;		// 65536 Hz
-			break;
-	case 0b11:
-		TickRate = 256;		// 16384 Hz
-		break;
-	}
+	
 
 	if(TAC->Start && gb->nClockCycles % TickRate == 0)
 	{

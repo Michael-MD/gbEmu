@@ -43,7 +43,7 @@ Cartridge::Cartridge(std::string gbFilename)
 
 	// Display some information about the game
 	std::cout << "Title: " << GameTitle << std::endl;
-	std::cout << "Cartridge Type: " << Header->CartType << std::endl;
+	std::cout << "Cartridge Type: " << (int)Header->CartType << std::endl;
 	std::cout << "License Code: " << ((Header->LicenseCodeH << 8) | Header->LicenseCodeL) << std::endl;
 	std::cout << "Destination Code: " << (Header->DestinationCode == 0 ? "Japanese" : "Non-Japanese") << std::endl;
 }
