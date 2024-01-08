@@ -161,6 +161,10 @@ uint8_t GB::read(uint16_t addr)
 	{
 		return cart->read(addr);
 	}
+	else if (addr >= 0xA000 && addr < 0xC000)
+	{
+		return cart->read(addr);
+	}
 
 	return RAM[addr];
 }
@@ -168,6 +172,10 @@ uint8_t GB::read(uint16_t addr)
 void GB::write(uint16_t addr, uint8_t data)
 {
 	if (addr < 0x8000)		// Cartridge
+	{
+		cart->write(addr, data);
+	}
+	else if (addr >= 0xA000 && addr < 0xC000)
 	{
 		cart->write(addr, data);
 	}

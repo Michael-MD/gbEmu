@@ -138,6 +138,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cartridge.cpp" />
+    <ClCompile Include="MBC.cpp" />
+    <ClCompile Include="NoMBC.cpp" />
     <ClCompile Include="PPU.cpp" />
     <ClCompile Include="GB.cpp" />
     <ClCompile Include="SM83.cpp" />
@@ -146,6 +148,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cartridge.hpp" />
+    <ClInclude Include="MBC.hpp" />
+    <ClInclude Include="NoMBC.hpp" />
     <ClInclude Include="PPU.hpp" />
     <ClInclude Include="GB.hpp" />
     <ClInclude Include="SM83.hpp" />

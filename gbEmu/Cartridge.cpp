@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "NoMBC.hpp"
 
 Cartridge::Cartridge(std::string gbFilename)
 {
@@ -12,7 +13,15 @@ Cartridge::Cartridge(std::string gbFilename)
 
 	if (ifs.is_open())
 	{
-		ifs.read(reinterpret_cast<char*>(ROM), sizeof(ROM));
+		// Get Game Title
+		ifs.seekg(0x134, std::ios::beg);
+		ifs.read(GameTitle, 16);
+		GameTitle[16] = '\n';
+
+		// Get Game Header Information
+		ifs.seekg(0x143, std::ios::beg);
+		ifs.read(reinterpret_cast<char*>(Header), sizeof(*Header));
+
 		ifs.close();
 	}
 	else
@@ -23,7 +32,11 @@ Cartridge::Cartridge(std::string gbFilename)
 	// Emulation Info
 	try
 	{
-		if (Header->CartType != 0x00)
+		if (Header->CartType == 0x00)
+		{
+			mbc = new NoMBC(gbFilename, Header->ROMSize, Header->RAMSize);
+		}
+		else
 		{
 			std::stringstream s;
 			s << "Only Cartridges which use ROM only are supported."
@@ -38,9 +51,6 @@ Cartridge::Cartridge(std::string gbFilename)
 		std::exit(1);
 	}
 
-	memcpy(GameTitle, ROM + 0x134, 16);
-	GameTitle[16] = '\n';
-
 	// Display some information about the game
 	std::cout << "Title: " << GameTitle << std::endl;
 	std::cout << "Cartridge Type: " << (int)Header->CartType << std::endl;
@@ -50,15 +60,10 @@ Cartridge::Cartridge(std::string gbFilename)
 
 void Cartridge::write(uint16_t addr, uint8_t data)
 {
-	// Cannot write to ROM
+	mbc->write(addr, data);
 }
 
 uint8_t Cartridge::read(uint16_t addr)
 {
-	if (addr < 0x8000)
-	{
-		return ROM[addr];
-	}
-
-	return 0x00;
+	return mbc->read(addr);
 }
