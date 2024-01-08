@@ -3,9 +3,9 @@
 #include "SM83.hpp"
 #include "Cartridge.hpp"
 #include "PPU.hpp"
+#include "Timer.hpp"
 #include <string>
 #include "SDL.h"
-
 
 class GB
 {
@@ -15,6 +15,7 @@ public:
 	SM83 cpu;
 	Cartridge* cart;
 	PPU ppu;
+	Timer timer;
 
 	int nClockCycles;
 
@@ -48,33 +49,6 @@ public:
 		};
 
 	} *P1 = reinterpret_cast<decltype(P1)>(RAM + 0xFF00);
-
-	// Divider (Read/Reset)
-	uint8_t* Div = RAM + 0xFF04;
-
-	// TIMA Register
-	uint8_t* TIMA = RAM + 0xFF05;
-
-	// TMA Register
-	uint8_t* TMA = RAM + 0xFF06;
-
-	// TAC Register
-	union
-	{
-		struct
-		{
-			uint8_t InputClockSelect : 2;
-			uint8_t Start : 1;
-		};
-
-		uint8_t reg_;
-
-		void operator=(uint8_t reg)
-		{
-			reg_ = reg;
-		};
-
-	} *TAC = reinterpret_cast<decltype(TAC)>(RAM + 0xFF07);
 
 	// NR10 Register
 	uint8_t* NR10 = RAM + 0xFF10;
