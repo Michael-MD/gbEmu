@@ -16,6 +16,9 @@ GB::GB(std::string gbFilename)
 	// Initialize ppulay
 	ppu.connectGB(this);
 
+	// Connect Timer Unit
+	timer.connectGB(this);
+
 	// ============== Initilizes Registers ==============
 	// CPU Internal Registers
 	cpu.BC = 0x0013;
@@ -24,9 +27,6 @@ GB::GB(std::string gbFilename)
 	cpu.SP = 0xFFFE;
 	cpu.PC = 0x0100;
 
-	*TIMA = 0x00;
-	*TMA = 0x00;
-	*TAC = 0x00;
 	*NR10 = 0x80;
 	*NR11 = 0xBF;
 	*NR12 = 0xF3;
@@ -147,17 +147,11 @@ void GB::clean()
 
 void GB::clock()
 {
-	// The system should be clocked in DMG mode
-	// at 4f where f=4.1943MHz i.e. machine cycles.
-
 	nClockCycles++;
 
 	cpu.clock();
 	ppu.clock();
-
-	// Increment Divider register at 8.192kHz.
-	if (nClockCycles % 0xFF == 0 && nClockCycles % 4 == 0)
-		(*Div)++;
+	timer.clock();
 
 }
 
@@ -231,7 +225,7 @@ void GB::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF04)	// Divider Register
 	{
 		// Writing any value to Divider register sets it to 0x00.
-		*Div = 0x00;
+		*timer.Div = 0x00;
 	}
 	else
 	{

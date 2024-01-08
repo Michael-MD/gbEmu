@@ -17,39 +17,6 @@ void SM83::clock()
 {
 	if (gb->nClockCycles % 4 == 0) // CPU instructuctions defined in machine cycles
 	{
-		// =============== Timer Unit =============== 
-		if (gb->TAC->Start)
-		{
-			uint16_t mod;
-			switch (gb->TAC->InputClockSelect)
-			{
-			case 0b00:	// f/2^10 (4.096kHz)
-				mod = 0x3FF;
-				break;
-			case 0b01:	// f/2^4 (262.144kHz)
-				mod = 0x03;
-				break;
-			case 0b10:	// f/2^6 (65.536kHz)
-				mod = 0x1F;
-				break;
-			case 0b11:	// f/2^8 (16.384kHz)
-				mod = 0x7F;
-				break;
-			}
-
-			if (*(gb->TIMA) == 0xFF)
-			{
-				// Overflow
-				*gb->TIMA = *gb->TIMA;
-				gb->IF->TimerOverflow = 1;	// Raise Timer Overflow interrupt flag
-			}
-			else
-			{
-				if (gb->nClockCycles % mod == 0)
-					(*gb->TIMA)++;
-			}
-		}
-
 		// =============== Intsruction Execution =============== 
 		if (cycle == 0)
 		{
