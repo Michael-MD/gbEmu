@@ -3,7 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+
 #include "NoMBC.hpp"
+#include "MBC1.hpp"
 
 Cartridge::Cartridge(std::string gbFilename)
 {
@@ -26,36 +28,40 @@ Cartridge::Cartridge(std::string gbFilename)
 	}
 	else
 	{
-		throw std::invalid_argument(".gb File Not Found.");
-	}
-
-	// Emulation Info
-	try
-	{
-		if (Header->CartType == 0x00)
-		{
-			mbc = new NoMBC(gbFilename, Header->ROMSize, Header->RAMSize);
-		}
-		else
-		{
-			std::stringstream s;
-			s << "Only Cartridges which use ROM only are supported."
-				<< "The inserted cartridge type is 0x" 
-				<< std::hex << (int)Header->CartType << ".";
-			throw std::domain_error(s.str());
-		}
-	}
-	catch (const std::domain_error& e)
-	{
-		std::cout << "Error: " << e.what() << std::endl;
+		std::cout << ".gb file not found." << std::endl;
 		std::exit(1);
 	}
 
+	// Emulation Info
+	switch (Header->CartType)
+	{
+	case 0x00:
+		mbc = new NoMBC(gbFilename, Header->ROMSize, Header->RAMSize);
+		break;
+	case 0x01:
+	case 0x02:
+	case 0x03:
+		mbc = new MBC1(gbFilename, Header->ROMSize, Header->RAMSize);
+		break;
+	default:
+		std::stringstream s;
+		s << "Only Cartridges which use ROM only are supported."
+			<< "The inserted cartridge type is 0x"
+			<< std::hex << (int)Header->CartType << ".";
+		std::exit(1);
+	}
+
+
 	// Display some information about the game
 	std::cout << "Title: " << GameTitle << std::endl;
+
 	std::cout << "Cartridge Type: " << (int)Header->CartType << std::endl;
-	std::cout << "License Code: " << ((Header->LicenseCodeH << 8) | Header->LicenseCodeL) << std::endl;
-	std::cout << "Destination Code: " << (Header->DestinationCode == 0 ? "Japanese" : "Non-Japanese") << std::endl;
+
+	std::cout << "License Code: " 
+		<< ((Header->LicenseCodeH << 8) | Header->LicenseCodeL) << std::endl;
+
+	std::cout << "Destination Code: " 
+		<< (Header->DestinationCode == 0 ? "Japanese" : "Non-Japanese") << std::endl;
 }
 
 void Cartridge::write(uint16_t addr, uint8_t data)

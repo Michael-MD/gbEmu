@@ -13,6 +13,7 @@ public:
 	const int ROM_BANK_SIZE = 16 * 1024;
 	const int RAM_BANK_SIZE = 8 * 1024;
 	int nROMBanks, nRAMBanks;
+	int Log2nROMBanks, Log2nRAMBanks;
 	int ROMSizeBytes, RAMSizeBytes;
 
 	virtual void write(uint16_t addr, uint8_t data) = 0;

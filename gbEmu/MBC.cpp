@@ -38,6 +38,7 @@ MBC::MBC(uint8_t ROMSize, uint8_t RAMSize)
 		break;
 	}
 
+	for (int p = 0; (nROMBanks - 1) >> p++ != 0; Log2nROMBanks = p);
 	ROMSizeBytes = ROM_BANK_SIZE * nROMBanks;
 
 	switch (RAMSize)
@@ -57,6 +58,7 @@ MBC::MBC(uint8_t ROMSize, uint8_t RAMSize)
 		break;
 	}
 
+	for (int p = 0; (nRAMBanks - 1) >> p++ != 0; Log2nRAMBanks = p);
 	RAMSizeBytes = RAM_BANK_SIZE * nRAMBanks;
 
 	ROM = new uint8_t[ROMSizeBytes];

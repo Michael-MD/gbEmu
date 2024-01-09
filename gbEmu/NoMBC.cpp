@@ -1,5 +1,6 @@
 #include "NoMBC.hpp"
 #include <fstream>
+#include <iostream>
 
 NoMBC::NoMBC(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(ROMSize, RAMSize)
 {
@@ -13,7 +14,8 @@ NoMBC::NoMBC(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(ROM
 	}
 	else
 	{
-		throw std::invalid_argument(".gb File Not Found.");
+		std::cout << ".gb file not found." << std::endl;
+		std::exit(1);
 	}
 }
 
