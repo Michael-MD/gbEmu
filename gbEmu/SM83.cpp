@@ -63,13 +63,25 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 			#if DEBUG_MODE
-			//if (gb->nClockCycles % 10'000 == 0)
-			//if(PC == 0xC000)
+				if (gb->nClockCycles % 100'000 == 0)
 				{
 					std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << CurrentInstruction.mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
-					std::cout << std::hex << ' ' << (int)B << std::endl;
-				
-					std::cout << "Debug Message: " << gb->SerialOut << std::endl;
+
+					/*std::cout << std::endl << std::dec << "A = $" << std::hex << (int)A << ' ';
+					std::cout << std::dec << "B = $" << std::hex << (int)B << ' ';
+					std::cout << std::dec << "C = $" << std::hex << (int)C << ' ';
+					std::cout << std::dec << "D = $" << std::hex << (int)D << ' ' << std::endl;
+					std::cout << std::dec << "E = $" << std::hex << (int)E << ' ';
+					std::cout << std::dec << "F = $" << std::hex << (int)F << ' ';
+					std::cout << std::dec << "L = $" << std::hex << (int)L << ' ';
+					std::cout << std::dec << "H = $" << std::hex << (int)H << ' ' << std::endl;*/
+
+					std::cout << std::endl << std::hex << "AF = $" << (int)AF << std::endl;
+					std::cout << "BC = $" << (int)BC << std::endl;
+					std::cout << "DE = $" << (int)DE << std::endl;
+					std::cout << "HL = $" << (int)HL << std::endl;
+
+					std::cout << std::dec << "Debug Message: " << gb->SerialOut << std::endl;
 				}
 			#endif
 
@@ -263,7 +275,7 @@ SM83::SM83()
 			uint8_t LO, HI;
 			LO = gb->read(PC++);
 			HI = gb->read(PC++);
-			A = (HI << 8) | LO;
+			A = gb->read((HI << 8) | LO);
 		},
 		4
 	};
@@ -409,7 +421,7 @@ SM83::SM83()
 	InstructionSet[0b11'111'001] =
 	{
 		[]() {
-			return "LD SP 11 SP, HL (SP <- HL)";
+			return "LD SP, HL (SP <- HL)";
 		},
 		[this]() {
 			SP = HL;
@@ -479,10 +491,33 @@ SM83::SM83()
 			HI = gb->read(PC++);
 			uint16_t M = (HI << 8) | LO;
 			gb->write(M++, SP & 0x00FF);
-			gb->write(M, SP & 0xFF00);
+			gb->write(M, SP >> 8);
 		},
 		5
 	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet[0b10'000'000 | i] =
+		{
+			[]() {
+				return "A, r (A <- A + r)";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+				uint16_t tmp = A + r;
+				uint8_t tmp2 = ((A & 0xF) + (r & 0xF)) >> 4;
+
+				HC = tmp2 != 0;
+				CY = (tmp >> 8) != 0;
+				A = tmp;
+				Z = A == 0;
+				N = 0;
+			},
+			1,
+			i
+		};
+	}
 
 	InstructionSet[0b11'000'110] =
 	{
@@ -706,7 +741,7 @@ SM83::SM83()
 
 				A &= r;
 				CY = 0;
-				HC = 0;
+				HC = 1;
 				N = 0;
 				Z = A == 0;
 			},
@@ -721,9 +756,10 @@ SM83::SM83()
 			return "AND n (A & n)";
 		},
 		[this]() {
-			A &= gb->read(PC++);
+			uint8_t n = gb->read(PC++);
+			A &= n;
 			CY = 0;
-			HC = 0;
+			HC = 1;
 			N = 0;
 			Z = A == 0;
 		},
@@ -738,7 +774,7 @@ SM83::SM83()
 		[this]() {
 			A &= gb->read(HL);
 			CY = 0;
-			HC = 0;
+			HC = 1;
 			N = 0;
 			Z = A == 0;
 		},
@@ -1535,7 +1571,7 @@ SM83::SM83()
 			return "JR e (PC <- PC+e)";
 		},
 		[this]() {
-			int8_t e = gb->read(PC++) - 1;
+			int8_t e = gb->read(PC++);
 			PC += e;
 		},
 		3
@@ -1549,7 +1585,7 @@ SM83::SM83()
 		[this]() {
 			if (Z == 0)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1567,7 +1603,7 @@ SM83::SM83()
 		[this]() {
 			if (Z == 1)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1585,7 +1621,7 @@ SM83::SM83()
 		[this]() {
 			if (CY == 0)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1603,7 +1639,7 @@ SM83::SM83()
 		[this]() {
 			if (CY == 1)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
@@ -1767,7 +1803,7 @@ SM83::SM83()
 			uint8_t LO = gb->read(SP++);
 			uint8_t HI = gb->read(SP++);
 			PC = (HI << 8) | LO;
-			gb->IME = 1; // TODO: Double Check
+			gb->IME = 1;
 		},
 		4
 	};
@@ -1851,10 +1887,10 @@ SM83::SM83()
 			[]() {
 				return "RST t"
 ;			},
-			[this, t]() {
+			[this]() {
 				gb->write(--SP, PC >> 8);
 				gb->write(--SP, PC & 0x00FF);
-				PC = t << 3;
+				PC = a << 3;
 			},
 			4,
 			t
@@ -2010,7 +2046,7 @@ SM83::SM83()
 		},
 		[this]() {
 			A = ~A;
-			H = 1;
+			HC = 1;
 			N = 1;
 		},
 		1
@@ -2023,8 +2059,8 @@ SM83::SM83()
 		},
 		[this]() {
 			CY = ~CY;
-			H = 1;
-			N = 1;
+			HC = 0;
+			N = 0;
 		},
 		1
 	};
@@ -2036,7 +2072,7 @@ SM83::SM83()
 		},
 		[this]() {
 			CY = 1;
-			H = 0;
+			HC = 0;
 			N = 0;
 		},
 		1

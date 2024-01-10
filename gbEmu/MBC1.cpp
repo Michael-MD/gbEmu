@@ -27,7 +27,7 @@ MBC1::MBC1(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(ROMSi
 
 void MBC1::write(uint16_t addr, uint8_t data)
 {
-	
+	// TODO
 }
 
 uint8_t MBC1::read(uint16_t addr)

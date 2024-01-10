@@ -71,6 +71,6 @@ public:
 	} *Header = reinterpret_cast<decltype(Header)>(ROM + 0x143);
 
 private:
-	uint8_t ROM[0x7FFF + 1];
+	uint8_t ROM[0xFFFF + 1];
 	
 };

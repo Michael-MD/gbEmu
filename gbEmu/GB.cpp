@@ -21,6 +21,7 @@ GB::GB(std::string gbFilename)
 
 	// ============== Initilizes Registers ==============
 	// CPU Internal Registers
+	cpu.AF = 0x1180;
 	cpu.BC = 0x0013;
 	cpu.DE = 0x00D8;
 	cpu.HL = 0x014D;
@@ -190,7 +191,7 @@ void GB::write(uint16_t addr, uint8_t data)
 		}
 		else
 		{
-			RAM[0xC000 + addr % 0xE000] = data;
+			RAM[0xC000 + (addr % 0xE000)] = data;
 			RAM[addr] = data;
 		}
 	}
