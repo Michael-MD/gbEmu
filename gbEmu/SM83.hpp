@@ -36,7 +36,20 @@ private:
 	{
 		struct
 		{
-			uint8_t F;
+			union
+			{
+				struct
+				{
+					uint8_t _ : 4;
+					uint8_t CY : 1;	// Carry
+					uint8_t HC : 1;	// Half Carry
+					uint8_t N : 1;	// Subtract
+					uint8_t Z : 1;	// Zero
+				};
+
+				uint8_t F;
+			};
+			
 			uint8_t A;
 			uint8_t C;
 			uint8_t B;
@@ -63,21 +76,6 @@ private:
 
 	uint16_t PC, SP; // Program Counter, Stack Pointer
 
-	// Flags
-	union
-	{
-		struct
-		{
-			uint8_t _ : 4;
-			uint8_t CY : 1;	// Carry
-			uint8_t HC : 1;	// Half Carry
-			uint8_t N : 1;	// Subtract
-			uint8_t Z : 1;	// Zero
-		};
-
-		uint8_t FlagReg;
-	};
-
 	// ============== Instructions ==============
 	uint8_t a, b;
 
@@ -89,18 +87,6 @@ private:
 		uint8_t a;
 		uint8_t b;
 	} InstructionSet[256], CurrentInstruction;
-
-	union
-	{
-		struct
-		{
-			uint8_t op0 : 3;
-			uint8_t op1 : 3;
-			uint8_t op2 : 2;
-		};
-
-		uint8_t Opcode;
-	};
 
 	uint8_t cycle;		// Cycle Number
 
