@@ -20,6 +20,8 @@ public:
 
 	GB* gb;
 
+	int nMachineCycles = 0;
+
 private:
 	
 	// DMG mode has only 8kB of built-in ppulay RAM

@@ -17,6 +17,8 @@ void SM83::clock()
 {
 	if (gb->nClockCycles % 4 == 0) // CPU instructuctions defined in machine cycles
 	{
+		nMachineCycles++;
+
 		// =============== Intsruction Execution =============== 
 		if (cycle == 0)
 		{
@@ -63,8 +65,10 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 			#if DEBUG_MODE
-				if (gb->nClockCycles % 100'000 == 0)
+				if (nMachineCycles > 100'000)
 				{
+					nMachineCycles = 0;
+
 					std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << CurrentInstruction.mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
 
 					/*std::cout << std::endl << std::dec << "A = $" << std::hex << (int)A << ' ';
@@ -1585,7 +1589,7 @@ SM83::SM83()
 		[this]() {
 			if (Z == 0)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}
@@ -1603,7 +1607,7 @@ SM83::SM83()
 		[this]() {
 			if (Z == 1)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}
@@ -1621,7 +1625,7 @@ SM83::SM83()
 		[this]() {
 			if (CY == 0)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}
@@ -1639,7 +1643,7 @@ SM83::SM83()
 		[this]() {
 			if (CY == 1)
 			{
-				int8_t e = gb->read(PC++);
+				int8_t e = gb->read(PC++) - 1;
 				PC += e;
 				cycle++;
 			}
