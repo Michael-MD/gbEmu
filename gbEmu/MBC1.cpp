@@ -9,7 +9,8 @@ MBC1::MBC1(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(ROMSi
 
 	if (ifs.is_open())
 	{
-		
+		ifs.read(reinterpret_cast<char*>(ROM), ROMSizeBytes);
+		ifs.close();
 	}
 	else
 	{
@@ -90,9 +91,9 @@ uint8_t MBC1::read(uint16_t addr)
 			case 0x20:
 			case 0x40:
 			case 0x60:
-				return ROM[0x4000 * (ROMBankCode + 1) + (addr & 0x4000)];
+				return ROM[0x4000 * (ROMBankCode + 1) + (addr % 0x4000)];
 			default:
-				return ROM[0x4000 * ROMBankCode + (addr & 0x4000)];
+				return ROM[0x4000 * ROMBankCode + (addr % 0x4000)];
 			}
 		}
 		else
@@ -115,9 +116,9 @@ uint8_t MBC1::read(uint16_t addr)
 					case 0x20:
 					case 0x40:
 					case 0x60:
-						return ROM[0x4000 * (BankNum + 1) + (addr & 0x4000)];
+						return ROM[0x4000 * (BankNum + 1) + (addr % 0x4000)];
 					default:
-						return ROM[0x4000 * BankNum + (addr & 0x4000)];
+						return ROM[0x4000 * BankNum + (addr % 0x4000)];
 					}
 				}
 				else
@@ -140,11 +141,11 @@ uint8_t MBC1::read(uint16_t addr)
 				// bank is used to select the upper two bits
 				// of the ROM bank. Hence RAM bank 0 is
 				// always referred.
-				return RAM[addr & 0xA000];
+				return RAM[addr % 0xA000];
 			}
 			else
 			{
-				return RAM[0x2000 * UpperROMBankCode + (addr & 0xA000)];
+				return RAM[0x2000 * UpperROMBankCode + (addr % 0xA000)];
 			}
 		}
 		else
