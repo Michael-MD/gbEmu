@@ -102,11 +102,12 @@ void SM83::clock()
 }
 
 
+
 SM83::SM83()
 {
 
 	// TODO: Internal Checks
- 
+
 	InstructionSet[0b00'000'000] =
 	{
 		[]() {
@@ -117,12 +118,12 @@ SM83::SM83()
 		},
 		1
 	};
-	
-	for (uint8_t i = 0; i <= 7; i+1 == 0b110 ? i += 2 : i++)
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
 		for (uint8_t j = 0; j <= 7; j + 1 == 0b110 ? j += 2 : j++)
 		{
-			InstructionSet[0x40|(i<<3)|j] =
+			InstructionSet[0x40 | (i << 3) | j] =
 			{
 				[this]() {
 					uint8_t r = GPRString(a);
@@ -132,7 +133,7 @@ SM83::SM83()
 					return s.str();
 	;			},
 				[this]() {
-					uint8_t& r = GPR(a), &rp = GPR(b);
+					uint8_t& r = GPR(a),& rp = GPR(b);
 					r = rp;
 				},
 				1,
@@ -176,14 +177,14 @@ SM83::SM83()
 
 	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
-		
+
 		InstructionSet[0b01'110'000 | i] =
 		{
 			[]() {
 				return "LD (HL),r ((HL) <- r)"
 ;			},
 			[this]() {
-				uint8_t &r = GPR(a);
+				uint8_t& r = GPR(a);
 				gb->write(HL, r);
 			},
 			2,
@@ -435,7 +436,7 @@ SM83::SM83()
 
 	for (uint8_t i = 0; i <= 3; i++)
 	{
-		
+
 
 		InstructionSet[0b11'000'101 | (i << 4)] =
 		{
@@ -555,7 +556,7 @@ SM83::SM83()
 
 	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
-		
+
 		InstructionSet[0b10'001'000 | i] =
 		{
 			[]() {
@@ -676,7 +677,7 @@ SM83::SM83()
 
 	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
 	{
-		
+
 		InstructionSet[0b10'011'000 | i] =
 		{
 			[]() {
@@ -760,8 +761,7 @@ SM83::SM83()
 			return "AND n (A & n)";
 		},
 		[this]() {
-			uint8_t n = gb->read(PC++);
-			A &= n;
+			A &= gb->read(PC++);
 			CY = 0;
 			HC = 1;
 			N = 0;
@@ -1021,7 +1021,7 @@ SM83::SM83()
 		},
 		[this]() {
 			HC = (((HL & 0xFFF) + (BC & 0xFFF)) >> 12) != 0;
-			CY = (((uint32_t)HL+(uint32_t)BC) >> 16) != 0;
+			CY = (((uint32_t)HL + (uint32_t)BC) >> 16) != 0;
 			HL += BC;
 			N = 0;
 		},
@@ -1035,7 +1035,7 @@ SM83::SM83()
 		},
 		[this]() {
 			HC = (((HL & 0xFFF) + (DE & 0xFFF)) >> 12) != 0;
-			CY = (((uint32_t)HL+(uint32_t)DE) >> 16) != 0;
+			CY = (((uint32_t)HL + (uint32_t)DE) >> 16) != 0;
 			HL += DE;
 			N = 0;
 		},
@@ -1049,7 +1049,7 @@ SM83::SM83()
 		},
 		[this]() {
 			HC = (((HL & 0xFFF) + (HL & 0xFFF)) >> 12) != 0;
-			CY = (((uint32_t)HL+(uint32_t)HL) >> 16) != 0;
+			CY = (((uint32_t)HL + (uint32_t)HL) >> 16) != 0;
 			HL += HL;
 			N = 0;
 		},
@@ -1063,7 +1063,7 @@ SM83::SM83()
 		},
 		[this]() {
 			HC = (((HL & 0xFFF) + (SP & 0xFFF)) >> 12) != 0;
-			CY = (((uint32_t)HL+(uint32_t)SP) >> 16) != 0;
+			CY = (((uint32_t)HL + (uint32_t)SP) >> 16) != 0;
 			HL += SP;
 			N = 0;
 		},
@@ -1085,7 +1085,7 @@ SM83::SM83()
 		},
 		4
 	};
-	
+
 	for (uint8_t i = 0; i <= 3; i++)
 	{
 		InstructionSet[0b00'000'011 | (i << 4)] =
@@ -1467,7 +1467,7 @@ SM83::SM83()
 		},
 		2
 	};
-	
+
 	InstructionSet[0b11'000'011] =
 	{
 		[this]() {
@@ -1575,7 +1575,7 @@ SM83::SM83()
 			return "JR e (PC <- PC+e)";
 		},
 		[this]() {
-			int8_t e = gb->read(PC++);
+			int8_t e = gb->read(PC++) - 1;
 			PC += e;
 		},
 		3
@@ -1884,7 +1884,7 @@ SM83::SM83()
 		2
 	};
 
-	for(uint8_t t = 0; t <= 7; t++)
+	for (uint8_t t = 0; t <= 7; t++)
 	{
 		InstructionSet[0b11'000'111 | (t << 3)] =
 		{
@@ -1909,138 +1909,138 @@ SM83::SM83()
 		[this]() {
 			switch (gb->read(PC - 2))
 			{
-			// ADD A, r
-			case 0b10'000'000:
-			case 0b10'000'001:
-			case 0b10'000'010:
-			case 0b10'000'011:
-			case 0b10'000'100:
-			case 0b10'000'101:
-			case 0b10'000'111:
-			// ADD A, n
-			case 0b11'000'110:
-			// ADD A, (HL)
-			case 0b10'000'110:
-			// ADC A, r
-			case 0b10'001'000:
-			case 0b10'001'001:
-			case 0b10'001'010:
-			case 0b10'001'011:
-			case 0b10'001'100:
-			case 0b10'001'101:
-			case 0b10'001'111:
-			// ADC A, (HL)
-			case 0b10'001'110:
-			// ADC A, nn
-			case 0b11'001'110:
-			{
-				// ADD/ADC
-				uint8_t AL = A & 0x0F, AH = A & 0xF0;
-				if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
-				{
-					A += 0x00;
-					CY = 0;
-				}
-				else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
-				{
-					A += 0x06;
-					CY = 0;
-				}
-				else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x9)
-				{
-					A += 0x06;
-					CY = 0;
-				}
-				else if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0xA && AH <= 0xF)
-				{
-					A += 0x60;
-					CY = 1;
-				}
-				else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x9 && AH <= 0xF)
-				{
-					A += 0x66;
-					CY = 1;
-				}
-				else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0xA && AH <= 0xF)
-				{
-					A += 0x66;
-					CY = 1;
-				}
-				else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x2)
-				{
-					A += 0x60;
-					CY = 1;
-				}
-				else if (CY == 1 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x2)
-				{
-					A += 0x66;
-					CY = 1;
-				}
-				else if (CY == 1 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x3)
-				{
-					A += 0x66;
-					CY = 1;
-				}
+				// ADD A, r
+				case 0b10'000'000:
+				case 0b10'000'001:
+				case 0b10'000'010:
+				case 0b10'000'011:
+				case 0b10'000'100:
+				case 0b10'000'101:
+				case 0b10'000'111:
+					// ADD A, n
+					case 0b11'000'110:
+						// ADD A, (HL)
+						case 0b10'000'110:
+							// ADC A, r
+							case 0b10'001'000:
+							case 0b10'001'001:
+							case 0b10'001'010:
+							case 0b10'001'011:
+							case 0b10'001'100:
+							case 0b10'001'101:
+							case 0b10'001'111:
+								// ADC A, (HL)
+								case 0b10'001'110:
+									// ADC A, nn
+									case 0b11'001'110:
+									{
+										// ADD/ADC
+										uint8_t AL = A & 0x0F, AH = A & 0xF0;
+										if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
+										{
+											A += 0x00;
+											CY = 0;
+										}
+										else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
+										{
+											A += 0x06;
+											CY = 0;
+										}
+										else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x9)
+										{
+											A += 0x06;
+											CY = 0;
+										}
+										else if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0xA && AH <= 0xF)
+										{
+											A += 0x60;
+											CY = 1;
+										}
+										else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x9 && AH <= 0xF)
+										{
+											A += 0x66;
+											CY = 1;
+										}
+										else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0xA && AH <= 0xF)
+										{
+											A += 0x66;
+											CY = 1;
+										}
+										else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x2)
+										{
+											A += 0x60;
+											CY = 1;
+										}
+										else if (CY == 1 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x2)
+										{
+											A += 0x66;
+											CY = 1;
+										}
+										else if (CY == 1 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x3)
+										{
+											A += 0x66;
+											CY = 1;
+										}
 
 
-				break;
-			}
+										break;
+									}
 
-			// SUB r
-			case 0b10'010'000:
-			case 0b10'010'001:
-			case 0b10'010'010:
-			case 0b10'010'011:
-			case 0b10'010'100:
-			case 0b10'010'101:
-			case 0b10'010'111:
-			// SUB (HL)
-			case 0b10'010'110:
-			// SUB n
-			case 0b11'010'110:
-			// SBC A, r
-			case 0b10'011'000:
-			case 0b10'011'001:
-			case 0b10'011'010:
-			case 0b10'011'011:
-			case 0b10'011'100:
-			case 0b10'011'101:
-			case 0b10'011'111:
-			// SBC A. (HL)
-			case 0b10'011'110:
-			// SBC A, n
-			case 0b11'011'110:
-			{
-				// SUB/SBC
-				uint8_t AL = A & 0x0F, AH = A & 0xF0;
-				if (CY ==0 && H ==0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
-				{
-					A += 0x00;
-					CY = 0;
-				}
-				else if (CY ==0 && H ==1 && AL >= 0x6 && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
-				{
-					A += 0xFA;
-					CY = 0;
-				}
-				else if (CY == 1&& H == 0&& AL >= 0x0 && AL <= 0x9 && AH >= 0x7 && AH <= 0xF)
-				{
-					A += 0xA0;
-					CY = 1;
-				}
-				else if (CY == 1&& H == 1&& AL >= 0x6 && AL <= 0xF && AH >= 0x6 && AH <= 0xF)
-				{
-					A += 0x9A;
-					CY = 1;
-				}
-				break;
-			}
-			}
+									// SUB r
+									case 0b10'010'000:
+									case 0b10'010'001:
+									case 0b10'010'010:
+									case 0b10'010'011:
+									case 0b10'010'100:
+									case 0b10'010'101:
+									case 0b10'010'111:
+										// SUB (HL)
+										case 0b10'010'110:
+											// SUB n
+											case 0b11'010'110:
+												// SBC A, r
+												case 0b10'011'000:
+												case 0b10'011'001:
+												case 0b10'011'010:
+												case 0b10'011'011:
+												case 0b10'011'100:
+												case 0b10'011'101:
+												case 0b10'011'111:
+													// SBC A. (HL)
+													case 0b10'011'110:
+														// SBC A, n
+														case 0b11'011'110:
+														{
+															// SUB/SBC
+															uint8_t AL = A & 0x0F, AH = A & 0xF0;
+															if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
+															{
+																A += 0x00;
+																CY = 0;
+															}
+															else if (CY == 0 && H == 1 && AL >= 0x6 && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
+															{
+																A += 0xFA;
+																CY = 0;
+															}
+															else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x7 && AH <= 0xF)
+															{
+																A += 0xA0;
+																CY = 1;
+															}
+															else if (CY == 1 && H == 1 && AL >= 0x6 && AL <= 0xF && AH >= 0x6 && AH <= 0xF)
+															{
+																A += 0x9A;
+																CY = 1;
+															}
+															break;
+														}
+														}
 
-			HC = 0;
-			Z = A == 0;
-		},
-		1
+														HC = 0;
+														Z = A == 0;
+													},
+													1
 	};
 
 	InstructionSet[0b00'101'111] =
@@ -2110,9 +2110,9 @@ SM83::SM83()
 			return "HALT";
 		},
 		[this]() {
-		// TODO
-	},
-	1
+			// TODO
+		},
+		1
 	};
 
 	InstructionSet[0b00'010'000] =
@@ -2121,9 +2121,9 @@ SM83::SM83()
 			return "STOP";
 		},
 		[this]() {
-		// TODO
-	},
-	1
+			// TODO
+		},
+		1
 	};
 }
 
