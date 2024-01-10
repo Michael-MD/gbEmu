@@ -186,11 +186,11 @@ void GB::write(uint16_t addr, uint8_t data)
 		if (addr >= 0xC000 && addr < 0xE000)
 		{
 			RAM[addr] = data;
-			RAM[0xE000 + addr & 0xC000] = data;
+			RAM[0xE000 + addr % 0xC000] = data;
 		}
 		else
 		{
-			RAM[0xC000 + addr & 0xE000] = data;
+			RAM[0xC000 + addr % 0xE000] = data;
 			RAM[addr] = data;
 		}
 	}
