@@ -65,7 +65,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 			#if DEBUG_MODE
-				if (nMachineCycles > 100'000)
+				//if (nMachineCycles > 0x10000)
 				{
 					nMachineCycles = 0;
 
@@ -1174,7 +1174,7 @@ SM83::SM83()
 		[this]() {
 			uint8_t tmp = A & 0x01;
 			A >>= 1;
-			A |= CY;
+			A |= CY << 7;
 			CY = tmp;
 			HC = 0;
 			N = 0;
@@ -1323,6 +1323,7 @@ SM83::SM83()
 					HC = 0;
 					N = 0;
 					Z = M == 0;
+					gb->write(HL, M);
 					cycle += 2;
 				}
 				break;
@@ -1350,6 +1351,7 @@ SM83::SM83()
 					HC = 0;
 					N = 0;
 					Z = M == 0;
+					gb->write(HL, M);
 					cycle += 2;
 				}
 				break;
@@ -1373,6 +1375,7 @@ SM83::SM83()
 					HC = 0;
 					N = 0;
 					Z = M == 0;
+					gb->write(HL, M);
 					cycle += 2;
 				}
 				break;
@@ -1390,6 +1393,7 @@ SM83::SM83()
 					uint8_t M = gb->read(HL);
 					uint8_t MH = M >> 4;
 					M = (M << 4) | MH;
+					gb->write(HL, M);
 					cycle += 2;
 				}
 				break;
