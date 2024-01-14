@@ -72,6 +72,8 @@ private:
 	inline char GPRString(uint8_t i); // For Disassembly
 	
 	inline uint16_t& qq(uint8_t i);
+	inline std::string qqString(uint8_t i); // For Disassembly
+
 	inline uint16_t& ss(uint8_t i);
 
 	uint16_t PC, SP; // Program Counter, Stack Pointer

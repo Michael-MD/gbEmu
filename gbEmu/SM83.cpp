@@ -65,7 +65,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			if (nMachineCycles > 0x100000)
+			if (nMachineCycles > 0x10000)
 			{
 				nMachineCycles = 0;
 
@@ -407,11 +407,13 @@ SM83::SM83()
 
 		InstructionSet[0b11'000'101 | (i << 4)] =
 		{
-			[]() {
-				return "PUSH qq ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)";
+			[this]() {
+				std::stringstream s;
+				s << "PUSH " << qqString(a) << " ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)";
+				return s.str();
 			},
 			[this]() {
-				uint16_t& r = qq(a);
+				uint16_t r = qq(a);
 				gb->write(--SP, r >> 8);
 				gb->write(--SP, r & 0x00FF);
 			},
@@ -421,14 +423,17 @@ SM83::SM83()
 
 		InstructionSet[0b11'000'001 | (i << 4)] =
 		{
-			[]() {
-				return "POP qq (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)";
+			[this]() {
+				std::stringstream s;
+				s << "POP " << qqString(a) << " (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)";
+				return s.str();
 			},
 			[this]() {
 				uint16_t& r = qq(a);
+				uint8_t LO = gb->read(SP++);
+				uint8_t HI = gb->read(SP++);
 
-				r = (r & 0xFF00) | gb->read(SP++);
-				r = (gb->read(SP++) << 8) | (r & 0x00FF);
+				r = (HI << 8) | LO;
 			},
 			3,
 			i
@@ -2166,6 +2171,21 @@ inline uint16_t& SM83::qq(uint8_t i)
 		// release mode. This case should never
 		// be reached.
 		return AF;
+	}
+}
+
+inline std::string SM83::qqString(uint8_t i)
+{
+	switch (i)
+	{
+	case 0b00:
+		return "BC";
+	case 0b01:
+		return "DE";
+	case 0b10:
+		return "HL";
+	case 0b11:
+		return "AF";
 	}
 }
 
