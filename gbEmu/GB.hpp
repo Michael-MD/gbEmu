@@ -105,8 +105,7 @@ public:
 	uint8_t* NR52 = RAM + 0xFF26;
 
 	// ================== Serial Transfer ================== 
-	char SerialOut[100] = {0};
-	int MessageSize = 0;
+	std::string SerialOut;
 
 	uint8_t* SB = RAM + 0xFF01;	// Serial transfer data
 

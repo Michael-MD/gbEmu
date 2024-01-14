@@ -95,11 +95,11 @@ GB::GB(std::string gbFilename)
 
 				i++;
 				//if (i % 280'000 == 0)	// Update Screen at ~60Hz
-				if(i % 28000 == 0)	// Update Screen at ~60Hz
-				{
+				//if(i % 28000 == 0)	// Update Screen at ~60Hz
+				/*{
 					update();
 					render();
-				}
+				}*/
 			}
 
 		}
@@ -198,9 +198,9 @@ void GB::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF02)	// Serial I/O
 	{
 		*SC = data;
-		if (SC->TransferEnable)
+		if (SC->reg == 0x81)
 		{
-			SerialOut[MessageSize++] = *SB;
+			SerialOut.push_back(*SB);
 			SC->TransferEnable = 0;
 		}
 	}

@@ -4,7 +4,7 @@
 #define DEBUG_MODE 1
 
 #if DEBUG_MODE
-	#include <iostream>
+#include <iostream>
 #endif
 #include <sstream>
 
@@ -64,30 +64,33 @@ void SM83::clock()
 			a = CurrentInstruction.a;
 			b = CurrentInstruction.b;
 
-			#if DEBUG_MODE
-				//if (nMachineCycles > 0x10000)
-				{
-					nMachineCycles = 0;
+#if DEBUG_MODE
+			//if (nMachineCycles > 0x10000)
+			{
+				nMachineCycles = 0;
 
-					std::cout << std::hex << (int)(PC - 1) << std::dec << ' ' << CurrentInstruction.mnemonic() << ' ' << std::hex << (int)(data) << std::dec << ' ' << (int)Z;
+				std::cout << std::hex
+					<< (int)(PC - 1)
+					<< std::dec << ' ' << CurrentInstruction.mnemonic()
+					<< ' ' << std::hex << (int)data;
 
-					/*std::cout << std::endl << std::dec << "A = $" << std::hex << (int)A << ' ';
-					std::cout << std::dec << "B = $" << std::hex << (int)B << ' ';
-					std::cout << std::dec << "C = $" << std::hex << (int)C << ' ';
-					std::cout << std::dec << "D = $" << std::hex << (int)D << ' ' << std::endl;
-					std::cout << std::dec << "E = $" << std::hex << (int)E << ' ';
-					std::cout << std::dec << "F = $" << std::hex << (int)F << ' ';
-					std::cout << std::dec << "L = $" << std::hex << (int)L << ' ';
-					std::cout << std::dec << "H = $" << std::hex << (int)H << ' ' << std::endl;*/
+				/*std::cout << std::endl << std::dec << "A = $" << std::hex << (int)A << ' ';
+				std::cout << std::dec << "B = $" << std::hex << (int)B << ' ';
+				std::cout << std::dec << "C = $" << std::hex << (int)C << ' ';
+				std::cout << std::dec << "D = $" << std::hex << (int)D << ' ' << std::endl;
+				std::cout << std::dec << "E = $" << std::hex << (int)E << ' ';
+				std::cout << std::dec << "F = $" << std::hex << (int)F << ' ';
+				std::cout << std::dec << "L = $" << std::hex << (int)L << ' ';
+				std::cout << std::dec << "H = $" << std::hex << (int)H << ' ' << std::endl;*/
 
-					std::cout << std::endl << std::hex << "AF = $" << (int)AF << std::endl;
-					std::cout << "BC = $" << (int)BC << std::endl;
-					std::cout << "DE = $" << (int)DE << std::endl;
-					std::cout << "HL = $" << (int)HL << std::endl;
+				std::cout << std::endl << std::hex << "AF = $" << (int)AF << std::endl;
+				std::cout << "BC = $" << (int)BC << std::endl;
+				std::cout << "DE = $" << (int)DE << std::endl;
+				std::cout << "HL = $" << (int)HL << std::endl;
 
-					std::cout << std::dec << "Debug Message: " << gb->SerialOut << std::endl;
-				}
-			#endif
+				std::cout << std::dec << "Debug Message: " << gb->SerialOut << std::endl;
+			}
+#endif
 
 			CurrentInstruction.op();
 		}
@@ -133,7 +136,8 @@ SM83::SM83()
 					return s.str();
 	;			},
 				[this]() {
-					uint8_t& r = GPR(a),& rp = GPR(b);
+					uint8_t& r = GPR(a);
+					uint8_t& rp = GPR(b);
 					r = rp;
 				},
 				1,
@@ -152,7 +156,7 @@ SM83::SM83()
 				std::stringstream s;
 				s << "LD " << rStr << ", [$" << std::hex << (int)PC << std::dec << "] = $" << std::hex << (int)gb->read(PC) << std::dec << " (r <- n)";
 				return s.str();
-;			},
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 				r = gb->read(PC++);
@@ -164,8 +168,8 @@ SM83::SM83()
 		InstructionSet[(0b01 << 6) | (i << 3) | 0b110] =
 		{
 			[]() {
-				return "LD r, (HL) (r <- (HL))"
-;			},
+				return "LD r, (HL) (r <- (HL))";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 				r = gb->read(HL);
@@ -181,10 +185,10 @@ SM83::SM83()
 		InstructionSet[0b01'110'000 | i] =
 		{
 			[]() {
-				return "LD (HL),r ((HL) <- r)"
-;			},
+				return "LD (HL),r ((HL) <- r)";
+			},
 			[this]() {
-				uint8_t& r = GPR(a);
+				uint8_t r = GPR(a);
 				gb->write(HL, r);
 			},
 			2,
@@ -367,61 +371,24 @@ SM83::SM83()
 		2
 	};
 
-	InstructionSet[0b00'000'001] =
+	for (uint8_t i = 0; i < 4; i++)
 	{
-		[]() {
-			return "LD dd, nn (BC <- nn)";
-		},
-		[this]() {
-			uint8_t LO, HI;
-			LO = gb->read(PC++);
-			HI = gb->read(PC++);
-			BC = (HI << 8) | LO;
-		},
-		3
-	};
-
-	InstructionSet[0b00'010'001] =
-	{
-		[]() {
-			return "LD dd, nn (DE <- nn)";
-		},
-		[this]() {
-			uint8_t LO, HI;
-			LO = gb->read(PC++);
-			HI = gb->read(PC++);
-			DE = (HI << 8) | LO;
-		},
-		3
-	};
-
-	InstructionSet[0b00'100'001] =
-	{
-		[]() {
-			return "LD dd, nn (HL <- nn)";
-		},
-		[this]() {
-			uint8_t LO, HI;
-			LO = gb->read(PC++);
-			HI = gb->read(PC++);
-			HL = (HI << 8) | LO;
-		},
-		3
-	};
-
-	InstructionSet[0b00'110'001] =
-	{
-		[]() {
-			return "LD dd, nn (SP <- nn)";
-		},
-		[this]() {
-			uint8_t LO, HI;
-			LO = gb->read(PC++);
-			HI = gb->read(PC++);
-			SP = (HI << 8) | LO;
-		},
-		3
-	};
+		InstructionSet[0b00'000'001 | (i << 4)] =
+		{
+			[]() {
+				return "LD dd, nn (BC <- nn)";
+			},
+			[this]() {
+				uint16_t& dd = ss(a);
+				uint8_t LO, HI;
+				LO = gb->read(PC++);
+				HI = gb->read(PC++);
+				dd = (HI << 8) | LO;
+			},
+			3,
+			i
+		};
+	}
 
 	InstructionSet[0b11'111'001] =
 	{
@@ -441,8 +408,8 @@ SM83::SM83()
 		InstructionSet[0b11'000'101 | (i << 4)] =
 		{
 			[]() {
-				return "PUSH qq ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)"
-;			},
+				return "PUSH qq ((SP-1) <- qqH (SP - 2) <- qqL SP <- SP - 2)";
+			},
 			[this]() {
 				uint16_t& r = qq(a);
 				gb->write(--SP, r >> 8);
@@ -455,8 +422,8 @@ SM83::SM83()
 		InstructionSet[0b11'000'001 | (i << 4)] =
 		{
 			[]() {
-				return "POP qq (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)"
-;			},
+				return "POP qq (qqL <- (SP) qqH <- (SP + 1) SP <- SP + 2)";
+			},
 			[this]() {
 				uint16_t& r = qq(a);
 
@@ -479,7 +446,7 @@ SM83::SM83()
 			HL = tmp & 0xFFFF;
 			Z = 0;
 			N = 0;
-			HC = (((SP & 0x000F) + e) >> 8) != 0;
+			HC = (((SP & 0xFFF) + (e & 0xFFF)) >> 12) != 0;
 			CY = (tmp >> 16) != 0;
 		},
 		3
@@ -494,9 +461,9 @@ SM83::SM83()
 			uint8_t LO, HI;
 			LO = gb->read(PC++);
 			HI = gb->read(PC++);
-			uint16_t M = (HI << 8) | LO;
-			gb->write(M++, SP & 0x00FF);
-			gb->write(M, SP >> 8);
+			uint16_t nn = (HI << 8) | LO;
+			gb->write(nn++, SP & 0x00FF);
+			gb->write(nn, SP >> 8);
 		},
 		5
 	};
@@ -560,8 +527,8 @@ SM83::SM83()
 		InstructionSet[0b10'001'000 | i] =
 		{
 			[]() {
-				return "ADC A, r (A <- A+s+CY)"
-;			},
+				return "ADC A, r (A <- A+s+CY)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -622,8 +589,8 @@ SM83::SM83()
 		InstructionSet[0b10'010'000 | i] =
 		{
 			[]() {
-				return "SUB r (A <- A-r)"
-;			},
+				return "SUB r (A <- A-r)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -681,8 +648,8 @@ SM83::SM83()
 		InstructionSet[0b10'011'000 | i] =
 		{
 			[]() {
-				return "SBC A, r (A <- A-r-CY)"
-;			},
+				return "SBC A, r (A <- A-r-CY)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -739,8 +706,8 @@ SM83::SM83()
 		InstructionSet[0b10'100'000 | i] =
 		{
 			[]() {
-				return "AND r (A & r)"
-;			},
+				return "AND r (A & r)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -790,8 +757,8 @@ SM83::SM83()
 		InstructionSet[0b10'110'000 | i] =
 		{
 			[]() {
-				return "OR r (A | r)"
-;			},
+				return "OR r (A | r)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -841,8 +808,8 @@ SM83::SM83()
 		InstructionSet[0b10'101'000 | i] =
 		{
 			[]() {
-				return "XOR r (A ^ r)"
-;			},
+				return "XOR r (A ^ r)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -892,8 +859,8 @@ SM83::SM83()
 		InstructionSet[0b10'111'000 | i] =
 		{
 			[]() {
-				return "CP r (A == r)"
-;			},
+				return "CP r (A == r)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -944,8 +911,8 @@ SM83::SM83()
 		InstructionSet[0b00'000'100 | (i << 3)] =
 		{
 			[]() {
-				return "INC r (r <- r+1)"
-;			},
+				return "INC r (r <- r+1)";
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 
@@ -984,8 +951,8 @@ SM83::SM83()
 				uint8_t r = GPR(a);
 				char rStr = GPRString(a);
 				s << "DEC " << rStr << " = $" << std::hex << (int)r << std::dec << " (r <- r-1)";
-				return s.str();
-;			},
+				return s.str();;
+			},
 			[this]() {
 				uint8_t& r = GPR(a);
 				HC = (r & 0xF) < (1 & 0xF);
@@ -1091,8 +1058,8 @@ SM83::SM83()
 		InstructionSet[0b00'000'011 | (i << 4)] =
 		{
 			[]() {
-				return "INC ss (ss <- ss + 1)"
-;			},
+				return "INC ss (ss <- ss + 1)";
+			},
 			[this]() {
 				uint16_t& r = ss(a);
 
@@ -1105,8 +1072,8 @@ SM83::SM83()
 		InstructionSet[0b00'001'011 | (i << 4)] =
 		{
 			[]() {
-				return "DEC ss (ss <- ss - 1)"
-;			},
+				return "DEC ss (ss <- ss - 1)";
+			},
 			[this]() {
 				uint16_t& r = ss(a);
 
@@ -1893,8 +1860,8 @@ SM83::SM83()
 		InstructionSet[0b11'000'111 | (t << 3)] =
 		{
 			[]() {
-				return "RST t"
-;			},
+				return "RST t";
+			},
 			[this]() {
 				gb->write(--SP, PC >> 8);
 				gb->write(--SP, PC & 0x00FF);
@@ -2185,7 +2152,12 @@ inline uint16_t& SM83::qq(uint8_t i)
 		return HL;
 	case 0b11:
 		return AF;
-
+	default:
+		// A default statement is present to stop
+		// the compiler from complaining in 
+		// release mode. This case should never
+		// be reached.
+		return AF;
 	}
 }
 
@@ -2200,6 +2172,12 @@ inline uint16_t& SM83::ss(uint8_t i)
 	case 0b10:
 		return HL;
 	case 0b11:
+		return SP;
+	default:
+		// A default statement is present to stop
+		// the compiler from complaining in 
+		// release mode. This case should never
+		// be reached.
 		return SP;
 	}
 }
