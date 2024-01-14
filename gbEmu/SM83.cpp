@@ -1901,130 +1901,130 @@ SM83::SM83()
 				case 0b10'000'100:
 				case 0b10'000'101:
 				case 0b10'000'111:
-					// ADD A, n
-					case 0b11'000'110:
-						// ADD A, (HL)
-						case 0b10'000'110:
-							// ADC A, r
-							case 0b10'001'000:
-							case 0b10'001'001:
-							case 0b10'001'010:
-							case 0b10'001'011:
-							case 0b10'001'100:
-							case 0b10'001'101:
-							case 0b10'001'111:
-								// ADC A, (HL)
-								case 0b10'001'110:
-									// ADC A, nn
-									case 0b11'001'110:
-									{
-										// ADD/ADC
-										uint8_t AL = A & 0x0F, AH = A & 0xF0;
-										if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
-										{
-											A += 0x00;
-											CY = 0;
-										}
-										else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
-										{
-											A += 0x06;
-											CY = 0;
-										}
-										else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x9)
-										{
-											A += 0x06;
-											CY = 0;
-										}
-										else if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0xA && AH <= 0xF)
-										{
-											A += 0x60;
-											CY = 1;
-										}
-										else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x9 && AH <= 0xF)
-										{
-											A += 0x66;
-											CY = 1;
-										}
-										else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0xA && AH <= 0xF)
-										{
-											A += 0x66;
-											CY = 1;
-										}
-										else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x2)
-										{
-											A += 0x60;
-											CY = 1;
-										}
-										else if (CY == 1 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x2)
-										{
-											A += 0x66;
-											CY = 1;
-										}
-										else if (CY == 1 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x3)
-										{
-											A += 0x66;
-											CY = 1;
-										}
+				// ADD A, n
+				case 0b11'000'110:
+				// ADD A, (HL)
+				case 0b10'000'110:
+				// ADC A, r
+				case 0b10'001'000:
+				case 0b10'001'001:
+				case 0b10'001'010:
+				case 0b10'001'011:
+				case 0b10'001'100:
+				case 0b10'001'101:
+				case 0b10'001'111:
+				// ADC A, (HL)
+				case 0b10'001'110:
+				// ADC A, nn
+				case 0b11'001'110:
+				{
+					// ADD/ADC
+					uint8_t AL = A & 0x0F, AH = A & 0xF0;
+					if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
+					{
+						A += 0x00;
+						CY = 0;
+					}
+					else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
+					{
+						A += 0x06;
+						CY = 0;
+					}
+					else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x9)
+					{
+						A += 0x06;
+						CY = 0;
+					}
+					else if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0xA && AH <= 0xF)
+					{
+						A += 0x60;
+						CY = 1;
+					}
+					else if (CY == 0 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x9 && AH <= 0xF)
+					{
+						A += 0x66;
+						CY = 1;
+					}
+					else if (CY == 0 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0xA && AH <= 0xF)
+					{
+						A += 0x66;
+						CY = 1;
+					}
+					else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x2)
+					{
+						A += 0x60;
+						CY = 1;
+					}
+					else if (CY == 1 && H == 0 && AL >= 0xA && AL <= 0xF && AH >= 0x0 && AH <= 0x2)
+					{
+						A += 0x66;
+						CY = 1;
+					}
+					else if (CY == 1 && H == 1 && AL >= 0x0 && AL <= 0x3 && AH >= 0x0 && AH <= 0x3)
+					{
+						A += 0x66;
+						CY = 1;
+					}
 
 
-										break;
-									}
+					break;
+				}
 
-									// SUB r
-									case 0b10'010'000:
-									case 0b10'010'001:
-									case 0b10'010'010:
-									case 0b10'010'011:
-									case 0b10'010'100:
-									case 0b10'010'101:
-									case 0b10'010'111:
-										// SUB (HL)
-										case 0b10'010'110:
-											// SUB n
-											case 0b11'010'110:
-												// SBC A, r
-												case 0b10'011'000:
-												case 0b10'011'001:
-												case 0b10'011'010:
-												case 0b10'011'011:
-												case 0b10'011'100:
-												case 0b10'011'101:
-												case 0b10'011'111:
-													// SBC A. (HL)
-													case 0b10'011'110:
-														// SBC A, n
-														case 0b11'011'110:
-														{
-															// SUB/SBC
-															uint8_t AL = A & 0x0F, AH = A & 0xF0;
-															if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
-															{
-																A += 0x00;
-																CY = 0;
-															}
-															else if (CY == 0 && H == 1 && AL >= 0x6 && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
-															{
-																A += 0xFA;
-																CY = 0;
-															}
-															else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x7 && AH <= 0xF)
-															{
-																A += 0xA0;
-																CY = 1;
-															}
-															else if (CY == 1 && H == 1 && AL >= 0x6 && AL <= 0xF && AH >= 0x6 && AH <= 0xF)
-															{
-																A += 0x9A;
-																CY = 1;
-															}
-															break;
-														}
-														}
+				// SUB r
+				case 0b10'010'000:
+				case 0b10'010'001:
+				case 0b10'010'010:
+				case 0b10'010'011:
+				case 0b10'010'100:
+				case 0b10'010'101:
+				case 0b10'010'111:
+				// SUB (HL)
+				case 0b10'010'110:
+				// SUB n
+				case 0b11'010'110:
+				// SBC A, r
+				case 0b10'011'000:
+				case 0b10'011'001:
+				case 0b10'011'010:
+				case 0b10'011'011:
+				case 0b10'011'100:
+				case 0b10'011'101:
+				case 0b10'011'111:
+				// SBC A. (HL)
+				case 0b10'011'110:
+				// SBC A, n
+				case 0b11'011'110:
+				{
+					// SUB/SBC
+					uint8_t AL = A & 0x0F, AH = A & 0xF0;
+					if (CY == 0 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x0 && AH <= 0x9)
+					{
+						A += 0x00;
+						CY = 0;
+					}
+					else if (CY == 0 && H == 1 && AL >= 0x6 && AL <= 0xF && AH >= 0x0 && AH <= 0x8)
+					{
+						A += 0xFA;
+						CY = 0;
+					}
+					else if (CY == 1 && H == 0 && AL >= 0x0 && AL <= 0x9 && AH >= 0x7 && AH <= 0xF)
+					{
+						A += 0xA0;
+						CY = 1;
+					}
+					else if (CY == 1 && H == 1 && AL >= 0x6 && AL <= 0xF && AH >= 0x6 && AH <= 0xF)
+					{
+						A += 0x9A;
+						CY = 1;
+					}
+					break;
+				}
+			}
 
-														HC = 0;
-														Z = A == 0;
-													},
-													1
+			HC = 0;
+			Z = A == 0;
+		},
+		1
 	};
 
 	InstructionSet[0b00'101'111] =
