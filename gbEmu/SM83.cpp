@@ -65,7 +65,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			//if (nMachineCycles > 0x10000)
+			if (nMachineCycles > 0x100000)
 			{
 				nMachineCycles = 0;
 
@@ -1546,7 +1546,7 @@ SM83::SM83()
 			return "JR e (PC <- PC+e)";
 		},
 		[this]() {
-			int8_t e = gb->read(PC++) - 1;
+			int8_t e = gb->read(PC++);
 			PC += e;
 		},
 		3
@@ -1560,12 +1560,14 @@ SM83::SM83()
 		[this]() {
 			if (Z == 0)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
-
-			PC++;
+			else
+			{
+				PC++;
+			}
 		},
 		2
 	};
@@ -1578,12 +1580,14 @@ SM83::SM83()
 		[this]() {
 			if (Z == 1)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
-
-			PC++;
+			else
+			{
+				PC++;
+			}
 		},
 		2
 	};
@@ -1596,12 +1600,14 @@ SM83::SM83()
 		[this]() {
 			if (CY == 0)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
-
-			PC++;
+			else
+			{
+				PC++;
+			}
 		},
 		2
 	};
@@ -1614,12 +1620,14 @@ SM83::SM83()
 		[this]() {
 			if (CY == 1)
 			{
-				int8_t e = gb->read(PC++) - 1;
+				int8_t e = gb->read(PC++);
 				PC += e;
 				cycle++;
 			}
-
-			PC++;
+			else
+			{
+				PC++;
+			}
 		},
 		2
 	};
