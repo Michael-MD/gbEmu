@@ -40,7 +40,7 @@ private:
 			{
 				struct
 				{
-					uint8_t _ : 4;
+					uint8_t U : 4;	// Unused
 					uint8_t CY : 1;	// Carry
 					uint8_t HC : 1;	// Half Carry
 					uint8_t N : 1;	// Subtract
