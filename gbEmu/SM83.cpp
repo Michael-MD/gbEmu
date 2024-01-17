@@ -23,38 +23,29 @@ void SM83::clock()
 		if (cycle == 0)
 		{
 			// Check for interrupts between intruction fetch cycles
-			if (gb->IME)
+			if (IME)
 			{
 				// Check if any interrupts have occured
 				if ((gb->IE->reg & gb->IF->reg & 0x1F) != 0)
 				{
-					// Check interrupts in order of precedence
-
-					gb->IME = 0;
-					gb->write(--SP, PC >> 8);
-					gb->write(--SP, PC & 0x00FF);
-
-					if (gb->IE->VerticalBlanking && gb->IF->VerticalBlanking)
-					{
-						PC = 0x0040;
-					}
-					else if (gb->IE->LCDC && gb->IF->LCDC)
-					{
-						PC = 0x0048;
-					}
-					else if (gb->IE->TimerOverflow && gb->IF->TimerOverflow)
-					{
-						PC = 0x0050;
-					}
-					else if (gb->IE->SerialIOTransferCompletion && gb->IF->SerialIOTransferCompletion)
-					{
-						PC = 0x0058;
-					}
-					else if (gb->IE->PNegEdge && gb->IF->PNegEdge)
-					{
-						PC = 0x0060;
-					}
+					InterruptServiceRoutine();
 				}
+			}
+
+			// Before fetching another instruction there
+			// is the possibility the EI instruction was run.
+			// The instruction effect is delayed by one 
+			// instruction so we check if the IMEDelaySet
+			// flag is set. 
+
+			if (IMEDelaySet == 0)
+			{
+				IME = 1;
+				IMEDelaySet = 0xFF;
+			}
+			else if(IMEDelaySet != 0xFF)
+			{
+				IMEDelaySet--;
 			}
 
 			// Fetch Next Instruction
@@ -104,7 +95,46 @@ void SM83::clock()
 	// IME reset after interrupt occurs	
 }
 
+void SM83::InterruptServiceRoutine()
+{
+	// Prepares the CPU for executing an interrupt handler.
+	// This process takes a total of 5 machine cycles. 
+	// Everything is done at once here.
 
+	IME = 0;
+	gb->write(--SP, PC >> 8);
+	gb->write(--SP, PC & 0x00FF);
+
+	// Check interrupts in order of precedence
+
+	if (gb->IE->VerticalBlanking && gb->IF->VerticalBlanking)
+	{
+		PC = 0x0040;
+		gb->IF->VerticalBlanking = 0;
+	}
+	else if (gb->IE->LCDC && gb->IF->LCDC)
+	{
+		PC = 0x0048;
+		gb->IF->LCDC = 0;
+	}
+	else if (gb->IE->TimerOverflow && gb->IF->TimerOverflow)
+	{
+		PC = 0x0050;
+		gb->IF->TimerOverflow = 0;
+	}
+	else if (gb->IE->SerialIOTransferCompletion && gb->IF->SerialIOTransferCompletion)
+	{
+		PC = 0x0058;
+		gb->IF->SerialIOTransferCompletion = 0;
+	}
+	else if (gb->IE->PNegEdge && gb->IF->PNegEdge)
+	{
+		PC = 0x0060;
+		gb->IF->PNegEdge = 0;
+	}
+
+	cycle += 5;
+}
 
 SM83::SM83()
 {
@@ -1812,7 +1842,7 @@ SM83::SM83()
 			uint8_t LO = gb->read(SP++);
 			uint8_t HI = gb->read(SP++);
 			PC = (HI << 8) | LO;
-			gb->IME = 1;
+			IME = 1;
 		},
 		4
 	};
@@ -1933,7 +1963,7 @@ SM83::SM83()
 					tmp += 0x06;
 				}
 
-				if (CY || tmp > 0x9F)
+				if (CY || tmp > 0x99)
 				{
 					tmp += 0x60;
 				}
@@ -1941,7 +1971,7 @@ SM83::SM83()
 
 			A = tmp;
 
-			CY = (tmp >> 8) != 0;
+			CY = tmp >> 8;
 			Z = A == 0;
 			HC = 0;
 		},
@@ -1993,7 +2023,7 @@ SM83::SM83()
 			return "DI (IME <- 0)";
 		},
 		[this]() {
-			gb->IME = 0;
+			IME = 0;
 		},
 		1
 	};
@@ -2004,7 +2034,8 @@ SM83::SM83()
 			return "EI (IME <- 1)";
 		},
 		[this]() {
-			gb->IME = 1;
+			//IME = 1;
+			IMEDelaySet = 1;
 		},
 		1
 	};
@@ -2027,6 +2058,8 @@ SM83::SM83()
 		},
 		[this]() {
 			// TODO
+
+			gb->timer.DIV = 0;
 		},
 		1
 	};

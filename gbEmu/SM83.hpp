@@ -92,5 +92,12 @@ private:
 
 	uint8_t cycle;		// Cycle Number
 
+	uint8_t IMEDelaySet = 0xFF;
+
+	// Interrupt Handling
+
+	bool IME; // Interrupt Master Flag
+
+	void InterruptServiceRoutine();
 
 };
