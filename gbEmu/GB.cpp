@@ -22,9 +22,9 @@ GB::GB(std::string gbFilename)
 	// ============== Initilizes Registers ==============
 	// CPU Internal Registers
 	cpu.AF = 0x1180;
-	cpu.BC = 0x0013;
-	cpu.DE = 0x00D8;
-	cpu.HL = 0x014D;
+	cpu.BC = 0x0000;
+	cpu.DE = 0xFF56;
+	cpu.HL = 0x000D;
 	cpu.SP = 0xFFFE;
 	cpu.PC = 0x0100;
 
@@ -78,7 +78,7 @@ GB::GB(std::string gbFilename)
 		unsigned int a, b = 0, delta, i = 0;
 		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, ppu.GridWidth, ppu.GridHeight);
 
-		while (bIsRunning)
+		while (IsRunning)
 		{
 			a = SDL_GetTicks();
 			delta = a - b;
@@ -116,7 +116,7 @@ void GB::handleEvents()
 	switch (event.type)
 	{
 	case SDL_QUIT:
-		bIsRunning = false;
+		IsRunning = false;
 		break;
 	case SDL_KEYDOWN:
 
@@ -207,7 +207,7 @@ void GB::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF04)	// Divider Register
 	{
 		// Writing any value to Divider register sets it to 0x00.
-		*timer.Div = 0x00;
+		*timer.DIV = 0x00;
 	}
 	else if (addr == 0xFF07)	// TAC
 	{

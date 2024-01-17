@@ -22,7 +22,7 @@ MBC1::MBC1(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(ROMSi
 	ROMBankCode = 0x00;
 	UpperROMBankCode = 0x00;
 	bBankingMode = 0x00;
-	bRAMEnable = 0;
+	RAMEnable = 0;
 }
 
 void MBC1::write(uint16_t addr, uint8_t data)
@@ -133,7 +133,7 @@ uint8_t MBC1::read(uint16_t addr)
 	// RAM
 	else if (addr >= 0xA000 && addr < 0xC000)
 	{
-		if(bRAMEnable)
+		if(RAMEnable)
 		{
 			if (bBankingMode)
 			{

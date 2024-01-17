@@ -14,7 +14,7 @@ public:
 	int TickRate;
 
 	// Divider (Read/Reset)
-	uint8_t* Div;
+	uint8_t* DIV;
 
 	// TIMA Register
 	uint8_t* TIMA;
@@ -28,7 +28,7 @@ public:
 		struct
 		{
 			uint8_t InputClockSelect : 2;
-			uint8_t Start : 1;
+			uint8_t Enable : 1;
 		};
 
 		uint8_t reg_;

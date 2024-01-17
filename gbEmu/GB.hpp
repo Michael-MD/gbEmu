@@ -171,15 +171,13 @@ public:
 
 	} *IE = reinterpret_cast<decltype(IE)>(RAM + 0xFFFF);
 
-	bool IME; // Interrupt Master Flag
-
 private:	
 	void handleEvents();
 	void update();
 	void render();
 	void clean();
 
-	bool bIsRunning = true;
+	bool IsRunning = true;
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 	SDL_Texture* texture;

@@ -13,5 +13,5 @@ public:
 
 	// Registers
 	uint8_t ROMBankCode, UpperROMBankCode, bBankingMode;
-	bool bRAMEnable;
+	bool RAMEnable;
 };

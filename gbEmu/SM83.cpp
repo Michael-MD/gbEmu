@@ -15,6 +15,33 @@ void SM83::connectGB(GB* gb)
 
 void SM83::clock()
 {
+	// Check if CPU is halted. If som then nothing
+	// should be done. The halt is lifted if an 
+	// interrupt is pending. In which case a series
+	// of events take place depending on whether 
+	// IME is set or unset.
+
+	if (Halted)
+	{
+		if ((gb->IE->reg & gb->IF->reg & 0x1F) != 0)
+		{
+			Halted = false;
+
+			if (IME == 0 && PendingInterruptWhileHalted)
+			{
+				// If the halt instruction was executed while
+				// an interrupt was pending, when the cpu resumes
+				// a halt bug is triggered.
+
+				// TODO: halt bug
+				
+				PendingInterruptWhileHalted = false;
+			}
+		}
+		else
+			return;
+	}
+
 	if (gb->nClockCycles % 4 == 0) // CPU instructuctions defined in machine cycles
 	{
 		nMachineCycles++;
@@ -2046,7 +2073,11 @@ SM83::SM83()
 			return "HALT";
 		},
 		[this]() {
-			// TODO
+			Halted = true;
+			if ((gb->IE->reg & gb->IF->reg & 0x1F) != 0 && IME == 0)
+			{
+				PendingInterruptWhileHalted = true;
+			}
 		},
 		1
 	};

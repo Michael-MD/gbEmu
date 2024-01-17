@@ -100,4 +100,7 @@ private:
 
 	void InterruptServiceRoutine();
 
+	bool Halted; // Set if CPU is halted
+	bool PendingInterruptWhileHalted;
+
 };

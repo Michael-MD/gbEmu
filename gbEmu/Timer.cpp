@@ -6,7 +6,7 @@ void Timer::connectGB(GB* gb)
 	this->gb = gb;
 
 	// Divider (Read/Reset)
-	Div = gb->RAM + 0xFF04;
+	DIV = gb->RAM + 0xFF04;
 
 	// TIMA Register
 	TIMA = gb->RAM + 0xFF05;
@@ -25,9 +25,14 @@ void Timer::connectGB(GB* gb)
 
 void Timer::clock()
 {
+	// TODO: obscure behaviour
 	
+	// Increment TIMA register, if the current
+	// value is 0xFF then the register will overflow
+	// and we load TMA into TIMA and set the inerrupt
+	// request bit in register IF.
 
-	if(TAC->Start && gb->nClockCycles % TickRate == 0)
+	if(TAC->Enable && gb->nClockCycles % TickRate == 0)
 	{
 		if (*TIMA == 0xFF)
 		{
@@ -40,6 +45,7 @@ void Timer::clock()
 		}
 	}
 
-	// Increment Div Register
-	if (gb->nClockCycles % 256 == 0) (*Div)++;
+	// Increment DIV Register
+	// DIV is incremented at 16384Hz (~16779Hz on 
+	if (gb->nClockCycles % 256 == 0) (*DIV)++;
 }
