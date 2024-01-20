@@ -83,7 +83,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			if (nMachineCycles > 0x10000)
+			if (nMachineCycles > 0xA0000)
 			{
 				nMachineCycles = 0;
 
@@ -2106,7 +2106,7 @@ SM83::SM83()
 			return "RET CY";
 		},
 		[this]() {
-			if (CY == 0)
+			if (CY == 1)
 			{
 				uint8_t LO = gb->read(SP++);
 				uint8_t HI = gb->read(SP++);
