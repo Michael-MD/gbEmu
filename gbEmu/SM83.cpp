@@ -1233,294 +1233,466 @@ SM83::SM83()
 		1
 	};
 
+	// ========== 16-bit Opcode Instructions ==========
+
 	InstructionSet[0b11'001'011] =
 	{
 		[]() {
-			return "Shift";
+			return "";
 		},
 		[this]() {
-			uint8_t D = gb->read(PC++);
-			uint8_t raddr = D & 0x03;
-			uint8_t opH = D >> 3;
+			uint8_t data = gb->read(PC++);
 
-			switch (opH)
-			{
-			case 0b00'000:
-				if (raddr != 0b110)
-				{
-					// RLC r
-					uint8_t& r = GPR(raddr);
-					CY = r >> 7;
-					r <<= 1;
-					r |= CY;
-					HC = 0;
-					N = 0;
-					Z = r == 0;
-				}
-				else
-				{
-					// RLC (HL)
-					uint8_t M = gb->read(HL);
-					CY = M >> 7;
-					M <<= 1;
-					M |= CY;
-					gb->write(HL, M);
-					N = 0;
-					HC = 0;
-					Z = M == 0;
-					cycle += 2;
-				}
-				break;
-			case 0b00'010:
-				if (raddr != 0b110)
-				{
-					// RL r
-					uint8_t& r = GPR(raddr);
-					uint8_t tmp = r >> 7;
-					r <<= 1;
-					r |= CY;
-					CY = tmp;
-					HC = 0;
-					N = 0;
-					Z = r == 0;
-				}
-				else
-				{
-					// RL (HL)
-					uint8_t M = gb->read(HL);
-					uint8_t tmp = M >> 7;
-					M <<= 1;
-					M |= CY;
-					gb->write(HL, M);
-					CY = tmp;
-					N = 0;
-					HC = 0;
-					Z = M == 0;
-					cycle += 2;
-				}
-				break;
-			case 0b00'001:
-				if (raddr != 0b110)
-				{
-					// RRC r
-					uint8_t& r = GPR(raddr);
-					CY = r & 0x01;
-					r >>= 1;
-					r |= CY << 7;
-					HC = 0;
-					N = 0;
-					Z = r == 0;
-				}
-				else
-				{
-					// RRC (HL)
-					uint8_t M = gb->read(HL);
-					CY = M & 0x01;
-					M >>= 1;
-					M |= CY << 7;
-					gb->write(HL, M);
-					N = 0;
-					HC = 0;
-					Z = M == 0;
-					cycle += 2;
-				}
-				break;
-			case 0b00'011:
-				if (raddr != 0b110)
-				{
-					// RR r
-					uint8_t& r = GPR(raddr);
-					uint8_t tmp = r & 0x01;
-					r >>= 1;
-					r |= CY << 7;
-					CY = tmp;
-					HC = 0;
-					N = 0;
-					Z = r == 0;
-				}
-				else
-				{
-					// RR (HL)
-					uint8_t M = gb->read(HL);
-					uint8_t tmp = M & 0x01;
-					M >>= 1;
-					M |= CY << 7;
-					CY = tmp;
-					gb->write(HL, M);
-					N = 0;
-					HC = 0;
-					Z = M == 0;
-					cycle += 2;
-				}
-				break;
-			case 0b00'100:
-				if (raddr != 0b110)
-				{
-					// SLA r
-					uint8_t& r = GPR(raddr);
-					CY = r >> 7;
-					r <<= 1;
-					HC = 0;
-					N = 0;
-					Z = r == 0;
-				}
-				else
-				{
-					// SLA (HL)
-					uint8_t M = gb->read(HL);
-					CY = M >> 7;
-					M <<= 1;
-					HC = 0;
-					N = 0;
-					Z = M == 0;
-					gb->write(HL, M);
-					cycle += 2;
-				}
-				break;
-			case 0b00'101:
-				if (raddr != 0b110)
-				{
-					// SRA r
-					uint8_t& r = GPR(raddr);
-					uint8_t tmp = r & 0x80;
-					CY = r & 0x01;
-					r >>= 1;
-					r |= tmp;
-					HC = 0;
-					N = 0;
-					Z = r == 0;
-				}
-				else
-				{
-					// SRA (HL)
-					uint8_t M = gb->read(HL);
-					uint8_t tmp = M & 0x80;
-					CY = M & 0x01;
-					M >>= 1;
-					M |= tmp;
-					HC = 0;
-					N = 0;
-					Z = M == 0;
-					gb->write(HL, M);
-					cycle += 2;
-				}
-				break;
-			case 0b00'111:
-				if (raddr != 0b110)
-				{
-					// SRL r
-					uint8_t& r = GPR(raddr);
-					CY = r & 0x01;
-					r >>= 1;
-					HC = 0;
-					N = 0;
-					Z = r == 0;
-				}
-				else
-				{
-					// SRL (HL)
-					uint8_t M = gb->read(HL);
-					CY = M & 0x01;
-					M >>= 1;
-					HC = 0;
-					N = 0;
-					Z = M == 0;
-					gb->write(HL, M);
-					cycle += 2;
-				}
-				break;
-			case 0b00'110:
-				if (raddr != 0b110)
-				{
-					// SWAP r
-					uint8_t& r = GPR(raddr);
-					uint8_t rH = r >> 4;
-					r = (r << 4) | rH;
-				}
-				else
-				{
-					// SWAP (HL)
-					uint8_t M = gb->read(HL);
-					uint8_t MH = M >> 4;
-					M = (M << 4) | MH;
-					gb->write(HL, M);
-					cycle += 2;
-				}
-				break;
-			}
+			CurrentInstruction16Bit = InstructionSet16Bit[data];
+			cycle += CurrentInstruction16Bit.cycles;
+			a = CurrentInstruction16Bit.a;
+			b = CurrentInstruction16Bit.b;
+
+			CurrentInstruction16Bit.op();
 		},
-		2
+		0
 	};
 
-	InstructionSet[0b11'001'011] =
-	{
-		[]() {
-			return "BIT";
-		},
-		[this]() {
-			uint8_t D = gb->read(PC++);
-			uint8_t raddr = D & 0x03;
-			uint8_t& r = GPR(raddr);
-			uint8_t b = (D >> 3) & 0x03;
-			uint8_t opH = D >> 6;
+	// Bit Instructions
 
-			switch (opH)
+	for (uint8_t c = 0; c <= 7; c++)
+	{
+		for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+		{
+			InstructionSet16Bit[0b01'000'000 | (c << 3) | i] =
 			{
-			case 0b01:
-				if (raddr != 0b110)
-				{
-					// BIT b,r (Z <- ~rb)
+				[]() {
+					return "BIT b, r (Z <- ~rb)";
+				},
+				[this]() {
+					uint8_t& r = GPR(a);
+					
 					Z = (~r >> b) & 0b1;
 					HC = 1;
 					N = 0;
-				}
-				else
-				{
-					// BIT b,(HL) (Z <- ~(HL)b)
-					uint8_t M = gb->read(HL);
-					Z = (~M >> b) & 0b1;
-					HC = 1;
-					N = 0;
+				},
+				2,
+				i,
+				c
+			};
+		}
+	}
 
-					cycle += 1;
-				}
-				break;
-			case 0b11:
-				if (raddr != 0b110)
-				{
-					// SET b,r (rb <- 1)
+	for (uint8_t c = 0; c <= 7; c++)
+	{
+		InstructionSet16Bit[0b01'000'110 | (c << 3)] =
+		{
+			[]() {
+				return "BIT b,(HL) (Z <- ~(HL)b)";
+			},
+			[this]() {
+				uint8_t M = gb->read(HL);
+				Z = (~M >> b) & 0b1;
+				HC = 1;
+				N = 0;
+			},
+			3,
+			0,
+			c
+		};
+	}
+	
+	for (uint8_t c = 0; c <= 7; c++)
+	{
+		for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+		{
+			InstructionSet16Bit[0b11'000'000 | (c << 3) | i] =
+			{
+				[]() {
+					return "SET b,r (rb <- 1)";
+				},
+				[this]() {
+					uint8_t& r = GPR(a);
+
 					r |= (1 << b);
-				}
-				else
-				{
-					// SET b,(HL) ((HL)b <- 1)
-					uint8_t M = gb->read(HL);
-					M |= (1 << b);
-					gb->write(HL, M);
+				},
+				2,
+				i,
+				c
+			};
+		}
+	}
 
-					cycle += 2;
-				}
-				break;
-			case 0b10:
-				if (raddr != 0b110)
-				{
-					// RES b,r (rb <- 0)
+	for (uint8_t c = 0; c <= 7; c++)
+	{
+		InstructionSet16Bit[0b11'000'110 | (c << 3)] =
+		{
+			[]() {
+				return "SET b,(HL) ((HL)b <- 1)";
+			},
+			[this]() {
+				uint8_t M = gb->read(HL);
+				M |= (1 << b);
+				gb->write(HL, M);
+			},
+			4,
+			0,
+			c
+		};
+	}
+
+	for (uint8_t c = 0; c <= 7; c++)
+	{
+		for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+		{
+			InstructionSet16Bit[0b10'000'000 | (c << 3) | i] =
+			{
+				[]() {
+					return "RES b,r (rb <- 0)";
+				},
+				[this]() {
+					uint8_t& r = GPR(a);
+
 					r &= ~(1 << b);
-				}
-				else
-				{
-					// RES b,(HL) ((HL)b <- 0)
-					uint8_t M = gb->read(HL);
-					M &= ~(1 << b);
-					gb->write(HL, M);
+				},
+				2,
+				i,
+				c
+			};
+		}
+	}
 
-					cycle += 2;
-				}
-				break;
-			}
+	for (uint8_t c = 0; c <= 7; c++)
+	{
+		InstructionSet16Bit[0b10'000'110 | (c << 3)] =
+		{
+			[]() {
+				return "RES b,(HL) ((HL)b <- 0)";
+			},
+			[this]() {
+				uint8_t M = gb->read(HL);
+				M &= ~(1 << b);
+				gb->write(HL, M);
+			},
+			4,
+			0,
+			c
+		};
+	}
+
+	// Shift Instructions
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'000'000 | i] =
+		{
+			[]() {
+				return "RLC r";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				CY = r >> 7;
+				r <<= 1;
+				r |= CY;
+				HC = 0;
+				N = 0;
+				Z = r == 0;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'000'110] =
+	{
+		[]() {
+			return "RLC (HL)";
 		},
-		2
+		[this]() {
+			uint8_t M = gb->read(HL);
+			CY = M >> 7;
+			M <<= 1;
+			M |= CY;
+			gb->write(HL, M);
+			N = 0;
+			HC = 0;
+			Z = M == 0;
+		},
+		4
 	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'010'000 | i] =
+		{
+			[]() {
+				return "RL r";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				uint8_t tmp = r >> 7;
+				r <<= 1;
+				r |= CY;
+				CY = tmp;
+				HC = 0;
+				N = 0;
+				Z = r == 0;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'010'110] =
+	{
+		[]() {
+			return "RL (HL)";
+		},
+		[this]() {
+			uint8_t M = gb->read(HL);
+			uint8_t tmp = M >> 7;
+			M <<= 1;
+			M |= CY;
+			gb->write(HL, M);
+			CY = tmp;
+			N = 0;
+			HC = 0;
+			Z = M == 0;
+		},
+		4
+	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'001'000 | i] =
+		{
+			[]() {
+				return "RRC r";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				CY = r & 0x01;
+				r >>= 1;
+				r |= CY << 7;
+				HC = 0;
+				N = 0;
+				Z = r == 0;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'001'110] =
+	{
+		[]() {
+			return "RRC (HL)";
+		},
+		[this]() {
+			uint8_t M = gb->read(HL);
+			CY = M & 0x01;
+			M >>= 1;
+			M |= CY << 7;
+			gb->write(HL, M);
+			N = 0;
+			HC = 0;
+			Z = M == 0;
+		},
+		4
+	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'011'000 | i] =
+		{
+			[]() {
+				return "";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				uint8_t tmp = r & 0x01;
+				r >>= 1;
+				r |= CY << 7;
+				CY = tmp;
+				HC = 0;
+				N = 0;
+				Z = r == 0;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'011'110] =
+	{
+		[]() {
+			return "RR (HL)";
+		},
+		[this]() {
+			uint8_t M = gb->read(HL);
+			uint8_t tmp = M & 0x01;
+			M >>= 1;
+			M |= CY << 7;
+			CY = tmp;
+			gb->write(HL, M);
+			N = 0;
+			HC = 0;
+			Z = M == 0;
+		},
+		4
+	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'100'000 | i] =
+		{
+			[]() {
+				return "SLA r";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				CY = r >> 7;
+				r <<= 1;
+				HC = 0;
+				N = 0;
+				Z = r == 0;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'100'110] =
+	{
+		[]() {
+			return "SLA (HL)";
+		},
+		[this]() {
+			uint8_t M = gb->read(HL);
+			CY = M >> 7;
+			M <<= 1;
+			HC = 0;
+			N = 0;
+			Z = M == 0;
+			gb->write(HL, M);
+		},
+		4
+	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'101'000 | i] =
+		{
+			[]() {
+				return "SRA r";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				uint8_t tmp = r & 0x80;
+				CY = r & 0x01;
+				r >>= 1;
+				r |= tmp;
+				HC = 0;
+				N = 0;
+				Z = r == 0;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'101'110] =
+	{
+		[]() {
+			return "SRA (HL)";
+		},
+		[this]() {
+			uint8_t M = gb->read(HL);
+			uint8_t tmp = M & 0x80;
+			CY = M & 0x01;
+			M >>= 1;
+			M |= tmp;
+			HC = 0;
+			N = 0;
+			Z = M == 0;
+			gb->write(HL, M);
+		},
+		4
+	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'111'000 | i] =
+		{
+			[]() {
+				return "SRL r";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				CY = r & 0x01;
+				r >>= 1;
+				HC = 0;
+				N = 0;
+				Z = r == 0;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'111'110] =
+	{
+		[]() {
+			return "SRL (HL)";
+		},
+		[this]() {
+			uint8_t M = gb->read(HL);
+			CY = M & 0x01;
+			M >>= 1;
+			HC = 0;
+			N = 0;
+			Z = M == 0;
+			gb->write(HL, M);
+		},
+		4
+	};
+
+	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
+	{
+		InstructionSet16Bit[0b00'110'000 | i] =
+		{
+			[]() {
+				return "SWAP r";
+			},
+			[this]() {
+				uint8_t& r = GPR(a);
+
+				uint8_t rH = r >> 4;
+				r = (r << 4) | rH;
+			},
+			2,
+			i
+		};
+	}
+
+	InstructionSet16Bit[0b00'110'110] =
+	{
+		[]() {
+			return "SWAP (HL)";
+		},
+		[this]() {
+			uint8_t M = gb->read(HL);
+			uint8_t MH = M >> 4;
+			M = (M << 4) | MH;
+			gb->write(HL, M);
+		},
+		4
+	};
+
+	// ========================================
+
 
 	InstructionSet[0b11'000'011] =
 	{
@@ -1969,38 +2141,36 @@ SM83::SM83()
 			return "DAA";
 		},
 		[this]() {
-			uint16_t tmp = A;
-			
-			if (N)
-			{
-				if (HC)
-				{
-					tmp = (tmp - 0x06) & 0xFF;
-				}
 
-				if (CY)
-				{
-					tmp -= 0x60;
-				}
+			uint8_t Offset = 0;
+
+			if ((N == 0 && (A & 0xF) > 0x09) || HC == 1) 
+			{
+				Offset |= 0x06;
+			}
+
+			if ((N == 0 && A > 0x99) || CY == 1) 
+			{
+				Offset |= 0x60;
+			CY = 1;
 			}
 			else
 			{
-				if (HC || (tmp & 0x0F) > 0x09)
-				{
-					tmp += 0x06;
-				}
-
-				if (CY || tmp > 0x99)
-				{
-					tmp += 0x60;
-				}
+				CY = 0;
 			}
 
-			A = tmp;
+			if (N == 0)
+			{
+				A += Offset;
+			}
+			else
+			{
+				A -= Offset;
+			}
 
-			CY = tmp >> 8;
-			Z = A == 0;
 			HC = 0;
+			Z = A == 0;
+
 		},
 		1
 	};
@@ -2204,4 +2374,6 @@ void SM83::reset()
 	HL = 0X014D;
 
 	cycle = 0;
+
+	Halted = false;
 }

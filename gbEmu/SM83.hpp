@@ -23,9 +23,6 @@ public:
 	int nMachineCycles = 0;
 
 private:
-	
-	// DMG mode has only 8kB of built-in ppulay RAM
-	uint8_t PPURAM[8 * 1024];	// LCD PPU RAM
 
 	// ============== Registers ============== 
 	
@@ -88,7 +85,10 @@ private:
 		uint8_t cycles;
 		uint8_t a;
 		uint8_t b;
-	} InstructionSet[256], CurrentInstruction;
+	} InstructionSet[256], 
+		CurrentInstruction, 
+		InstructionSet16Bit[256],
+		CurrentInstruction16Bit;
 
 	uint8_t cycle;		// Cycle Number
 
