@@ -180,20 +180,17 @@ void GB::write(uint16_t addr, uint8_t data)
 	{
 		cart->write(addr, data);
 	}
-	else if (addr >= 0xC000 && addr < 0xFE00)	// 8kB Internal RAM
+	else if (addr >= 0xC000 && addr <= 0xDE00)
 	{
-		// Echo 8kB Internal RAM
-
-		if (addr >= 0xC000 && addr < 0xE000)
-		{
-			RAM[addr] = data;
-			RAM[0xE000 + addr % 0xC000] = data;
-		}
-		else
-		{
-			RAM[0xC000 + (addr % 0xE000)] = data;
-			RAM[addr] = data;
-		}
+		// Mirror 8kiB internal RAM
+		RAM[addr] = data;
+		RAM[0xE000 + addr % 0xC000] = data;
+	}
+	else if (addr >= 0xE000 && addr <= 0xFE00)
+	{
+		// Mirror 8kiB internal RAM
+		RAM[0xC000 + (addr % 0xE000)] = data;
+		RAM[addr] = data;
 	}
 	else if (addr == 0xFF02)	// Serial I/O
 	{
