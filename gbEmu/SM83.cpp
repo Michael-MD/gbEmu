@@ -736,10 +736,10 @@ SM83::SM83()
 			[this]() {
 				uint8_t& r = GPR(a);
 
-				HC = (A & 0xF) < ((r + 1) & 0xF);
-				CY = A < (r + 1);
-
-				A -= (r + 1);
+				HC = (A & 0xF) < ((r & 0xF) + CY);
+				bool CY_tmp = A < (r + CY);
+				A -= (r + CY);
+				CY = CY_tmp;
 				Z = A == 0;
 				N = 1;
 			},
@@ -756,10 +756,12 @@ SM83::SM83()
 		[this]() {
 			uint8_t n = gb->read(PC++);
 
-			HC = (A & 0xF) < ((n + 1) & 0xF);
-			CY = A < (n + 1);
+			HC = (A & 0xF) < ((n & 0xF) + CY);
+			bool CY_tmp = A < (n + CY);
 
-			A -= (n + 1);
+			A -= (n + CY);
+			CY = CY_tmp;
+
 			Z = A == 0;
 			N = 1;
 		},
@@ -774,10 +776,10 @@ SM83::SM83()
 		[this]() {
 			uint8_t M = gb->read(HL);
 
-			HC = (A & 0xF) < ((M + 1) & 0xF);
-			CY = A < (M + 1);
-
-			A -= (M + 1);
+			HC = (A & 0xF) < ((M & 0xF) + CY);
+			bool CY_tmp = A < (M + CY);
+			A -= (M + CY);
+			CY = CY_tmp;
 			Z = A == 0;
 			N = 1;
 		},
@@ -1126,9 +1128,11 @@ SM83::SM83()
 			return "ADD SP,e (SP <- SP+e)";
 		},
 		[this]() {
-			int8_t e = gb->read(PC++);
-			HC = (((SP & 0xFFF) + (e & 0xFFF)) >> 12) != 0;
-			CY = (((uint32_t)SP + (uint32_t)e) >> 16) != 0;
+			int16_t e = gb->read(PC++);
+			
+			HC = ((SP & 0xFFF) + (e & 0xFFF)) >> 12;
+			CY = ((uint32_t)SP + (uint32_t)e) >> 16;
+			
 			SP += e;
 			N = 0;
 			Z = 0;
