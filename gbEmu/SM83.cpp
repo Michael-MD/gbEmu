@@ -1130,8 +1130,11 @@ SM83::SM83()
 		[this]() {
 			int16_t e = gb->read(PC++);
 			
-			HC = ((SP & 0xFFF) + (e & 0xFFF)) >> 12;
-			CY = ((uint32_t)SP + (uint32_t)e) >> 16;
+			//HC = ((SP & 0xFFF) + (e & 0xFFF)) >> 12;
+			//CY = ((uint32_t)SP + (uint32_t)e) >> 16;
+
+			HC = (SP & 0xF) + (e & 0xF) > 0xF;
+			CY = (SP & 0xFF) + (e & 0xFF) > 0xFF;
 			
 			SP += e;
 			N = 0;
@@ -1675,6 +1678,11 @@ SM83::SM83()
 
 				uint8_t rH = r >> 4;
 				r = (r << 4) | rH;
+
+				Z = r == 0;
+				CY = 0;
+				HC = 0;
+				N = 0;
 			},
 			2,
 			i
@@ -1691,6 +1699,11 @@ SM83::SM83()
 			uint8_t MH = M >> 4;
 			M = (M << 4) | MH;
 			gb->write(HL, M);
+
+			Z = M == 0;
+			CY = 0;
+			HC = 0;
+			N = 0;
 		},
 		4
 	};
