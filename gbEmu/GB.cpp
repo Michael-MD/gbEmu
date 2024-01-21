@@ -151,8 +151,8 @@ void GB::clock()
 	nClockCycles++;
 
 	cpu.clock();
-	ppu.clock();
-	timer.clock();
+	//ppu.clock();
+	//timer.clock();
 
 }
 

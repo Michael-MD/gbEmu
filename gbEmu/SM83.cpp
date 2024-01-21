@@ -521,16 +521,19 @@ SM83::SM83()
 	InstructionSet[0b11'111'000] =
 	{
 		[]() {
-			return "LDHL SP, e (HL <- SP+e)";
+			return "LD, HL, SP, e (HL <- SP+e)";
 		},
 		[this]() {
-			int8_t e = gb->read(PC++);
-			uint32_t tmp = SP + e;
+			int16_t e = (int8_t)gb->read(PC++);
+			uint16_t tmp = SP + e;
 			HL = tmp & 0xFFFF;
+
+			HC = ((SP & 0xF) + (e & 0xF)) >> 4;
+			CY = ((SP & 0xFF) + (uint8_t)(e & 0xFF)) >> 8;
+
 			Z = 0;
 			N = 0;
-			HC = (((SP & 0xFFF) + (e & 0xFFF)) >> 12) != 0;
-			CY = (tmp >> 16) != 0;
+
 		},
 		3
 	};
@@ -599,7 +602,15 @@ SM83::SM83()
 			return "ADD A, (HL) (A <- A+(HL))";
 		},
 		[this]() {
-			A += gb->read(HL);
+			uint8_t D = gb->read(HL);
+			uint16_t tmp = A + D;
+
+			HC = ((A & 0xF) + (D & 0xF)) >> 4;
+			CY = (tmp >> 8) != 0;
+			A = tmp;
+
+			N = 0;
+			Z = A == 0;
 		},
 		2
 	};
@@ -1128,15 +1139,14 @@ SM83::SM83()
 			return "ADD SP,e (SP <- SP+e)";
 		},
 		[this]() {
-			int16_t e = gb->read(PC++);
+			int16_t e = (int8_t)gb->read(PC++);
 			
-			//HC = ((SP & 0xFFF) + (e & 0xFFF)) >> 12;
-			//CY = ((uint32_t)SP + (uint32_t)e) >> 16;
+			uint16_t tmp = SP + e;
 
-			HC = (SP & 0xF) + (e & 0xF) > 0xF;
-			CY = (SP & 0xFF) + (e & 0xFF) > 0xFF;
+			HC = ((SP & 0xF) + (e & 0xF)) >> 4;
+			CY = ((SP & 0xFF) + (uint8_t)(e & 0xFF)) >> 8;
 			
-			SP += e;
+			SP = tmp;
 			N = 0;
 			Z = 0;
 		},
