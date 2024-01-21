@@ -171,7 +171,8 @@ public:
 
 	} *IE = reinterpret_cast<decltype(IE)>(RAM + 0xFFFF);
 
-private:	
+private:
+	void gameLoop();
 	void handleEvents();
 	void update();
 	void render();

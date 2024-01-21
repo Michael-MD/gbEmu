@@ -143,6 +143,7 @@
     <ClCompile Include="NoMBC.cpp" />
     <ClCompile Include="PPU.cpp" />
     <ClCompile Include="GB.cpp" />
+    <ClCompile Include="Peripherals.cpp" />
     <ClCompile Include="SM83.cpp" />
     <ClCompile Include="gbEmu.cpp" />
     <ClCompile Include="Timer.cpp" />

@@ -42,6 +42,9 @@
     <ClCompile Include="MBC1.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Peripherals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SM83.hpp">
