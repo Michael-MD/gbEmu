@@ -756,10 +756,12 @@ SM83::SM83()
 		[this]() {
 			uint8_t n = gb->read(PC++);
 
-			HC = (A & 0xF) < ((n + 1) & 0xF);
-			CY = A < (n + 1);
+			HC = (A & 0xF) < ((n & 0xF) + CY);
+			bool CY_tmp = A < (n + CY);
 
-			A -= (n + 1);
+			A -= (n + CY);
+			CY = CY_tmp;
+
 			Z = A == 0;
 			N = 1;
 		},
@@ -1126,9 +1128,11 @@ SM83::SM83()
 			return "ADD SP,e (SP <- SP+e)";
 		},
 		[this]() {
-			int8_t e = gb->read(PC++);
-			HC = (((SP & 0xFFF) + (e & 0xFFF)) >> 12) != 0;
-			CY = (((uint32_t)SP + (uint32_t)e) >> 16) != 0;
+			int16_t e = gb->read(PC++);
+			
+			HC = ((SP & 0xFFF) + (e & 0xFFF)) >> 12;
+			CY = ((uint32_t)SP + (uint32_t)e) >> 16;
+			
 			SP += e;
 			N = 0;
 			Z = 0;
