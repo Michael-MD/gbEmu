@@ -66,8 +66,8 @@ void GB::clock()
 	nClockCycles++;
 
 	cpu.clock();
-	//ppu.clock();
-	//timer.clock();
+	ppu.clock();
+	timer.clock();
 
 }
 
@@ -91,6 +91,10 @@ void GB::write(uint16_t addr, uint8_t data)
 	{
 		cart->write(addr, data);
 	}
+	//else if ((addr >= 0x8000 && addr < 0x9FFF))	// CHR codes and tile data
+	//{
+	//	int a = data;
+	//}
 	else if (addr >= 0xA000 && addr < 0xC000)
 	{
 		cart->write(addr, data);
@@ -139,6 +143,11 @@ void GB::write(uint16_t addr, uint8_t data)
 			timer.TickRate = 256;		// 16384 Hz
 			break;
 		}
+	}
+	else if (addr == 0xFF41)	// STAT Register
+	{
+		// Writing to this register resets the match flag
+		ppu.STAT->MatchFlag = 0;
 	}
 	else
 	{

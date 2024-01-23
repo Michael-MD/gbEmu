@@ -13,7 +13,6 @@ public:
 
 	int DotsRemaining;
 	int DotsTotal;
-	int CurrentPixelRendered;
 
 	enum
 	{
@@ -28,8 +27,11 @@ public:
 	const int GridHeight = 18 * 8;
 	uint8_t DotMatrix[18 * 8][20 * 8][4];		// ABGR
 
-	// Line of Data being copied to LCD Driver
+	// Line of data being copied to LCD Driver
 	uint8_t* LY;
+
+	// LY register compare
+	uint8_t* LYC;
 
 	// LCD Control Register
 	union LCDCRegister
@@ -64,7 +66,7 @@ public:
 
 			uint8_t ModeFlag : 2;
 			uint8_t MatchFlag : 1;
-			uint8_t InterruptSelection : 3;
+			uint8_t InterruptSelection : 4;
 		};
 
 		uint8_t reg_;
