@@ -58,6 +58,8 @@ public:
 
 	} *LCDC;
 
+	bool bLineRendered = false;
+
 	// STAT
 	union STATRegister
 	{

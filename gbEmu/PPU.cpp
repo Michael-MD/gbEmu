@@ -68,7 +68,8 @@ void PPU::clock()
 			DotsRemaining = 172;
 			// TODO: Check if ModeFlag set correctly
 			STAT->ModeFlag = 0b11;
-				break;
+			bLineRendered = false;
+			break;
 		case DrawingPixels:
 			Mode = HorizontalBlank;
 			DotsRemaining = 456 - DotsTotal;
@@ -82,7 +83,7 @@ void PPU::clock()
 			DotsTotal = 0;					// Reset Row Dots Count
 			gb->IF->VerticalBlanking = 0;	// Reset Vertical Blanking Flag
 			// TODO: Fix bug here which may not render first line
-			(*LY)++;		// Next Row will now begin to be rendered
+			(*LY)++;		// Next row will now begin to be rendered
 			STAT->ModeFlag = 0b10;
 			STAT->InterruptSelection |= 0b0100; // Mode 10 Selection
 			gb->IF->VerticalBlanking = 0;
@@ -93,9 +94,12 @@ void PPU::clock()
 		// Checks if scan line has reached value
 		// stored in LYC.
 		STAT->MatchFlag = (*LY) == (*LYC);
-		STAT->InterruptSelection |= 0b1000;	// Interrupt Selection: LY == LYC 
+		if(STAT->MatchFlag)
+		{
+			STAT->InterruptSelection |= 0b1000;	// Interrupt Selection: LY == LYC 
+		}
 
-		if (STAT->MatchFlag || STAT->InterruptSelection)
+		if (STAT->InterruptSelection)
 		{
 			gb->IF->LCDC = 1;
 		}
@@ -109,7 +113,9 @@ void PPU::clock()
 	// =========== Draw Pixels ===========
 	if (Mode == DrawingPixels)
 	{
-		if (LCDC->bBG == 1) // Check if background rendering enabled
+		// Check if background rendering enabled and line 
+		// not already rendered.
+		if (LCDC->bBG == 1 && bLineRendered == false)
 		{
 			// Get addressing mode for accessing
 			// VRAM which is the range 0x8000-0x97FF
@@ -134,7 +140,7 @@ void PPU::clock()
 				// Get tile data, offset from basee address and 
 				// by the row being rendered of a given tile which 
 				// is 8x8. Each row of tile is two bytes.
-				int TileRow = (*LY) & 8;
+				int TileRow = (*LY) % 8;
 				uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset + TileRow * 2 + 0];
 				uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset + TileRow * 2 + 1];
 
@@ -153,7 +159,29 @@ void PPU::clock()
 					DotMatrix[*LY][PixelColumn][3] = Value;
 				}
 			}
+
 		}
+		else if (LCDC->bBG == 0 && bLineRendered == false)
+		{
+			// If bBG flag of LCDC register is not set, then
+			// on all models except the CGB, the means the
+			// screen is simply white.
+			for (int Tile_i = 0; Tile_i < 20; Tile_i++)
+			{
+				for (uint8_t p = 0; p < 8; p++)
+				{
+					uint8_t PixelColumn = Tile_i * 8 + (8 - p - 1);
+
+					DotMatrix[*LY][PixelColumn][0] = 255;
+					DotMatrix[*LY][PixelColumn][1] = 255;
+					DotMatrix[*LY][PixelColumn][2] = 255;
+					DotMatrix[*LY][PixelColumn][3] = 255;
+				}
+			}
+			
+		}
+
+		bLineRendered = true;
 	}
 
 	

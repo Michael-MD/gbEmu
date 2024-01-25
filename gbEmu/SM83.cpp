@@ -2287,7 +2287,7 @@ SM83::SM83()
 		[this]() {
 			// TODO
 
-			gb->timer.DIV = 0;
+			*gb->timer.DIV = 0;
 		},
 		1
 	};
