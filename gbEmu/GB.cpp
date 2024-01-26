@@ -91,10 +91,6 @@ void GB::write(uint16_t addr, uint8_t data)
 	{
 		cart->write(addr, data);
 	}
-	//else if ((addr >= 0x8000 && addr < 0x9FFF))	// CHR codes and tile data
-	//{
-	//	int a = data;
-	//}
 	else if (addr >= 0xA000 && addr < 0xC000)
 	{
 		cart->write(addr, data);
@@ -124,23 +120,30 @@ void GB::write(uint16_t addr, uint8_t data)
 	{
 		// Writing any value to Divider register sets it to 0x00.
 		*timer.DIV = 0x00;
+		timer.Counter = 0x0000;
+
+		// Resetting the timer may have just triggered
+		// a falling edge.
+		timer.incrementTimer();
 	}
 	else if (addr == 0xFF07)	// TAC
 	{
+		// TODO: Writing to TAC obscure behaviour
+
 		// Set rate at which clock is incremented
 		switch (timer.TAC->InputClockSelect)
 		{
 		case 0b00:
-			timer.TickRate = 1024;		// 4096 Hz
+			timer.RateBitSelect = 9; // 4096 Hz
 			break;
 		case 0b01:
-			timer.TickRate = 16;		// 262144 Hz
+			timer.RateBitSelect = 3; // 262144 Hz
 			break;
 		case 0b10:
-			timer.TickRate = 64;		// 65536 Hz
+			timer.RateBitSelect = 5; // 65536 Hz
 			break;
 		case 0b11:
-			timer.TickRate = 256;		// 16384 Hz
+			timer.RateBitSelect = 7; // 16384 Hz
 			break;
 		}
 	}
@@ -149,6 +152,12 @@ void GB::write(uint16_t addr, uint8_t data)
 		// Writing to this register resets the match flag
 		ppu.STAT->MatchFlag = 0;
 	}
+	// Debugging
+	//else if ((addr >= 0x8000 && addr < 0x97FF))	// CHR codes and tile data
+	////else if (addr == 0xFF47)	// CHR codes and tile data
+	//{
+	//	RAM[addr] = data;
+	//}
 	else
 	{
 		RAM[addr] = data;

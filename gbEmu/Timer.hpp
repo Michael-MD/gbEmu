@@ -10,11 +10,12 @@ public:
 
 	void connectGB(GB* gb);
 	void clock();
-
-	int TickRate;
+	void incrementTimer();
 
 	// Divider (Read/Reset)
 	uint8_t* DIV;
+	uint16_t Counter;
+	uint16_t RateBitSelect; // Selects bit from Counter for incrementing timer
 
 	// TIMA Register
 	uint8_t* TIMA;
@@ -39,4 +40,7 @@ public:
 		};
 
 	} *TAC;
+
+private:
+	bool DelayedBit = 0;
 };

@@ -7,6 +7,7 @@ void Timer::connectGB(GB* gb)
 
 	// Divider (Read/Reset)
 	DIV = gb->RAM + 0xFF04;
+	Counter = 0x0000;
 
 	// TIMA Register
 	TIMA = gb->RAM + 0xFF05;
@@ -25,15 +26,39 @@ void Timer::connectGB(GB* gb)
 
 void Timer::clock()
 {
-	// TODO: obscure behaviour
-	
-	// Increment TIMA register, if the current
+	// There is an internal counter which 
+	// increments at the clock frequency.
+	// This is used for the divider register 
+	// which is in turn used for the timing
+	// circuit.
+	Counter++;
+
+	// Increment DIV Register
+	// DIV is incremented at 16384Hz (~16779Hz on DMG)
+	(*DIV) = Counter >> 8;	// DIV register is upper 8 bits of internal counter
+
+	incrementTimer();
+}
+
+void Timer::incrementTimer()
+	// Increment TIMA register using DIV, if the current
 	// value is 0xFF then the register will overflow
 	// and we load TMA into TIMA and set the inerrupt
 	// request bit in register IF.
+{
+	// Select appropriate bit from Counter. If timer is 
+	// disabled then mux result is reset.
+	bool CounterBit = (Counter >> RateBitSelect) & TAC->Enable;
 
-	if(TAC->Enable && gb->nClockCycles % TickRate == 0)
+	// Falling edge detector:
+	// If previous bit was 1 and
+	// current bit is 0 then we have just
+	// encountered a falling edge and we
+	// should increment the timer. 
+	if (DelayedBit && !CounterBit)
 	{
+		// TODO: Obscure timer overflow behaviour
+		// Check for overflow
 		if (*TIMA == 0xFF)
 		{
 			*TIMA = *TMA;
@@ -45,7 +70,5 @@ void Timer::clock()
 		}
 	}
 
-	// Increment DIV Register
-	// DIV is incremented at 16384Hz (~16779Hz on 
-	if (gb->nClockCycles % 256 == 0) (*DIV)++;
+	DelayedBit = CounterBit;
 }
