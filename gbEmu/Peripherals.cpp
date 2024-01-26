@@ -38,12 +38,11 @@ void GB::gameLoop()
 				clock();
 
 				i++;
-				//if (i % 280'000 == 0)	// Update Screen at ~60Hz
-				//if(i % 28000 == 0)	// Update Screen at ~60Hz
-				/*{
+				if (i % 70'000 == 0)	// Update Screen at ~60Hz
+				{
 					update();
 					render();
-				}*/
+				}
 			}
 
 		}

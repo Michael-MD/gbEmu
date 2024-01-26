@@ -126,6 +126,36 @@ void GB::write(uint16_t addr, uint8_t data)
 		// a falling edge.
 		timer.incrementTimer();
 	}
+	else if (addr == 0xFF05) // TIMA Register
+	{
+		if (timer.Overflowed)
+		{
+			// If TIMA is written to during 
+			// the four cycles after an overflow
+			// then the value written is latched
+			// immediately and all subsequent
+			// behaviour following an overflow
+			// is neglected.
+			*timer.TIMA = data;
+			timer.Overflowed = false;
+		}
+		else if (timer.FourClockCyclesB > 0)
+		{
+			// Ignore writes to TIMA during this period
+		}
+		else
+		{
+			*timer.TIMA = data;
+		}
+	}
+	else if (addr == 0xFF05) // TMA Register
+	{
+		*timer.TMA = data;
+		if (timer.FourClockCyclesB > 0)
+		{
+			*timer.TIMA = *timer.TMA;
+		}
+	}
 	else if (addr == 0xFF07)	// TAC
 	{
 		// TODO: Writing to TAC obscure behaviour

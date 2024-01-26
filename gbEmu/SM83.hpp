@@ -100,7 +100,16 @@ private:
 
 	void InterruptServiceRoutine();
 
-	bool Halted; // Set if CPU is halted
+	bool Halted, Stopped; // Set if CPU is halted/stopped
+
+	// The halt instruction exhibits specific behaviour
+	// when executed while an interrupt is pending.
+	// This flag checks this.
 	bool PendingInterruptWhileHalted;
+
+	// The halt bug causes the following instruciton to
+	// be executed twice due to a failure in incrementing
+	// the PC counter.
+	bool RereadInstruction;
 
 };

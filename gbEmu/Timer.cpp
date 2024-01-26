@@ -26,6 +26,29 @@ void Timer::connectGB(GB* gb)
 
 void Timer::clock()
 {
+	if (Overflowed)
+	{
+		if (FourClockCyclesA > 0)
+		{
+			FourClockCyclesA--;
+			return;
+		}
+		else
+		{
+			gb->IF->TimerOverflow = 1;
+			*TIMA = *TMA;
+			Overflowed = false;
+
+			// Start counting down the next 4 clock cycles
+			FourClockCyclesB = 4;
+		}
+	}
+
+	if (FourClockCyclesB > 0)
+	{
+		FourClockCyclesB--;
+	}
+
 	// There is an internal counter which 
 	// increments at the clock frequency.
 	// This is used for the divider register 
@@ -41,28 +64,30 @@ void Timer::clock()
 }
 
 void Timer::incrementTimer()
+{
 	// Increment TIMA register using DIV, if the current
 	// value is 0xFF then the register will overflow
 	// and we load TMA into TIMA and set the inerrupt
 	// request bit in register IF.
-{
+
 	// Select appropriate bit from Counter. If timer is 
 	// disabled then mux result is reset.
-	bool CounterBit = (Counter >> RateBitSelect) & TAC->Enable;
+	bool CounterCounterBit = (Counter >> RateBitSelect) & TAC->Enable;
 
 	// Falling edge detector:
 	// If previous bit was 1 and
 	// current bit is 0 then we have just
 	// encountered a falling edge and we
 	// should increment the timer. 
-	if (DelayedBit && !CounterBit)
+	if (DelayedBit && !CounterCounterBit)
 	{
-		// TODO: Obscure timer overflow behaviour
-		// Check for overflow
+		// If an overflow occurs, the effects are delayed
+		// by a 4 clock cycles.
 		if (*TIMA == 0xFF)
 		{
-			*TIMA = *TMA;
-			gb->IF->TimerOverflow = 1;
+			*TIMA = 0x00; // TIMA is set to 0 for 4 clock cycles.
+			Overflowed = true;
+			FourClockCyclesA = 4;
 		}
 		else
 		{
@@ -70,5 +95,5 @@ void Timer::incrementTimer()
 		}
 	}
 
-	DelayedBit = CounterBit;
+	DelayedBit = CounterCounterBit;
 }

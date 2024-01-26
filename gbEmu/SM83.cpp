@@ -33,13 +33,26 @@ void SM83::clock()
 				// an interrupt was pending, when the cpu resumes
 				// a halt bug is triggered.
 
-				// TODO: halt bug
-				
+				// Halt bug
+				// The instruction after the halt is read twice
+				// unless the next instruction is a jump.
+
+				// TODO: halt bug jump behaviour
+
+				RereadInstruction = true;
+	
 				PendingInterruptWhileHalted = false;
+			}
+			else if (IME == 0 && PendingInterruptWhileHalted == false)
+			{
+				// Execution resumes as normal but since IME = 0 the
+				// interrupt is not serviced.
 			}
 		}
 		else
+		{
 			return;
+		}
 	}
 
 	if (gb->nClockCycles % 4 == 0) // CPU instructuctions defined in machine cycles
@@ -77,6 +90,14 @@ void SM83::clock()
 
 			// Fetch Next Instruction
 			uint8_t data = gb->read(PC++);
+
+			// Halt instruction bug
+			if (RereadInstruction)
+			{
+				PC--;
+				RereadInstruction = false;
+			}
+
 			CurrentInstruction = InstructionSet[data];
 			cycle += CurrentInstruction.cycles;
 			a = CurrentInstruction.a;
@@ -106,7 +127,7 @@ void SM83::clock()
 				std::cout << "DE = $" << (int)DE << std::endl;
 				std::cout << "HL = $" << (int)HL << std::endl;
 
-				std::cout << std::dec << "Debug Message: " << gb->SerialOut << std::endl;
+				std::cout << std::dec << "Debug Message: " << std::hex << gb->SerialOut << std::endl;
 			}
 #endif
 
@@ -2276,7 +2297,7 @@ SM83::SM83()
 				PendingInterruptWhileHalted = true;
 			}
 		},
-		1
+		0 // HALT instruction remains indefinitely until interrupt
 	};
 
 	InstructionSet[0b00'010'000] =
@@ -2285,6 +2306,7 @@ SM83::SM83()
 			return "STOP";
 		},
 		[this]() {
+			Stopped = true;
 			// TODO
 
 			*gb->timer.DIV = 0;
@@ -2403,4 +2425,5 @@ void SM83::reset()
 	cycle = 0;
 
 	Halted = false;
+	Stopped = false;
 }

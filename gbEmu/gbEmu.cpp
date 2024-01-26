@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 {
     //GB gb("C:/Users/61481/Desktop/tetris.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/01-special.gb");
-    //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/02-interrupts.gb");
+    GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/02-interrupts.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/03-op sp,hl.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/04-op r,imm.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/05-op rp.gb");
@@ -21,9 +21,11 @@ int main(int argc, char* argv[])
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/08-misc instrs.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/09-op r,r.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/10-bit ops.gb");
-    GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/11-op a,(hl).gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/11-op a,(hl).gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/cpu_instrs.gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/instr_timing/instr_timing.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/mts-20240108-1545-b5740e1/acceptance/instr/daa.gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/mts-20240108-1545-b5740e1/acceptance/timer/rapid_toggle.gb");
     /*for (uint8_t i = 0; i < 1000000; i++)
     {
         gb.clock();
