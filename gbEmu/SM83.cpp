@@ -1,7 +1,7 @@
 #include "SM83.hpp"
 #include "GB.hpp"
 
-#define DEBUG_MODE 1
+#define DEBUG_MODE 0
 
 #if DEBUG_MODE
 #include <iostream>
@@ -94,6 +94,7 @@ void SM83::clock()
 			// Halt instruction bug
 			if (RereadInstruction)
 			{
+				// TODO: Fix potential bug here
 				PC--;
 				RereadInstruction = false;
 			}
@@ -104,7 +105,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			if (nMachineCycles > 0xA0000)
+			//if (nMachineCycles > 0xA000)
 			{
 				nMachineCycles = 0;
 
@@ -127,17 +128,22 @@ void SM83::clock()
 				std::cout << "DE = $" << (int)DE << std::endl;
 				std::cout << "HL = $" << (int)HL << std::endl;
 
+				std::cout << std::endl << "cycles = $" << (int)CurrentInstruction.cycles << std::endl;
+
+				std::cout << "DIV = $" << (int)*gb->timer.DIV << std::endl;
+				std::cout << "TIMA = $" << (int)*gb->timer.TIMA << std::endl;
+				std::cout << "TMA = $" << (int)*gb->timer.TMA << std::endl;
+				std::cout << "TAC = $" << (int)gb->timer.TAC->reg_ << std::endl << std::endl;
+
 				std::cout << std::dec << "Debug Message: " << std::hex << gb->SerialOut << std::endl;
 			}
 #endif
 
 			CurrentInstruction.op();
 		}
-		else
-		{
-			// Continue Current Instruction Execution
-			cycle--;
-		}
+
+		// Continue Current Instruction Execution
+		cycle--;
 	}
 
 	// IME reset after interrupt occurs	
@@ -344,8 +350,10 @@ SM83::SM83()
 
 	InstructionSet[0b11'100'000] =
 	{
-		[]() {
-			return "LD (n), A ((n) <- A)";
+		[this]() {
+			std::stringstream s;
+			s << "LD (0x" << std::hex <<0xFF00 + gb->read(PC) << std::dec << "), A ((n) <- A)";
+			return s.str();
 		},
 		[this]() {
 			gb->write(0xFF00 + gb->read(PC++), A);

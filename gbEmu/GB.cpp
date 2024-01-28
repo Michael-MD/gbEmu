@@ -159,6 +159,7 @@ void GB::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF07)	// TAC
 	{
 		// TODO: Writing to TAC obscure behaviour
+		*timer.TAC = data;
 
 		// Set rate at which clock is incremented
 		switch (timer.TAC->InputClockSelect)

@@ -40,7 +40,7 @@ public:
 	} *TAC;
 
 	uint16_t Counter;
-	uint16_t RateBitSelect; // Selects bit from Counter for incrementing timer
+	uint8_t RateBitSelect; // Selects bit from Counter for incrementing timer
 	bool Overflowed = false; // Indicates overflow has occured
 	
 	uint8_t FourClockCyclesA = 0;	// Four clock cycles after overflow

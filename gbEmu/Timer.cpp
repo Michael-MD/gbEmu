@@ -7,7 +7,8 @@ void Timer::connectGB(GB* gb)
 
 	// Divider (Read/Reset)
 	DIV = gb->RAM + 0xFF04;
-	Counter = 0x0000;
+	*DIV = 0xAC;
+	Counter = 0xAC00;
 
 	// TIMA Register
 	TIMA = gb->RAM + 0xFF05;
@@ -72,14 +73,14 @@ void Timer::incrementTimer()
 
 	// Select appropriate bit from Counter. If timer is 
 	// disabled then mux result is reset.
-	bool CounterCounterBit = (Counter >> RateBitSelect) & TAC->Enable;
+	bool CurrentCounterBit = (Counter >> RateBitSelect) & TAC->Enable;
 
 	// Falling edge detector:
 	// If previous bit was 1 and
 	// current bit is 0 then we have just
 	// encountered a falling edge and we
 	// should increment the timer. 
-	if (DelayedBit && !CounterCounterBit)
+	if (DelayedBit && !CurrentCounterBit)
 	{
 		// If an overflow occurs, the effects are delayed
 		// by a 4 clock cycles.
@@ -95,5 +96,5 @@ void Timer::incrementTimer()
 		}
 	}
 
-	DelayedBit = CounterCounterBit;
+	DelayedBit = CurrentCounterBit;
 }
