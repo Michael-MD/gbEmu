@@ -105,7 +105,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			//if (nMachineCycles > 0xA000)
+			if (nMachineCycles > 0xA000)
 			{
 				nMachineCycles = 0;
 
@@ -1013,7 +1013,7 @@ SM83::SM83()
 			N = 1;
 			CY = A < n;
 		},
-		1
+		2
 	};
 
 	InstructionSet[0b10'111'110] =
@@ -1028,7 +1028,7 @@ SM83::SM83()
 			N = 1;
 			CY = A < M;
 		},
-		1
+		2
 	};
 
 	for (uint8_t i = 0; i <= 7; i + 1 == 0b110 ? i += 2 : i++)
