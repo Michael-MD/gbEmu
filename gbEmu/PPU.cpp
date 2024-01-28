@@ -1,6 +1,8 @@
 #include "PPU.hpp"
 #include "GB.hpp"
 
+#define VBlankBeginLine 144
+
 void PPU::connectGB(GB* gb)
 {
 	this->gb = gb;
@@ -39,27 +41,6 @@ void PPU::clock()
 	// proceed to the next.
 	if (DotsRemaining == 0)
 	{
-		// Alert CPU PPU is in vertical blanking period
-		if ((*LY) == 144)
-		{
-			gb->IF->VerticalBlanking = 1;
-			STAT->InterruptSelection |= 0b0010; // Interrupt Selection: Vertical Blanking
-		}
-
-		// The PPU mode cycles between mode 2, 
-		// 3 and 0 for each scan line. This line
-		// checks if we have reached the vertical 
-		// blanking period.
-
-		if ((*LY) >= 144)
-		{
-			Mode = VerticalBlank;
-			DotsRemaining = 456;
-			DotsTotal = 0;					// Reset Row Dots Count
-			(*LY) = ((*LY) + 1) % 154;		// Next Row
-			STAT->ModeFlag = 0b01;
-			STAT->InterruptSelection |= 0b0010;	// Mode 01 Selection
-		}
 
 		switch (Mode)
 		{
@@ -76,18 +57,51 @@ void PPU::clock()
 			STAT->ModeFlag = 0b00;
 			STAT->InterruptSelection |= 0b0001; // Mode 00 Selection
 			break;
-		case HorizontalBlank:
 		case VerticalBlank:
-			Mode = OAMScan;
-			DotsRemaining = 80;
+			(*LY) = ((*LY) + 1) % 154;		// Next Row
+			// Check if PPU is now outside of 
+			// vertical blanking region by checking if the 
+			// line to be rendered is at the top of the page.
+			// If so, then allow switch statement to roll into
+			// horizontal blanking period where the mode will be
+			// set to OAMScan and we begin rendering the next frame.
+			if ((*LY) != 0x00)
+			{
+				DotsRemaining = 456;
+				DotsTotal = 0;					// Reset Row Dots Count
+				break;
+			}
+			else
+			{
+				gb->IF->VerticalBlanking = 0;
+				STAT->InterruptSelection &= ~0b0010; // Interrupt Selection: Reset Vertical Blanking
+			}
+		case HorizontalBlank:
 			DotsTotal = 0;					// Reset Row Dots Count
-			gb->IF->VerticalBlanking = 0;	// Reset Vertical Blanking Flag
-			// TODO: Fix bug here which may not render first line
-			(*LY)++;		// Next row will now begin to be rendered
-			STAT->ModeFlag = 0b10;
-			STAT->InterruptSelection |= 0b0100; // Mode 10 Selection
-			gb->IF->VerticalBlanking = 0;
-			STAT->InterruptSelection &= ~0b0010; // Interrupt Selection: Reset Vertical Blanking
+
+			// The PPU mode cycles between mode 2, 
+			// 3 and 0 for each scan line. This line
+			// checks if we have reached the vertical 
+			// blanking period.
+
+			// TODO: Fix bug were first line is skipped
+			if (++(*LY) == VBlankBeginLine)
+			{
+				// Alert CPU that PPU is in vertical blanking period
+				Mode = VerticalBlank;
+				gb->IF->VerticalBlanking = 1;
+				STAT->InterruptSelection |= 0b0010; // Interrupt Selection: Vertical Blanking
+				STAT->ModeFlag = 0b01;
+				DotsRemaining = 456;
+			}
+			else
+			{
+				Mode = OAMScan;
+				DotsRemaining = 80;
+				STAT->ModeFlag = 0b10;
+				STAT->InterruptSelection |= 0b0100; // Mode 10 Selection
+			}
+
 			break;
 		}
 
@@ -137,12 +151,12 @@ void PPU::clock()
 				// base address.
 				int16_t CHRCodeOffset = LCDC->BGCharData ? (uint8_t)CHRCode : (int8_t)CHRCode;
 
-				// Get tile data, offset from basee address and 
+				// Get tile data, offset from base address and 
 				// by the row being rendered of a given tile which 
 				// is 8x8. Each row of tile is two bytes.
 				int TileRow = (*LY) % 8;
-				uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset + TileRow * 2 + 0];
-				uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset + TileRow * 2 + 1];
+				uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
+				uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
 
 				// Get pixel color or in the case of DMG, the
 				// shade of pixel from BGP register.
