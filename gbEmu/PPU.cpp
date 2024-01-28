@@ -139,12 +139,17 @@ void PPU::clock()
 			// 0: 0x9800 - 0x9BFF
 			// 1: 0x9C00 - 0x9FFF
 			uint16_t CHRCodesBaseAddr = LCDC->BGCodeArea ? 0x9C00 : 0x9800;
+			
+			// The GB has the capability of scrolling the screen, the offset
+			// from the top left corner is specified through SCX and SCY.
+			// TODO: Midframe behaviour
+			uint8_t LineY = (*LY + *SCY) % 256;
 
 			// Only loop through visible tiles
-			for (int Tile_i = 0; Tile_i < 20; Tile_i++)
+			for (int LX = 0; LX < 20 * 8; LX++)
 			{
 				// Read character code of tile i on line (*LY) / 8
-				uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)((*LY) / 8) * 32 + Tile_i];
+				uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)(LineY / 8) * 32 + (int)(((LX + *SCX) % 256) / 8)];
 
 				// Determine mode by which tile data is located
 				// based on unsigned or signed offset from 
@@ -154,24 +159,22 @@ void PPU::clock()
 				// Get tile data, offset from base address and 
 				// by the row being rendered of a given tile which 
 				// is 8x8. Each row of tile is two bytes.
-				int TileRow = (*LY) % 8;
+				int TileRow = LineY % 8;
 				uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
 				uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
 
 				// Get pixel color or in the case of DMG, the
 				// shade of pixel from BGP register.
-				for (uint8_t p = 0; p < 8; p++)
-				{
-					uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
-					uint8_t Value = (((*BGP) >> (PixelPalette * 2)) & 0b11) * 255 / 4;
+				uint8_t p = 8 - (LX + *SCX) % 8;
 
-					// Place pixel value into dot matrix
-					uint8_t PixelColumn = Tile_i * 8 + (8 - p - 1);
-					DotMatrix[*LY][PixelColumn][0] = 255;
-					DotMatrix[*LY][PixelColumn][1] = Value;
-					DotMatrix[*LY][PixelColumn][2] = Value;
-					DotMatrix[*LY][PixelColumn][3] = Value;
-				}
+				uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
+				uint8_t Value = (((*BGP) >> (PixelPalette * 2)) & 0b11) * 255 / 4;
+
+				// Place pixel value into dot matrix
+				DotMatrix[*LY][LX][0] = 255;
+				DotMatrix[*LY][LX][1] = Value;
+				DotMatrix[*LY][LX][2] = Value;
+				DotMatrix[*LY][LX][3] = Value;
 			}
 
 		}

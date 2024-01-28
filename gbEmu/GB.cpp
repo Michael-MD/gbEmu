@@ -21,10 +21,10 @@ GB::GB(std::string gbFilename)
 
 	// ============== Initilizes Registers ==============
 	// CPU Internal Registers
-	cpu.AF = 0x1180;
-	cpu.BC = 0x0000;
-	cpu.DE = 0xFF56;
-	cpu.HL = 0x000D;
+	cpu.AF = 0x01B0;
+	cpu.BC = 0x0013;
+	cpu.DE = 0x00D8;
+	cpu.HL = 0x014D;
 	cpu.SP = 0xFFFE;
 	cpu.PC = 0x0100;
 
@@ -148,7 +148,7 @@ void GB::write(uint16_t addr, uint8_t data)
 			*timer.TIMA = data;
 		}
 	}
-	else if (addr == 0xFF05) // TMA Register
+	else if (addr == 0xFF06) // TMA Register
 	{
 		*timer.TMA = data;
 		if (timer.FourClockCyclesB > 0)
@@ -182,12 +182,6 @@ void GB::write(uint16_t addr, uint8_t data)
 		// Writing to this register resets the match flag
 		ppu.STAT->MatchFlag = 0;
 	}
-	// Debugging
-	//else if ((addr >= 0x8000 && addr < 0x97FF))	// CHR codes and tile data
-	////else if (addr == 0xFF47)	// CHR codes and tile data
-	//{
-	//	RAM[addr] = data;
-	//}
 	else
 	{
 		RAM[addr] = data;
