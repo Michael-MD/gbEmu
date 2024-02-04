@@ -146,6 +146,7 @@ public:
 		void operator=(uint8_t reg_)
 		{
 			reg = reg_;
+			reg |= 0xE0;	// First 3 bits are always set
 		};
 
 	} *IF = reinterpret_cast<decltype(IF)>(RAM + 0xFF0F);

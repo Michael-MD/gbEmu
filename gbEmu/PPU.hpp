@@ -65,10 +65,24 @@ public:
 	{
 		struct
 		{
+			union
+			{
+				struct 
+				{
+					uint8_t ModeFlag : 2;
+					uint8_t MatchFlag : 1;
+					uint8_t Mode00Selection : 1;
+					uint8_t Mode01Selection : 1;
+					uint8_t Mode10Selection : 1;
+					uint8_t LYCMatch : 1;
+				};
 
-			uint8_t ModeFlag : 2;
-			uint8_t MatchFlag : 1;
-			uint8_t InterruptSelection : 4;
+				struct
+				{
+					uint8_t OtherFlags : 3;
+					uint8_t InterruptSelection : 4;
+				};
+			};
 		};
 
 		uint8_t reg_;
@@ -76,6 +90,7 @@ public:
 		void operator=(uint8_t reg)
 		{
 			reg_ = reg;
+			reg_ |= 0x80;	// Highest bit is always set
 		};
 
 	} *STAT;

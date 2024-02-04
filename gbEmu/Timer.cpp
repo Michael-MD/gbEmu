@@ -7,8 +7,8 @@ void Timer::connectGB(GB* gb)
 
 	// Divider (Read/Reset)
 	DIV = gb->RAM + 0xFF04;
-	*DIV = 0xAC;
-	Counter = 0xAC00;
+	Counter = 0xAB00;
+	*DIV = Counter >> 8;
 
 	// TIMA Register
 	TIMA = gb->RAM + 0xFF05;
@@ -18,21 +18,30 @@ void Timer::connectGB(GB* gb)
 
 	// TAC Register
 	TAC = reinterpret_cast<decltype(TAC)>(gb->RAM + 0xFF07);
-
-	// Default Register Values
-	*TIMA = 0x00;
-	*TMA = 0x00;
-	*TAC = 0x00;
 }
 
 void Timer::clock()
 {
+
+	// There is an internal counter which 
+	// increments at the clock frequency.
+	// This is used for the divider register 
+	// which is in turn used for the timing
+	// circuit.
+	Counter++;
+
+	// Increment DIV Register
+	// DIV is incremented at 16384Hz (~16779Hz on DMG)
+	(*DIV) = Counter >> 8;	// DIV register is upper 8 bits of internal counter
+
+	incrementTimer();
+
+
 	if (Overflowed)
 	{
 		if (FourClockCyclesA > 0)
 		{
 			FourClockCyclesA--;
-			return;
 		}
 		else
 		{
@@ -49,19 +58,6 @@ void Timer::clock()
 	{
 		FourClockCyclesB--;
 	}
-
-	// There is an internal counter which 
-	// increments at the clock frequency.
-	// This is used for the divider register 
-	// which is in turn used for the timing
-	// circuit.
-	Counter++;
-
-	// Increment DIV Register
-	// DIV is incremented at 16384Hz (~16779Hz on DMG)
-	(*DIV) = Counter >> 8;	// DIV register is upper 8 bits of internal counter
-
-	incrementTimer();
 }
 
 void Timer::incrementTimer()

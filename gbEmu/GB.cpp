@@ -13,7 +13,7 @@ GB::GB(std::string gbFilename)
 	// Insert Cartridge
 	cart = new Cartridge(gbFilename);
 
-	// Initialize ppulay
+	// Initialize ppu
 	ppu.connectGB(this);
 
 	// Connect Timer Unit
@@ -28,32 +28,21 @@ GB::GB(std::string gbFilename)
 	cpu.SP = 0xFFFE;
 	cpu.PC = 0x0100;
 
-	*NR10 = 0x80;
-	*NR11 = 0xBF;
-	*NR12 = 0xF3;
-	*NR14 = 0xBF;
-	*NR21 = 0x3F;
-	*NR22 = 0x00;
-	*NR24 = 0xBF;
-	*NR30 = 0x7F;
-	*NR31 = 0xFF;
-	*NR32 = 0x9F;
-	*NR33 = 0xBF;
-	*NR41 = 0xFF;
-	*NR42 = 0x00;
-	*NR43 = 0x00;
-	*NR44 = 0xBF;
-	*NR50 = 0x77;
-	*NR51 = 0xF3;
-	*NR52 = cart->Header->SuperGB ? 0xF0 : 0xF1;
-
+	// PPU Internal Registers
+	*P1 = 0xCF;
 	*ppu.LCDC = 0x91;
-	*P1 = 0x00;
-	*ppu.LY = 0;
+	*ppu.STAT = 0x85;
+	*ppu.LY = 0x00;
 	*ppu.SCY = 0x00;
 	*ppu.SCX = 0x00;
 	*ppu.BGP = 0xFC;
 	*IE = 0x00;
+	*IF = 0xE1;
+
+	// Timer Internal Registers
+	*timer.TIMA = 0x00;
+	*timer.TMA = 0x00;
+	*timer.TAC = 0xF8;
 
 	// TODO: Finish remaining initialization
 
@@ -63,12 +52,11 @@ GB::GB(std::string gbFilename)
 
 void GB::clock()
 {
-	nClockCycles++;
-
 	cpu.clock();
 	ppu.clock();
 	timer.clock();
 
+	nClockCycles++;
 }
 
 uint8_t GB::read(uint16_t addr)
@@ -180,6 +168,9 @@ void GB::write(uint16_t addr, uint8_t data)
 	}
 	else if (addr == 0xFF41)	// STAT Register
 	{
+		// Lower 3-bits are read only
+		*ppu.STAT = (data & 0xF8) | (ppu.STAT->reg_ & 0x07);
+
 		// Writing to this register resets the match flag
 		ppu.STAT->MatchFlag = 0;
 	}
