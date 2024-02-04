@@ -72,6 +72,8 @@ void SM83::clock()
 				}
 			}
 
+
+
 			// Fetch Next Instruction
 			uint8_t data = gb->read(PC++);
 
@@ -119,6 +121,11 @@ void SM83::clock()
 				//std::cout << "TIMA = $" << (int)*gb->timer.TIMA << std::endl;
 				//std::cout << "TMA = $" << (int)*gb->timer.TMA << std::endl;
 				//std::cout << "TAC = $" << (int)gb->timer.TAC->reg_ << std::endl << std::endl;
+				
+				std::cout << "LY = $" << (int)*gb->ppu.LY << std::endl;
+				std::cout << "IE = $" << (int)gb->IE->reg << std::endl;
+				std::cout << "IE = $" << (int)gb->IE->reg << std::endl;
+				std::cout << "DotsRemaining = " << std::dec << (int)gb->ppu.DotsRemaining << std::endl << std::endl;
 
 				//std::cout << std::dec << "Debug Message: " << std::hex << gb->SerialOut << std::endl;
 			}
@@ -2307,7 +2314,9 @@ SM83::SM83()
 				PendingInterruptWhileHalted = true;
 			}
 		},
-		0 // HALT instruction remains indefinitely until interrupt
+		1 // HALT instruction remains indefinitely until interrupt but cycle 
+		  // will be subtracted so we set this to 1 so that we don't wrap around 
+		  // 0xFF.
 	};
 
 	InstructionSet[0b00'010'000] =

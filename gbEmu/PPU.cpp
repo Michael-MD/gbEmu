@@ -17,14 +17,27 @@ void PPU::connectGB(GB* gb)
 	BGP = gb->RAM + 0xFF47;
 	
 	// Set-up pixel rendering
-	Mode = OAMScan;
+	Mode = VerticalBlank;
 	DotsRemaining = 0;
 	DotsTotal = 0;
 }
 
 void PPU::clock()
 {
-	// ============= LCD ============= 
+	// Checks if scan line has reached value
+	// stored in LYC. This can happen any time 
+	// if LYC is set.
+	STAT->MatchFlag = (*LY) == (*LYC);
+	if (STAT->MatchFlag)
+	{
+		STAT->LYCMatch = 1;	// Interrupt Selection: LY == LYC 
+	}
+
+	if (STAT->InterruptSelection)
+	{
+		gb->IF->LCDC = 1;
+	}
+
 
 	// Because mode 3 of rendering
 	// has variable duration between 172 
@@ -47,7 +60,6 @@ void PPU::clock()
 		case OAMScan:	// Begin drawing pixels
 			Mode = DrawingPixels;
 			DotsRemaining = 172;
-			// TODO: Check if ModeFlag set correctly
 			STAT->ModeFlag = 0b11;
 			bLineRendered = false;
 			break;
@@ -55,18 +67,18 @@ void PPU::clock()
 			Mode = HorizontalBlank;
 			DotsRemaining = 456 - DotsTotal;
 			STAT->ModeFlag = 0b00;
-			STAT->InterruptSelection |= 0b0001; // Mode 00 Selection
+			STAT->Mode00Selection = 1;
 			break;
 		case VerticalBlank:
-			(*LY) = ((*LY) + 1) % 154;		// Next Row
 			// Check if PPU is now outside of 
 			// vertical blanking region by checking if the 
 			// line to be rendered is at the top of the page.
 			// If so, then allow switch statement to roll into
 			// horizontal blanking period where the mode will be
 			// set to OAMScan and we begin rendering the next frame.
-			if ((*LY) != 0x00)
+			if ((*LY) >= VBlankBeginLine)
 			{
+				(*LY) = ((*LY) + 1) % 154;		// Next Row
 				DotsRemaining = 456;
 				DotsTotal = 0;					// Reset Row Dots Count
 				break;
@@ -74,7 +86,7 @@ void PPU::clock()
 			else
 			{
 				gb->IF->VerticalBlanking = 0;
-				STAT->InterruptSelection &= ~0b0010; // Interrupt Selection: Reset Vertical Blanking
+				STAT->Mode01Selection = 0; // Interrupt Selection: Reset Vertical Blanking
 			}
 		case HorizontalBlank:
 			DotsTotal = 0;					// Reset Row Dots Count
@@ -84,13 +96,12 @@ void PPU::clock()
 			// checks if we have reached the vertical 
 			// blanking period.
 
-			// TODO: Fix bug were first line is skipped
 			if (++(*LY) == VBlankBeginLine)
 			{
 				// Alert CPU that PPU is in vertical blanking period
 				Mode = VerticalBlank;
 				gb->IF->VerticalBlanking = 1;
-				STAT->InterruptSelection |= 0b0010; // Interrupt Selection: Vertical Blanking
+				STAT->Mode01Selection = 1; // Interrupt Selection: Vertical Blanking
 				STAT->ModeFlag = 0b01;
 				DotsRemaining = 456;
 			}
@@ -99,30 +110,16 @@ void PPU::clock()
 				Mode = OAMScan;
 				DotsRemaining = 80;
 				STAT->ModeFlag = 0b10;
-				STAT->InterruptSelection |= 0b0100; // Mode 10 Selection
+				STAT->Mode10Selection = 1;
 			}
 
 			break;
 		}
 
-		// Checks if scan line has reached value
-		// stored in LYC.
-		STAT->MatchFlag = (*LY) == (*LYC);
-		if(STAT->MatchFlag)
-		{
-			STAT->InterruptSelection |= 0b1000;	// Interrupt Selection: LY == LYC 
-		}
-
-		if (STAT->InterruptSelection)
-		{
-			gb->IF->LCDC = 1;
-		}
-
 	}
-	else
-	{
-		DotsRemaining--;
-	}
+	
+	DotsRemaining--;
+
 
 	// =========== Draw Pixels ===========
 	if (Mode == DrawingPixels)
