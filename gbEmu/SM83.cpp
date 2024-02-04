@@ -72,22 +72,6 @@ void SM83::clock()
 				}
 			}
 
-			// Before fetching another instruction there
-			// is the possibility the EI instruction was run.
-			// The instruction effect is delayed by one 
-			// instruction so we check if the IMEDelaySet
-			// flag is set. 
-
-			if (IMEDelaySet == 0)
-			{
-				IME = 1;
-				IMEDelaySet = 0xFF;
-			}
-			else if(IMEDelaySet != 0xFF)
-			{
-				IMEDelaySet--;
-			}
-
 			// Fetch Next Instruction
 			uint8_t data = gb->read(PC++);
 
@@ -105,7 +89,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			if (nMachineCycles > 0xA000)
+			//if (nMachineCycles > 0xA000)
 			{
 				nMachineCycles = 0;
 
@@ -128,18 +112,36 @@ void SM83::clock()
 				std::cout << "DE = $" << (int)DE << std::endl;
 				std::cout << "HL = $" << (int)HL << std::endl;
 
-				std::cout << std::endl << "cycles = $" << (int)CurrentInstruction.cycles << std::endl;
+				//std::cout << std::endl << "STAT = $" << std::hex << (int)gb->ppu.STAT->reg_ << std::endl;
+				//std::cout << std::endl << "cycles = $" << (int)CurrentInstruction.cycles << std::endl;
 
-				std::cout << "DIV = $" << (int)*gb->timer.DIV << std::endl;
-				std::cout << "TIMA = $" << (int)*gb->timer.TIMA << std::endl;
-				std::cout << "TMA = $" << (int)*gb->timer.TMA << std::endl;
-				std::cout << "TAC = $" << (int)gb->timer.TAC->reg_ << std::endl << std::endl;
+				//std::cout << "DIV = $" << (int)*gb->timer.DIV << std::endl;
+				//std::cout << "TIMA = $" << (int)*gb->timer.TIMA << std::endl;
+				//std::cout << "TMA = $" << (int)*gb->timer.TMA << std::endl;
+				//std::cout << "TAC = $" << (int)gb->timer.TAC->reg_ << std::endl << std::endl;
 
-				std::cout << std::dec << "Debug Message: " << std::hex << gb->SerialOut << std::endl;
+				//std::cout << std::dec << "Debug Message: " << std::hex << gb->SerialOut << std::endl;
 			}
 #endif
 
 			CurrentInstruction.op();
+
+
+			// Before fetching another instruction there
+			// is the possibility the EI instruction was run.
+			// The instruction effect is delayed by one 
+			// instruction so we check if the IMEDelaySet
+			// flag is set. 
+
+			if (IMEDelaySet == 0)
+			{
+				IME = 1;
+				IMEDelaySet = 0xFF;
+			}
+			else if (IMEDelaySet != 0xFF)
+			{
+				IMEDelaySet--;
+			}
 		}
 
 		// Continue Current Instruction Execution
