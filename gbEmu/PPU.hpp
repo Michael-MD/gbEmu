@@ -85,12 +85,12 @@ public:
 			};
 		};
 
-		uint8_t reg_;
+		uint8_t reg;
 
-		void operator=(uint8_t reg)
+		void operator=(uint8_t reg_)
 		{
-			reg_ = reg;
-			reg_ |= 0x80;	// Highest bit is always set
+			reg = reg_;
+			reg |= 0x80;	// Highest bit is always set
 		};
 
 	} *STAT;
