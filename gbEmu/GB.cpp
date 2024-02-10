@@ -37,7 +37,7 @@ GB::GB(std::string gbFilename)
 	*ppu.SCX = 0x00;
 	*ppu.BGP = 0xFC;
 	*IE = 0x00;
-	*IF = 0xE1;	// TODO: Ensure first 3 bits always set
+	*IF = 0xE1;
 
 	// Timer Internal Registers
 	*timer.TIMA = 0x00;
@@ -166,6 +166,11 @@ void GB::write(uint16_t addr, uint8_t data)
 			break;
 		}
 	}
+	else if (addr == 0xFF0F)	// IF
+	{
+		IF->reg = data;
+		IF->reg |= 0xE0;
+	}
 	else if (addr == 0xFF40)	// LCDC Register
 	{
 		ppu.LCDC->reg = data;
@@ -182,6 +187,11 @@ void GB::write(uint16_t addr, uint8_t data)
 
 		// Writing to this register resets the match flag
 		//ppu.STAT->MatchFlag = 0;
+	}
+	else if (addr == 0xFFFF)	// IE
+	{
+		IE->reg = data;
+		IE->reg |= 0xE0;
 	}
 	else
 	{

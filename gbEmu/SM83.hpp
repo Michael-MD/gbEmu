@@ -20,7 +20,7 @@ public:
 
 	GB* gb;
 
-	int nMachineCycles = 0;
+	uint32_t nMachineCycles = 0;
 
 private:
 

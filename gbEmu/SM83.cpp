@@ -72,8 +72,6 @@ void SM83::clock()
 				}
 			}
 
-
-
 			// Fetch Next Instruction
 			uint8_t data = gb->read(PC++);
 
@@ -100,32 +98,17 @@ void SM83::clock()
 					<< std::dec << ' ' << CurrentInstruction.mnemonic()
 					<< ' ' << std::hex << (int)data;
 
-				/*std::cout << std::endl << std::dec << "A = $" << std::hex << (int)A << ' ';
-				std::cout << std::dec << "B = $" << std::hex << (int)B << ' ';
-				std::cout << std::dec << "C = $" << std::hex << (int)C << ' ';
-				std::cout << std::dec << "D = $" << std::hex << (int)D << ' ' << std::endl;
-				std::cout << std::dec << "E = $" << std::hex << (int)E << ' ';
-				std::cout << std::dec << "F = $" << std::hex << (int)F << ' ';
-				std::cout << std::dec << "L = $" << std::hex << (int)L << ' ';
-				std::cout << std::dec << "H = $" << std::hex << (int)H << ' ' << std::endl;*/
-
 				std::cout << std::endl << std::hex << "AF = $" << (int)AF << std::endl;
 				std::cout << "BC = $" << (int)BC << std::endl;
 				std::cout << "DE = $" << (int)DE << std::endl;
 				std::cout << "HL = $" << (int)HL << std::endl;
-
-				//std::cout << std::endl << "STAT = $" << std::hex << (int)gb->ppu.STAT->reg_ << std::endl;
-				//std::cout << std::endl << "cycles = $" << (int)CurrentInstruction.cycles << std::endl;
-
-				//std::cout << "DIV = $" << (int)*gb->timer.DIV << std::endl;
-				//std::cout << "TIMA = $" << (int)*gb->timer.TIMA << std::endl;
-				//std::cout << "TMA = $" << (int)*gb->timer.TMA << std::endl;
-				//std::cout << "TAC = $" << (int)gb->timer.TAC->reg_ << std::endl << std::endl;
 				
 				std::cout << "LY = $" << (int)*gb->ppu.LY << std::endl;
+				std::cout << "LYC = $" << (int)*gb->ppu.LYC << std::endl;
 				std::cout << "IE = $" << (int)gb->IE->reg << std::endl;
-				std::cout << "IE = $" << (int)gb->IE->reg << std::endl;
-				std::cout << "DotsRemaining = " << std::dec << (int)gb->ppu.DotsRemaining << std::endl << std::endl;
+				std::cout << "IF = $" << (int)gb->IF->reg << std::endl;
+				std::cout << "STAT = $" << (int)gb->ppu.STAT->reg << std::endl;
+				std::cout << "LCDC = $" << (int)gb->ppu.LCDC->reg << std::endl;
 
 				//std::cout << std::dec << "Debug Message: " << std::hex << gb->SerialOut << std::endl;
 			}
@@ -201,8 +184,6 @@ void SM83::InterruptServiceRoutine()
 
 SM83::SM83()
 {
-
-	// TODO: Internal Checks
 
 	InstructionSet[0b00'000'000] =
 	{
@@ -2352,6 +2333,12 @@ inline uint8_t& SM83::GPR(uint8_t i)
 		return H;
 	case 0b101:
 		return L;
+	default:
+		// A default statement is present to stop
+		// the compiler from complaining in 
+		// release mode. This case should never
+		// be reached.
+		return L;
 	}
 }
 
@@ -2372,6 +2359,12 @@ inline char SM83::GPRString(uint8_t i)
 	case 0b100:
 		return 'H';
 	case 0b101:
+		return 'L';
+	default:
+		// A default statement is present to stop
+		// the compiler from complaining in 
+		// release mode. This case should never
+		// be reached.
 		return 'L';
 	}
 }
@@ -2408,6 +2401,12 @@ inline std::string SM83::qqString(uint8_t i)
 	case 0b10:
 		return "HL";
 	case 0b11:
+		return "AF";
+	default:
+		// A default statement is present to stop
+		// the compiler from complaining in 
+		// release mode. This case should never
+		// be reached.
 		return "AF";
 	}
 }
