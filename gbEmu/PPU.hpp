@@ -10,6 +10,7 @@ public:
 
 	void connectGB(GB* gb);
 	void clock();
+	void reset();
 
 	int DotsRemaining;
 	int DotsTotal;
@@ -49,11 +50,11 @@ public:
 			uint8_t bLCDC : 1;
 		};
 
-		uint8_t reg_;
+		uint8_t reg;
 
-		void operator=(uint8_t reg)
+		void operator=(uint8_t reg_)
 		{
-			reg_ = reg;
+			reg = reg_;
 		};
 
 	} *LCDC;
@@ -100,4 +101,7 @@ public:
 
 	// Background Pixel Colour/Background Pallette Register
 	uint8_t* BGP;
+
+	// LY setter for handling various instantanious changes and wrap around requried when LY is changed
+	void setLY(uint8_t v);
 };

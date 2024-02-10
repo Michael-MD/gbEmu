@@ -32,12 +32,12 @@ GB::GB(std::string gbFilename)
 	*P1 = 0xCF;
 	*ppu.LCDC = 0x91;
 	*ppu.STAT = 0x85;
-	*ppu.LY = 0x00;
+	*ppu.LY = 153;	// End of vertical blanking
 	*ppu.SCY = 0x00;
 	*ppu.SCX = 0x00;
 	*ppu.BGP = 0xFC;
 	*IE = 0x00;
-	*IF = 0xE1;
+	*IF = 0xE1;	// TODO: Ensure first 3 bits always set
 
 	// Timer Internal Registers
 	*timer.TIMA = 0x00;
@@ -166,13 +166,22 @@ void GB::write(uint16_t addr, uint8_t data)
 			break;
 		}
 	}
+	else if (addr == 0xFF40)	// LCDC Register
+	{
+		ppu.LCDC->reg = data;
+		// Reset PPU when LCD is turned off
+		if (ppu.LCDC->bLCDC == 0)
+		{
+			ppu.reset();
+		}
+	}
 	else if (addr == 0xFF41)	// STAT Register
 	{
 		// Lower 3-bits are read only
-		*ppu.STAT = (data & 0xF8) | (ppu.STAT->reg_ & 0x07);
+		*ppu.STAT = (data & 0xF8) | (ppu.STAT->reg & 0x07);
 
 		// Writing to this register resets the match flag
-		ppu.STAT->MatchFlag = 0;
+		//ppu.STAT->MatchFlag = 0;
 	}
 	else
 	{
