@@ -104,4 +104,7 @@ public:
 
 	// LY setter for handling various instantanious changes and wrap around requried when LY is changed
 	void setLY(uint8_t v);
+
+private:
+	int LX;
 };

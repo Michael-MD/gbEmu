@@ -123,15 +123,16 @@ void PPU::clock()
 
 			DotsRemaining = 80;
 			STAT->ModeFlag = 0b10;
-			//STAT->Mode10Selection = 1;
-			gb->IF->LCDC = 1;
+			
+			gb->IF->LCDC = STAT->Mode10Selection != 0;
 
 			break;
 
 		case DrawingPixels:
-			DotsRemaining = 172;
+			DotsRemaining = 172; // TODO: Properly implement 12 cycles
 			STAT->ModeFlag = 0b11;
 			bLineRendered = false;
+			LX = 0;
 			break;
 
 		case VerticalBlank:
@@ -140,33 +141,37 @@ void PPU::clock()
 
 			if (*LY == 144)		// Vblank begins at 144
 			{
-				//STAT->Mode01Selection = 1; // Interrupt Selection: Vertical Blanking
 				STAT->ModeFlag = 0b01;
+				gb->IF->LCDC = STAT->Mode01Selection != 0;
 			}
+
 			break;
 
 		case HorizontalBlank:
 			DotsRemaining = 456 - DotsTotal;
 			STAT->ModeFlag = 0b00;
-			//STAT->Mode00Selection = 1;
-			gb->IF->LCDC = 1;
+			gb->IF->LCDC = STAT->Mode00Selection != 0;
 			break;
 		}
 	}
 	
 	DotsRemaining--;
 
+	switch (Mode)
+	{
+	case OAMScan:
+		break;
+	case DrawingPixels:
+		if (DotsRemaining >= 160)
+		{
+			break;
+		}
 
-	if (Mode == OAMScan)
-	{
-		
-	}
-	else if (Mode == DrawingPixels)
-	{
 		// =========== Draw Pixels ===========
 		// Check if background rendering enabled and line 
 		// not already rendered.
-		if (LCDC->bBG == 1 && bLineRendered == false)
+		//if (LCDC->bBG == 1 && bLineRendered == false)
+		if (LCDC->bBG == 1)
 		{
 			// Get addressing mode for accessing
 			// VRAM which is the range 0x8000-0x97FF
@@ -176,66 +181,54 @@ void PPU::clock()
 			// 0: 0x9800 - 0x9BFF
 			// 1: 0x9C00 - 0x9FFF
 			uint16_t CHRCodesBaseAddr = LCDC->BGCodeArea ? 0x9C00 : 0x9800;
-			
+
 			// The GB has the capability of scrolling the screen, the offset
 			// from the top left corner is specified through SCX and SCY.
 			// TODO: Midframe behaviour
 			uint8_t LineY = (*LY + *SCY) % 256;
 
-			// Only loop through visible tiles
-			for (int LX = 0; LX < 20 * 8; LX++)
-			{
-				// Read character code of tile i on line (*LY) / 8
-				uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)(LineY / 8) * 32 + (int)(((LX + *SCX) % 256) / 8)];
+			// Read character code of tile i on line (*LY) / 8
+			uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)(LineY / 8) * 32 + (int)(((LX + *SCX) % 256) / 8)];
 
-				// Determine mode by which tile data is located
-				// based on unsigned or signed offset from 
-				// base address.
-				int16_t CHRCodeOffset = LCDC->BGCharData ? (uint8_t)CHRCode : (int8_t)CHRCode;
+			// Determine mode by which tile data is located
+			// based on unsigned or signed offset from 
+			// base address.
+			int16_t CHRCodeOffset = LCDC->BGCharData ? (uint8_t)CHRCode : (int8_t)CHRCode;
 
-				// Get tile data, offset from base address and 
-				// by the row being rendered of a given tile which 
-				// is 8x8. Each row of tile is two bytes.
-				int TileRow = LineY % 8;
-				uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
-				uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
+			// Get tile data, offset from base address and 
+			// by the row being rendered of a given tile which 
+			// is 8x8. Each row of tile is two bytes.
+			int TileRow = LineY % 8;
+			uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
+			uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
 
-				// Get pixel color or in the case of DMG, the
-				// shade of pixel from BGP register.
-				uint8_t p = 8 - (LX + *SCX) % 8;
+			// Get pixel color or in the case of DMG, the
+			// shade of pixel from BGP register.
+			uint8_t p = 8 - (LX + *SCX) % 8;
 
-				uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
-				uint8_t Value = (((*BGP) >> (PixelPalette * 2)) & 0b11) * 255 / 4;
+			uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
+			uint8_t Value = (3 - (((*BGP) >> (PixelPalette * 2)) & 0b11)) * 255 / 3;
 
-				// Place pixel value into dot matrix
-				DotMatrix[*LY][LX][0] = 255;
-				DotMatrix[*LY][LX][1] = Value;
-				DotMatrix[*LY][LX][2] = Value;
-				DotMatrix[*LY][LX][3] = Value;
-			}
-
+			// Place pixel value into dot matrix
+			DotMatrix[*LY][LX][0] = 255;
+			DotMatrix[*LY][LX][1] = Value;
+			DotMatrix[*LY][LX][2] = Value;
+			DotMatrix[*LY][LX][3] = Value;
 		}
-		else if (LCDC->bBG == 0 && bLineRendered == false)
+		else if (LCDC->bBG == 0)
 		{
 			// If bBG flag of LCDC register is not set, then
-			// on all models except the CGB, the means the
+			// on all models except the CGB, this means the
 			// screen is simply white.
-			for (int Tile_i = 0; Tile_i < 20; Tile_i++)
-			{
-				for (uint8_t p = 0; p < 8; p++)
-				{
-					uint8_t PixelColumn = Tile_i * 8 + (8 - p - 1);
-
-					DotMatrix[*LY][PixelColumn][0] = 255;
-					DotMatrix[*LY][PixelColumn][1] = 255;
-					DotMatrix[*LY][PixelColumn][2] = 255;
-					DotMatrix[*LY][PixelColumn][3] = 255;
-				}
-			}
-			
+			DotMatrix[*LY][LX][0] = 255;
+			DotMatrix[*LY][LX][1] = 255;
+			DotMatrix[*LY][LX][2] = 255;
+			DotMatrix[*LY][LX][3] = 255;
 		}
 
-		bLineRendered = true;
+		LX += 1;
+		
+		break;
 	}
 
 	
