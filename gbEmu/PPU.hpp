@@ -99,6 +99,9 @@ public:
 	uint8_t* SCY;	// Scroll Y
 	uint8_t* SCX;	// Scroll X
 
+	uint8_t* WX;	// Window position Y
+	uint8_t* WY;	// Window position X
+
 	// Background Pixel Colour/Background Pallette Register
 	uint8_t* BGP;
 
@@ -107,4 +110,10 @@ public:
 
 private:
 	int LX;
+
+	// Keeps track of delays during mode 3
+	uint32_t Delay = 0;
+
+	// Keeps track of window scanline to be rendered
+	uint8_t WLY = 0;
 };

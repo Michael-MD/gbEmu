@@ -175,10 +175,10 @@ void GB::write(uint16_t addr, uint8_t data)
 	{
 		ppu.LCDC->reg = data;
 		// Reset PPU when LCD is turned off
-		if (ppu.LCDC->bLCDC == 0)
+		/*if (ppu.LCDC->bLCDC == 0)
 		{
 			ppu.reset();
-		}
+		}*/
 	}
 	else if (addr == 0xFF41)	// STAT Register
 	{
