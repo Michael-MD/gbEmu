@@ -42,7 +42,7 @@ public:
 
 			uint8_t bBG : 1;
 			uint8_t bOBJ : 1;
-			uint8_t OBJBlockComposition : 1;
+			uint8_t OBJ8x16 : 1;
 			uint8_t BGCodeArea : 1;
 			uint8_t BGCharData : 1;
 			uint8_t bWindowing : 1;
@@ -105,6 +105,10 @@ public:
 	// Background Pixel Colour/Background Pallette Register
 	uint8_t* BGP;
 
+	// Sprites pallettes
+	uint8_t* OBP0;
+	uint8_t* OBP1;
+
 	// LY setter for handling various instantanious changes and wrap around requried when LY is changed
 	void setLY(uint8_t v);
 
@@ -116,4 +120,40 @@ private:
 
 	// Keeps track of window scanline to be rendered
 	uint8_t WLY = 0;
+
+	// Useful data strucutre for interpreting OAM objects
+	struct Object
+	{
+		uint8_t YPos;
+		uint8_t XPos;
+		uint8_t TileIndex;
+		union
+		{
+			struct
+			{
+				uint8_t CGBOnly : 4; // Used on in CGB
+				uint8_t Pallette : 1;
+				//	0 : OBP0
+				//	1 : OBP1
+				uint8_t XFlip : 1;	// 1 : Entire OBJ is horizontally mirrored
+				uint8_t YFlip : 1;	// 1 : Entire OBJ is vertically mirrored
+				uint8_t Priority : 1;
+				//	1 : BG and Window colors 1–3 are drawn over this OBJ
+				//	0 : Obj is drawn infront
+			};
+
+			uint8_t Attributes; // Attrubtes/flags
+		};
+	} *ScanLineObjects[10];
+
+
+	bool FoundObject = false;
+
+	// Flags when the found objects prioirty may
+	// cause it to appear behind the background
+	// and window.
+	bool ObjectPriorityConflict = false;
+	
+	uint8_t nScanLineObjects = 0;
+	
 };
