@@ -29,15 +29,20 @@ void GB::gameLoop()
 
 			// FOR DEBUGGING
 
-			handleEvents();
 			//if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
 			{
 				b = a;
 
+				i++;
+
+				if (i % 10'000 == 0)
+				{
+					handleEvents();
+				}
+
 				// Clock System
 				clock();
 
-				i++;
 				if (i % 70'000 == 0)	// Update Screen at ~60Hz
 				{
 					update();
@@ -61,7 +66,7 @@ void GB::handleEvents()
 		break;
 	case SDL_KEYDOWN:
 
-
+		break;
 	default:
 		break;
 	}

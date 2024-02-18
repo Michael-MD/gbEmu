@@ -134,7 +134,10 @@ void PPU::clock()
 			gb->IF->LCDC = STAT->Mode10Selection;
 
 			// Check for scanline sprites all in one go
-			if (DotsTotal == 0)
+
+			// The PPU will read all sprites as off screen in DMA
+			// transfer is in progress.
+			if (DotsTotal == 0 && !gb->dma.DMAinProgress)
 			{
 				nScanLineObjects = 0;
 				// Find objects which cover current pixel to be drawn
@@ -259,188 +262,189 @@ void PPU::clock()
 		// white pixel on the monochrome gameboy.
 		uint8_t Value;
 
-		// TODO: Priority
-		if(LCDC->bLCDC)
+		// ============ Sprite Display ============ 
+		// TODO: object delay
+
+		// PPU cannot access DMA, this isn't true behaviour
+		// but this should never happen anyway.
+		if (LCDC->bOBJ && !gb->dma.DMAinProgress)
 		{
-			if (LCDC->bOBJ)
+			// Find objects which cover current pixel to be drawn
+			for (uint8_t i = 0; i < nScanLineObjects; i++)
 			{
-				// Find objects which cover current pixel to be drawn
-				// TODO: Overlap priorities
-				for (uint8_t i = 0; i < nScanLineObjects; i++)
-				{
-					Object* Obj = ScanLineObjects[i];
+				Object* Obj = ScanLineObjects[i];
 
-					// Check if sprite overlaps in x-direction
-					if (Obj->XPos > LX && Obj->XPos - 8 <= LX)
+				// Check if sprite overlaps in x-direction
+				if (Obj->XPos > LX && Obj->XPos - 8 <= LX)
+				{
+					// Get tile row from memory
+					// Check if sprite is flipped in y-direction
+					int TileRow;
+					uint8_t TileHeight = LCDC->OBJ8x16 ? 16 : 8;
+					if (Obj->YFlip)
 					{
-						// Get tile row from memory
-						// Check if sprite is flipped in y-direction
-						int TileRow;
-						uint8_t TileHeight = LCDC->OBJ8x16 ? 16 : 8;
-						if (Obj->YFlip)
-						{
-							TileRow = (TileHeight - 1) - (*LY - (Obj->YPos - 16));
-						}
-						else
-						{
-							TileRow = *LY - (Obj->YPos - 16);
-						}
-
-						// Enforced in hardware is the igorance of the LSB of the tile index
-						// when the ppu is in 8x16 mode.
-						if (LCDC->OBJ8x16)
-						{
-							Obj->TileIndex &= 0xFE;
-						}
-
-						uint8_t TileLO = gb->RAM[0x8000 + Obj->TileIndex * 0x10 + TileRow * 2 + 0];
-						uint8_t TileHI = gb->RAM[0x8000 + Obj->TileIndex * 0x10 + TileRow * 2 + 1];
-
-						// Get pixel color or in the case of DMG, the
-						// shade of pixel from OBP0 or OBP1 registers.
-						uint8_t ObP = Obj->Pallette ? *OBP1 : *OBP0;
-
-						// Check if bit is flipped in x-directions
-						uint8_t p;
-						if (Obj->XFlip)
-						{
-							p = (LX - (Obj->XPos - 8)) % 8;
-						}
-						else
-						{
-							p = 7 - (LX - (Obj->XPos - 8));
-						}
-
-						uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
-
-						// Index 0 is always transparent
-						if (PixelPalette == 0)
-						{
-							FoundObject = false;
-							ObjectPriorityConflict = false;
-						}
-						else
-						{
-							FoundObject = true;
-							ObjectPriorityConflict = Obj->Priority;
-
-							Value = (3 - ((ObP >> (PixelPalette * 2)) & 0b11)) * 255 / 3;
-						}
-
-						break;
-
+						TileRow = (TileHeight - 1) - (*LY - (Obj->YPos - 16));
 					}
-				}
+					else
+					{
+						TileRow = *LY - (Obj->YPos - 16);
+					}
 
-			}
+					// Enforced in hardware is the igorance of the LSB of the tile index
+					// when the ppu is in 8x16 mode.
+					if (LCDC->OBJ8x16)
+					{
+						Obj->TileIndex &= 0xFE;
+					}
 
-			// Either no object was found or an object was found but the 
-			// priority may result in the object pixel not being rendered.
-			if (!FoundObject || (FoundObject && ObjectPriorityConflict))
-			{
-				// TODO: WX < 7 behaviour
-				if (LCDC->bBG && LCDC->bWindowing && LX >= *WX - 7 && *LY >= *WY)
-				{
-					// ============ Window Display ============ 
-
-					// Get addressing mode for accessing
-					// VRAM which is the range 0x8000-0x97FF
-					uint16_t BGBaseAddr = LCDC->BGCharData ? 0x8000 : 0x9000;
-
-					// Get base address for character codes for tiles
-					// 0: 0x9800 - 0x9BFF
-					// 1: 0x9C00 - 0x9FFF
-					uint16_t CHRCodesBaseAddr = LCDC->WindowCodeArea ? 0x9C00 : 0x9800;
-
-					// TODO: Midframe behaviour
-					uint8_t LineY = WLY;
-					uint8_t LineX = LX - (*WX - 7);
-
-					// Read character code of tile i on line (*LY) / 8
-					uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)(LineY / 8) * 32 + (int)(LineX / 8)];
-
-					// Determine mode by which tile data is located
-					// based on unsigned or signed offset from 
-					// base address.
-					int16_t CHRCodeOffset = LCDC->BGCharData ? (uint8_t)CHRCode : (int8_t)CHRCode;
-
-					// Get tile data, offset from base address and 
-					// by the row being rendered of a given tile which 
-					// is 8x8. Each row of tile is two bytes.
-					int TileRow = LineY % 8;
-					uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
-					uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
+					uint8_t TileLO = gb->RAM[0x8000 + Obj->TileIndex * 0x10 + TileRow * 2 + 0];
+					uint8_t TileHI = gb->RAM[0x8000 + Obj->TileIndex * 0x10 + TileRow * 2 + 1];
 
 					// Get pixel color or in the case of DMG, the
-					// shade of pixel from BGP register.
-					uint8_t p = 7 - LineX % 8;
+					// shade of pixel from OBP0 or OBP1 registers.
+					uint8_t ObP = Obj->Pallette ? *OBP1 : *OBP0;
+
+					// Check if bit is flipped in x-directions
+					uint8_t p;
+					if (Obj->XFlip)
+					{
+						p = (LX - (Obj->XPos - 8)) % 8;
+					}
+					else
+					{
+						p = 7 - (LX - (Obj->XPos - 8));
+					}
 
 					uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
 
-					if (PixelPalette != 0 || !ObjectPriorityConflict)
+					// Index 0 is always transparent
+					if (PixelPalette == 0)
 					{
-						Value = (3 - (((*BGP) >> (PixelPalette * 2)) & 0b11)) * 255 / 3;
+						FoundObject = false;
+						ObjectPriorityConflict = false;
 					}
-				}
-				else if (LCDC->bBG)
-				{
-					// ============ Background Display ============ 
-
-					// Get addressing mode for accessing
-					// VRAM which is the range 0x8000-0x97FF
-					uint16_t BGBaseAddr = LCDC->BGCharData ? 0x8000 : 0x9000;
-
-					// Get base address for character codes for tiles
-					// 0: 0x9800 - 0x9BFF
-					// 1: 0x9C00 - 0x9FFF
-					uint16_t CHRCodesBaseAddr = LCDC->BGCodeArea ? 0x9C00 : 0x9800;
-
-					// The GB has the capability of scrolling the screen, the offset
-					// from the top left corner is specified through SCX and SCY.
-					// TODO: Midframe behaviour
-					uint8_t LineY = (*LY + *SCY) % 256;
-
-					// Read character code of tile i on line (*LY) / 8
-					uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)(LineY / 8) * 32 + (int)(((LX + *SCX) % 256) / 8)];
-
-					// Determine mode by which tile data is located
-					// based on unsigned or signed offset from 
-					// base address.
-					int16_t CHRCodeOffset = LCDC->BGCharData ? (uint8_t)CHRCode : (int8_t)CHRCode;
-
-					// Get tile data, offset from base address and 
-					// by the row being rendered of a given tile which 
-					// is 8x8. Each row of tile is two bytes.
-					int TileRow = LineY % 8;
-					uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
-					uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
-
-					// Get pixel color or in the case of DMG, the
-					// shade of pixel from BGP register.
-					uint8_t p = 7 - (LX + *SCX) % 8;
-
-					uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
-
-					if (PixelPalette != 0 || !ObjectPriorityConflict)
+					else
 					{
-						Value = (3 - (((*BGP) >> (PixelPalette * 2)) & 0b11)) * 255 / 3;
+						FoundObject = true;
+						ObjectPriorityConflict = Obj->Priority;
+
+						Value = (3 - ((ObP >> (PixelPalette * 2)) & 0b11)) * 255 / 3;
 					}
-				}
-				else
-				{
-					// If LCD is turned on but there is no sprite or 
-					// background or window then just return a plack pixel;
-					Value = 255;
+
+					break;
+
 				}
 			}
+
 		}
-		else
+
+		// Either no object was found or an object was found but the 
+		// priority may result in the object pixel not being rendered.
+		if (!FoundObject || (FoundObject && ObjectPriorityConflict))
 		{
-			// If bBG flag of LCDC register is not set, then
-			// on all models except the CGB, this means the
-			// screen is simply white.
-			Value = 255;
+			// TODO: WX < 7 behaviour
+			if (LCDC->bBG && LCDC->bWindowing && LX >= *WX - 7 && *LY >= *WY)
+			{
+				// ============ Window Display ============ 
+
+				// Get addressing mode for accessing
+				// VRAM which is the range 0x8000-0x97FF
+				uint16_t BGBaseAddr = LCDC->BGCharData ? 0x8000 : 0x9000;
+
+				// Get base address for character codes for tiles
+				// 0: 0x9800 - 0x9BFF
+				// 1: 0x9C00 - 0x9FFF
+				uint16_t CHRCodesBaseAddr = LCDC->WindowCodeArea ? 0x9C00 : 0x9800;
+
+				// TODO: Midframe behaviour
+				uint8_t LineY = WLY;
+				uint8_t LineX = LX - (*WX - 7);
+
+				// If this is the first pixel of the window then a 
+				// delay penalty is incurred.
+				if (LineX == 0)
+				{
+					Delay = 6;
+				}
+
+				// Read character code of tile i on line (*LY) / 8
+				uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)(LineY / 8) * 32 + (int)(LineX / 8)];
+
+				// Determine mode by which tile data is located
+				// based on unsigned or signed offset from 
+				// base address.
+				int16_t CHRCodeOffset = LCDC->BGCharData ? (uint8_t)CHRCode : (int8_t)CHRCode;
+
+				// Get tile data, offset from base address and 
+				// by the row being rendered of a given tile which 
+				// is 8x8. Each row of tile is two bytes.
+				int TileRow = LineY % 8;
+				uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
+				uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
+
+				// Get pixel color or in the case of DMG, the
+				// shade of pixel from BGP register.
+				uint8_t p = 7 - LineX % 8;
+
+				uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
+
+				if (PixelPalette != 0 || !ObjectPriorityConflict)
+				{
+					Value = (3 - (((*BGP) >> (PixelPalette * 2)) & 0b11)) * 255 / 3;
+				}
+			}
+			else if (LCDC->bBG)
+			{
+				// ============ Background Display ============ 
+
+				// Get addressing mode for accessing
+				// VRAM which is the range 0x8000-0x97FF
+				uint16_t BGBaseAddr = LCDC->BGCharData ? 0x8000 : 0x9000;
+
+				// Get base address for character codes for tiles
+				// 0: 0x9800 - 0x9BFF
+				// 1: 0x9C00 - 0x9FFF
+				uint16_t CHRCodesBaseAddr = LCDC->BGCodeArea ? 0x9C00 : 0x9800;
+
+				// The GB has the capability of scrolling the screen, the offset
+				// from the top left corner is specified through SCX and SCY.
+				// TODO: Midframe behaviour
+				uint8_t LineY = (*LY + *SCY) % 256;
+
+				// Read character code of tile i on line (*LY) / 8
+				uint8_t CHRCode = gb->RAM[CHRCodesBaseAddr + (int)(LineY / 8) * 32 + (int)(((LX + *SCX) % 256) / 8)];
+
+				// Determine mode by which tile data is located
+				// based on unsigned or signed offset from 
+				// base address.
+				int16_t CHRCodeOffset = LCDC->BGCharData ? (uint8_t)CHRCode : (int8_t)CHRCode;
+
+				// Get tile data, offset from base address and 
+				// by the row being rendered of a given tile which 
+				// is 8x8. Each row of tile is two bytes.
+				int TileRow = LineY % 8;
+				uint8_t TileLO = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 0];
+				uint8_t TileHI = gb->RAM[BGBaseAddr + CHRCodeOffset * 0x10 + TileRow * 2 + 1];
+
+				// Get pixel color or in the case of DMG, the
+				// shade of pixel from BGP register.
+				uint8_t p = 7 - (LX + *SCX) % 8;
+
+				uint8_t PixelPalette = (((TileHI >> p) & 0x01) << 1) | ((TileLO >> p) & 0x01);
+
+				if (PixelPalette != 0 || !ObjectPriorityConflict)
+				{
+					Value = (3 - (((*BGP) >> (PixelPalette * 2)) & 0b11)) * 255 / 3;
+				}
+			}
+			else
+			{
+				// If LCD is turned on but there is no sprite or 
+				// background or window then just return a white pixel;
+				Value = 255;
+			}
 		}
+
 
 		// Place pixel value into dot matrix
 		DotMatrix[*LY][LX][0] = 255;

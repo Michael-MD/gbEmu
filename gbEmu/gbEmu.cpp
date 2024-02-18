@@ -10,7 +10,7 @@
 
 int main(int argc, char* argv[])
 {
-    //GB gb("C:/Users/61481/Desktop/tetris.gb");
+    GB gb("C:/Users/61481/Desktop/tetris.gb");
     //GB gb("C:/Users/61481/Desktop/mb.gb");
     //GB gb("C:/Users/61481/Desktop/Dr. Mario (World).gb");
  
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
     //GB gb("C:/Users/61481/Documents/code/gb/mealybug-tearoom-tests/m3_bgp_change.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/mealybug-tearoom-tests/m3_lcdc_bg_map_change.gb");
-    GB gb("C:/Users/61481/Documents/code/gb/dmg-acid2.gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/dmg-acid2.gb");
 
 
     return 0;
