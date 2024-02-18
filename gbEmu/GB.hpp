@@ -52,6 +52,13 @@ public:
 
 	} *P1 = reinterpret_cast<decltype(P1)>(RAM + 0xFF00);
 
+	// Used to keep track of which buttons have
+	// been pressed. ButtonState[0] stores the D-pad.
+	// ButtonState[1] stores the other buttons (SsBA).
+	// If no button is pressed then lower bit 
+	// is 0xFF. Note, this switch is an active low.
+	uint8_t ButtonState[2] = { 0xFF , 0xFF };
+
 	// NR10 Register
 	uint8_t* NR10 = RAM + 0xFF10;
 

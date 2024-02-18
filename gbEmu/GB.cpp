@@ -125,11 +125,20 @@ void GB::write(uint16_t addr, uint8_t data)
 	}
 	else if (addr == 0xFF00)	// Joystick matrix
 	{
-		// If no button is pressed then lower bit 
-		// is 0xFF. This is temporariliy placed here
-		// until the joystick functionality is 
-		// implemented properly.
-		*P1 = data | 0xCF;
+		*P1 = data;
+		if (P1->P14)	// D-pad
+		{
+			*P1 = ((data & 0x30) | (ButtonState[0] & 0x0F)) | 0xC0;
+		}
+		else if (P1->P15)
+		{
+			*P1 = ((data & 0x30) | (ButtonState[1] & 0x0F)) | 0xC0;
+		}
+		else
+		{
+			*P1 = ((data & 0x30) | 0x0F) | 0xC0;
+		}
+
 	}
 	else if (addr == 0xFF02)	// Serial I/O
 	{

@@ -65,7 +65,70 @@ void GB::handleEvents()
 		IsRunning = false;
 		break;
 	case SDL_KEYDOWN:
-
+		switch (event.key.keysym.sym)
+		{
+		case SDLK_RIGHT:
+			ButtonState[0] &= ~0b0001;
+			IE->PNegEdge = 1;
+			break;
+		case SDLK_LEFT:
+			ButtonState[0] &= ~0b0010;
+			IE->PNegEdge = 1;
+			break;
+		case SDLK_UP:
+			ButtonState[0] &= ~0b0100;
+			IE->PNegEdge = 1;
+			break;
+		case SDLK_DOWN:
+			ButtonState[0] &= ~0b1000;
+			IE->PNegEdge = 1;
+			break;
+		case SDLK_z:	// A
+			ButtonState[1] &= ~0b0001;
+			IE->PNegEdge = 1;
+			break;
+		case SDLK_a:	// B
+			ButtonState[1] &= ~0b0010;
+			IE->PNegEdge = 1;
+			break;
+		case SDLK_w:	// SELECT
+			ButtonState[1] &= ~0b0100;
+			IE->PNegEdge = 1;
+			break;
+		case SDLK_q:	// START
+			ButtonState[1] &= ~0b1000;
+			IE->PNegEdge = 1;
+			break;
+		}
+		break;
+	case SDL_KEYUP:
+		switch (event.key.keysym.sym)
+		{
+		case SDLK_RIGHT:
+			ButtonState[0] |= 0b0001;
+			break;
+		case SDLK_LEFT:
+			ButtonState[0] |= 0b0010;
+			break;
+		case SDLK_UP:
+			ButtonState[0] |= 0b0100;
+			break;
+		case SDLK_DOWN:
+			ButtonState[0] |= 0b1000;
+			break;
+		case SDLK_z:	// A
+			ButtonState[1] |= 0b0001;
+			break;
+		case SDLK_a:	// B
+			ButtonState[1] |= 0b0010;
+			break;
+		case SDLK_w:	// SELECT
+			ButtonState[1] |= 0b0100;
+			break;
+		case SDLK_q:	// START
+			ButtonState[1] |= 0b1000;
+			break;
+		}
 		break;
 	default:
 		break;
