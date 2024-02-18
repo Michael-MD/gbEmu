@@ -19,6 +19,9 @@ GB::GB(std::string gbFilename)
 	// Connect Timer Unit
 	timer.connectGB(this);
 
+	// Connect DMA
+	dma.connectGB(this);
+
 	// ============== Initilizes Registers ==============
 	// CPU Internal Registers
 	cpu.AF = 0x01B0;
@@ -55,12 +58,25 @@ void GB::clock()
 	cpu.clock();
 	ppu.clock();
 	timer.clock();
+	dma.clock();
 
 	nClockCycles++;
 }
 
 uint8_t GB::read(uint16_t addr)
 {
+	// During a dma transfer the CPU can only read
+	// HRAM which is located from 0xFF00-0xFFFE.
+	if (dma.DMAinProgress)
+	{
+		// Check if CPU is trying to read data
+		// outside HRAM.
+		if (!(addr >= 0xFF80 && addr < 0xFFFF))
+		{
+			return 0xFF;
+		}
+	}
+
 	if (addr < 0x8000)		// Cartridge
 	{
 		return cart->read(addr);
@@ -75,6 +91,18 @@ uint8_t GB::read(uint16_t addr)
 
 void GB::write(uint16_t addr, uint8_t data)
 {
+	// During a dma transfer the CPU can only access
+	// HRAM which is located from 0xFF00-0xFFFE.
+	if (dma.DMAinProgress)
+	{
+		// Check if CPU is trying to access data
+		// outside HRAM.
+		if (!(addr >= 0xFF80 && addr < 0xFFFF))
+		{
+			return;
+		}
+	}
+
 	if (addr < 0x8000)		// Cartridge
 	{
 		cart->write(addr, data);
@@ -94,6 +122,14 @@ void GB::write(uint16_t addr, uint8_t data)
 		// Mirror 8kiB internal RAM
 		RAM[0xC000 + (addr % 0xE000)] = data;
 		RAM[addr] = data;
+	}
+	else if (addr == 0xFF00)	// Joystick matrix
+	{
+		// If no button is pressed then lower bit 
+		// is 0xFF. This is temporariliy placed here
+		// until the joystick functionality is 
+		// implemented properly.
+		*P1 = data | 0xCF;
 	}
 	else if (addr == 0xFF02)	// Serial I/O
 	{
@@ -188,10 +224,21 @@ void GB::write(uint16_t addr, uint8_t data)
 		// Writing to this register resets the match flag
 		//ppu.STAT->MatchFlag = 0;
 	}
+	else if (addr == 0xFF46)	// OAM DMA Transfer Register
+	{
+		// Transfers 100 bytes of data starting from 
+		// the high nibble of the register.
+		*dma.DMAReg = data;
+		dma.DMAinProgress = true;
+	}
 	else if (addr == 0xFFFF)	// IE
 	{
 		IE->reg = data;
 		IE->reg |= 0xE0;
+	}
+	else if (addr == 0xFF80)	// Debugging
+	{
+		RAM[addr] = data;
 	}
 	else
 	{

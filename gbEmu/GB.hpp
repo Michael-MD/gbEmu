@@ -4,6 +4,7 @@
 #include "Cartridge.hpp"
 #include "PPU.hpp"
 #include "Timer.hpp"
+#include "DMA.h"
 #include <string>
 #include "SDL.h"
 
@@ -16,6 +17,7 @@ public:
 	Cartridge* cart;
 	PPU ppu;
 	Timer timer;
+	DMA dma;
 
 	uint32_t nClockCycles;
 
@@ -41,11 +43,11 @@ public:
 			uint8_t P15 : 1;
 		};
 
-		uint8_t reg_;
+		uint8_t reg;
 
-		void operator=(uint8_t reg)
+		void operator=(uint8_t reg_)
 		{
-			reg_ = reg;
+			reg = reg_;
 		};
 
 	} *P1 = reinterpret_cast<decltype(P1)>(RAM + 0xFF00);
