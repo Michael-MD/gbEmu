@@ -83,19 +83,19 @@ void GB::handleEvents()
 			ButtonState[0] &= ~0b1000;
 			IE->PNegEdge = 1;
 			break;
-		case SDLK_z:	// A
+		case SDLK_v:	// A
 			ButtonState[1] &= ~0b0001;
 			IE->PNegEdge = 1;
 			break;
-		case SDLK_a:	// B
+		case SDLK_c:	// B
 			ButtonState[1] &= ~0b0010;
 			IE->PNegEdge = 1;
 			break;
-		case SDLK_w:	// SELECT
+		case SDLK_z:	// SELECT
 			ButtonState[1] &= ~0b0100;
 			IE->PNegEdge = 1;
 			break;
-		case SDLK_q:	// START
+		case SDLK_x:	// START
 			ButtonState[1] &= ~0b1000;
 			IE->PNegEdge = 1;
 			break;
@@ -116,16 +116,16 @@ void GB::handleEvents()
 		case SDLK_DOWN:
 			ButtonState[0] |= 0b1000;
 			break;
-		case SDLK_z:	// A
+		case SDLK_v:	// A
 			ButtonState[1] |= 0b0001;
 			break;
-		case SDLK_a:	// B
+		case SDLK_c:	// B
 			ButtonState[1] |= 0b0010;
 			break;
-		case SDLK_w:	// SELECT
+		case SDLK_z:	// SELECT
 			ButtonState[1] |= 0b0100;
 			break;
-		case SDLK_q:	// START
+		case SDLK_x:	// START
 			ButtonState[1] |= 0b1000;
 			break;
 		}

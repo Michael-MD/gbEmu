@@ -126,11 +126,11 @@ void GB::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF00)	// Joystick matrix
 	{
 		*P1 = data;
-		if (P1->P14)	// D-pad
+		if (P1->P14 == 0)	// D-pad
 		{
 			*P1 = ((data & 0x30) | (ButtonState[0] & 0x0F)) | 0xC0;
 		}
-		else if (P1->P15)
+		else if (P1->P15 == 0)
 		{
 			*P1 = ((data & 0x30) | (ButtonState[1] & 0x0F)) | 0xC0;
 		}
