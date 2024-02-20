@@ -14,4 +14,7 @@ public:
 	// Registers
 	uint8_t ROMBankCode, UpperROMBankCode, bBankingMode;
 	bool RAMEnable;
+
+	// Used for masking address to ROM / RAM size
+	uint32_t ROMMask, RAMMask;
 };

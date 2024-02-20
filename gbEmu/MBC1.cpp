@@ -2,162 +2,91 @@
 #include <fstream>
 #include <iostream>
 
-MBC1::MBC1(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(ROMSize, RAMSize)
+MBC1::MBC1(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(gbFilename, ROMSize, RAMSize)
 {
-	std::ifstream ifs;
-	ifs.open(gbFilename, std::ifstream::binary);
-
-	if (ifs.is_open())
-	{
-		ifs.read(reinterpret_cast<char*>(ROM), ROMSizeBytes);
-		ifs.close();
-	}
-	else
-	{
-		std::cout << ".gb file not found." << std::endl;
-		std::exit(1);
-	}
-
 	// Initialize internal registers
-	ROMBankCode = 0x00;
+	ROMBankCode = 0x01;
 	UpperROMBankCode = 0x00;
 	bBankingMode = 0x00;
 	RAMEnable = 0;
+
+	ROMMask = (1 << Log2nROMBanks) - 1;
+	RAMMask = (1 << Log2nRAMBanks) - 1;
 }
 
 void MBC1::write(uint16_t addr, uint8_t data)
 {
-	// TODO
+	if (addr >= 0x0000 && addr < 0x2000)	// RAM enable
+	{
+		// Write to this address space 0xXA 
+		// to enables RAM.
+		RAMEnable = (data & 0x0F) == 0xA;
+	}
+	else if (addr >= 0x2000 && addr < 0x4000)	// ROM bank select
+	{
+		ROMBankCode = data & 0x1F;
+		// Select Bank
+		if (ROMBankCode == 0)
+		{
+			// 00->01 bank translation
+			ROMBankCode = 1;
+		}
+
+		// Mask unncessary bits
+		ROMBankCode &= ROMMask;
+	}
+	else if (addr >= 0x4000 && addr < 0x6000)	// Upper ROM bank select / RAM bank select
+	{
+		UpperROMBankCode = data & 0b11;
+	}
+	else if (addr >= 0x6000 && addr < 0x8000)	// Banking mode select
+	{
+		bBankingMode = data & 0x01;
+	}
 }
 
 uint8_t MBC1::read(uint16_t addr)
 {
-	// ROM
-	if (addr < 0x4000)
+	if (addr >= 0x0000 && addr < 0x4000)	// Lower 16kiB ROM bank
 	{
-		if (bBankingMode == 0 || nROMBanks < 64)
+		if (bBankingMode == 0)
 		{
-			// In banking mode 0, this address space is
-			// always mapped to bank 0 of ROM or
-			// if less than 1MiB is being mapped then regardless
-			// of the bank mapping mode this address range always 
-			// points to bank 0 of ROM.
+			// Access 0-th 16kiB bank
 			return ROM[addr];
 		}
 		else
 		{
-			// In banking mode 1, there is now the possibility
-			// that if the MBC is mapping more than 1MiB
-			// then if the upper banking mode is set 1 one then
-			// ROM banks 0x20/0x40/0x60 can now be accessed from 
-			// this memory space.
-			if (nROMBanks >= 64)
-			{
-				// Using RAM bank register as upper ROM bank select
-				// ROM banks are of size 16KiB (0x4000). 
-				// 
-				// We make the ROM bank number and get the corresponding address.
-				// The requested address is then an offset from this starting
-				// point.
-				uint8_t BankNum = (UpperROMBankCode << 5) | ROMBankCode;
-				if(BankNum < nROMBanks)
-				{
-					return ROM[0x4000 * ((UpperROMBankCode << 5) | ROMBankCode) + addr];
-				}
-				else
-				{
-					// If execution makes it here then a bank which  
-					// is out of range is being accessed. This should
-					// never happen but in case it does the code will simply 
-					// return 0x00. This will only occur if the ROM is 1MiB
-					// but the addressing for some reason is assuming 2MiB.
-					return 0x00;
-				}
-			}
+			// Allow for secondary banking ROM (16kiB) to select larger registers 
+			// with the first 5 bits still 0. If the ROM doesn't
+			// have enough masks then this effect is unnoticeable.
+			return ROM[((UpperROMBankCode << 5) & ROMMask) * 0x4000 + addr];
 		}
 	}
-	else if (addr >= 0x4000 && addr < 0x8000)
+	else if (addr >= 0x4000 && addr < 0x8000) // Upper 16kiB ROM bank
 	{
-		
-		if (bBankingMode == 0 || nROMBanks < 64)
-		{
-			// The banks which could be accessed in 
-			// range <0x4000 cannot be mapped to this space.
-			// In cases where we map to 0x00/0x20/0x40/0x60
-			// we simply select the next register.
-			switch (ROMBankCode)
-			{
-			case 0x00:
-			case 0x20:
-			case 0x40:
-			case 0x60:
-				return ROM[0x4000 * (ROMBankCode + 1) + (addr % 0x4000)];
-			default:
-				return ROM[0x4000 * ROMBankCode + (addr % 0x4000)];
-			}
-		}
-		else
-		{
-			
-			if (nROMBanks >= 64)
-			{
-				// Using RAM bank register as upper ROM bank select
-				// ROM banks are of size 16KiB (0x4000). 
-				// 
-				// We make the ROM bank number and get the corresponding address.
-				// The requested address is then an offset from this starting
-				// point.
-				uint8_t BankNum = (UpperROMBankCode << 5) | ROMBankCode;
-				if (BankNum < nROMBanks)
-				{
-					switch (ROMBankCode)
-					{
-					case 0x00:
-					case 0x20:
-					case 0x40:
-					case 0x60:
-						return ROM[0x4000 * (BankNum + 1) + (addr % 0x4000)];
-					default:
-						return ROM[0x4000 * BankNum + (addr % 0x4000)];
-					}
-				}
-				else
-				{
-					return 0x00;
-				}
-			}
-		}
-		
+		// Here the upper bank select is always used and we can switch 
+		// freely between banks.
+		return ROM[(((UpperROMBankCode << 5) | ROMBankCode) & ROMMask) * 0x4000 + (addr % 0x4000)];
 	}
-
-	// RAM
-	else if (addr >= 0xA000 && addr < 0xC000)
+	else if (addr >= 0xA000 && addr < 0xC000) // RAM read
 	{
-		if(RAMEnable)
+		if (RAMEnable)
 		{
-			if (bBankingMode)
+			if (bBankingMode == 0)
 			{
-				// The register which selects the RAM
-				// bank is used to select the upper two bits
-				// of the ROM bank. Hence RAM bank 0 is
-				// always referred.
-				return RAM[addr % 0xA000];
+				RAM[addr % 0xA000];
 			}
 			else
 			{
-				return RAM[0x2000 * UpperROMBankCode + (addr % 0xA000)];
+				// Access any of up to 4 8kiB RAM banks
+				RAM[((UpperROMBankCode & RAMMask) * 0x2000) + (addr % 0xA000)];
 			}
 		}
 		else
 		{
-			// If a read from RAM is attempted while 
-			// reading is disabled, then the system
-			// exibits open bus behaviour and we end
-			// up with a random value although most of
-			// the time the value returned is 0xFF. 
+			// Open bus behaviour
 			return 0xFF;
 		}
-
 	}
 
 	return 0x00;

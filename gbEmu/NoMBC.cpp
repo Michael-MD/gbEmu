@@ -2,21 +2,9 @@
 #include <fstream>
 #include <iostream>
 
-NoMBC::NoMBC(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(ROMSize, RAMSize)
+NoMBC::NoMBC(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(gbFilename, ROMSize, RAMSize)
 {
-	std::ifstream ifs;
-	ifs.open(gbFilename, std::ifstream::binary);
 
-	if (ifs.is_open())
-	{
-		ifs.read(reinterpret_cast<char*>(ROM), ROMSizeBytes);
-		ifs.close();
-	}
-	else
-	{
-		std::cout << ".gb file not found." << std::endl;
-		std::exit(1);
-	}
 }
 
 void NoMBC::write(uint16_t addr, uint8_t data)

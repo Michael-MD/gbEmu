@@ -1,8 +1,12 @@
 #include "MBC.hpp"
+#include <fstream>
+#include <iostream>
 
-MBC::MBC(uint8_t ROMSize, uint8_t RAMSize)
+MBC::MBC(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize)
 {
 	// Convert sizes in game header to proper size in bytes
+	// and create ROM and RAM on heap since these could be up
+	// to several MiB.
 
 	switch (ROMSize)
 	{
@@ -26,6 +30,12 @@ MBC::MBC(uint8_t ROMSize, uint8_t RAMSize)
 		break;
 	case 0x06:
 		nROMBanks = 128;
+		break;
+	case 0x07:
+		nROMBanks = 256;
+		break;
+	case 0x08:
+		nROMBanks = 512;
 		break;
 	case 0x52:
 		nROMBanks = 72;
@@ -59,6 +69,9 @@ MBC::MBC(uint8_t ROMSize, uint8_t RAMSize)
 	case 0x04:
 		nRAMBanks = 16;
 		break;
+	case 0x05:
+		nRAMBanks = 8;
+		break;
 	}
 
 	if (nRAMBanks != 0)
@@ -69,6 +82,23 @@ MBC::MBC(uint8_t ROMSize, uint8_t RAMSize)
 
 	ROM = new uint8_t[ROMSizeBytes];
 	RAM = new uint8_t[RAMSizeBytes];
+
+	// Populate ROM with cartridge data
+	std::ifstream ifs;
+	ifs.open(gbFilename, std::ifstream::binary);
+
+	if (ifs.is_open())
+	{
+		ifs.read(reinterpret_cast<char*>(ROM), ROMSizeBytes);
+		ifs.close();
+
+		// TODO: RAM
+	}
+	else
+	{
+		std::cout << ".gb file not found." << std::endl;
+		std::exit(1);
+	}
 
 }
 
