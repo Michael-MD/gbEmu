@@ -1,10 +1,11 @@
 #pragma once
 #include <cstdint>
+#include <string>
 
 class MBC
 {
 public:
-	MBC(uint8_t ROMSize, uint8_t RAMSize);
+	MBC(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize);
 	~MBC();
 
 	uint8_t* ROM;
