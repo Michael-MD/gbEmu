@@ -43,6 +43,21 @@ void MBC1::write(uint16_t addr, uint8_t data)
 	{
 		bBankingMode = data & 0x01;
 	}
+	else if (addr >= 0xA000 && addr < 0xC000)	// RAM
+	{
+		if (RAMEnable)
+		{
+			if (bBankingMode == 0 && nRAMBanks != 0)
+			{
+				RAM[addr % 0xA000] = data;
+			}
+			else
+			{
+				// Access any of up to 4 8kiB RAM banks
+				RAM[((UpperROMBankCode & RAMMask) * 0x2000) + (addr % 0xA000)] = data;
+			}
+		}
+	}
 }
 
 uint8_t MBC1::read(uint16_t addr)
@@ -72,14 +87,14 @@ uint8_t MBC1::read(uint16_t addr)
 	{
 		if (RAMEnable)
 		{
-			if (bBankingMode == 0)
+			if (bBankingMode == 0 && nRAMBanks != 0)
 			{
-				RAM[addr % 0xA000];
+				return RAM[addr % 0xA000];
 			}
 			else
 			{
 				// Access any of up to 4 8kiB RAM banks
-				RAM[((UpperROMBankCode & RAMMask) * 0x2000) + (addr % 0xA000)];
+				return RAM[((UpperROMBankCode & RAMMask) * 0x2000) + (addr % 0xA000)];
 			}
 		}
 		else
