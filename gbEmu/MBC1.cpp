@@ -1,6 +1,4 @@
 #include "MBC1.hpp"
-#include <fstream>
-#include <iostream>
 
 MBC1::MBC1(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(gbFilename, ROMSize, RAMSize)
 {
