@@ -7,6 +7,7 @@
 #include "NoMBC.hpp"
 #include "MBC1.hpp"
 #include "MBC2.hpp"
+#include "MBC3.hpp"
 
 Cartridge::Cartridge(std::string gbFilename)
 {
@@ -47,6 +48,10 @@ Cartridge::Cartridge(std::string gbFilename)
 	case 0x05:
 	case 0x06:
 		mbc = new MBC2(gbFilename, Header->ROMSize, Header->RAMSize);
+		break;
+	case 0x012:
+	case 0x013:
+		mbc = new MBC3(gbFilename, Header->ROMSize, Header->RAMSize);
 		break;
 	default:
 		std::cout << "Only Cartridges which use ROM only are supported."

@@ -142,6 +142,7 @@
     <ClCompile Include="MBC.cpp" />
     <ClCompile Include="MBC1.cpp" />
     <ClCompile Include="MBC2.cpp" />
+    <ClCompile Include="MBC3.cpp" />
     <ClCompile Include="NoMBC.cpp" />
     <ClCompile Include="PPU.cpp" />
     <ClCompile Include="GB.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="MBC.hpp" />
     <ClInclude Include="MBC1.hpp" />
     <ClInclude Include="MBC2.hpp" />
+    <ClInclude Include="MBC3.hpp" />
     <ClInclude Include="NoMBC.hpp" />
     <ClInclude Include="PPU.hpp" />
     <ClInclude Include="GB.hpp" />
