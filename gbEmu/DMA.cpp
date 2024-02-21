@@ -1,4 +1,4 @@
-#include "DMA.h"
+#include "DMA.hpp"
 #include "GB.hpp"
 
 void DMA::connectGB(GB* gb)

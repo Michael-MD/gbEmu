@@ -49,10 +49,10 @@ void PPU::setLY(uint8_t v)
 void PPU::clock()
 {
 	// Checks if ppu is off
-	if (LCDC->bLCDC == 0)
+	/*if (LCDC->bLCDC == 0)
 	{
 		return;
-	}
+	}*/
 
 	// LY == LYC is checked contiuously during OAMScan
 	// Checks if scan line has reached value

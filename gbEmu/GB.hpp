@@ -4,7 +4,7 @@
 #include "Cartridge.hpp"
 #include "PPU.hpp"
 #include "Timer.hpp"
-#include "DMA.h"
+#include "DMA.hpp"
 #include <string>
 #include "SDL.h"
 

@@ -80,7 +80,7 @@
     <ClInclude Include="MBC1.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DMA.h">
+    <ClInclude Include="DMA.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MBC2.hpp">
