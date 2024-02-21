@@ -1,11 +1,12 @@
 #include "Cartridge.hpp"
-#include "GB.hpp"
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
+#include "GB.hpp"
 #include "NoMBC.hpp"
 #include "MBC1.hpp"
+#include "MBC2.hpp"
 
 Cartridge::Cartridge(std::string gbFilename)
 {
@@ -43,9 +44,12 @@ Cartridge::Cartridge(std::string gbFilename)
 	case 0x03:
 		mbc = new MBC1(gbFilename, Header->ROMSize, Header->RAMSize);
 		break;
+	case 0x05:
+	case 0x06:
+		mbc = new MBC2(gbFilename, Header->ROMSize, Header->RAMSize);
+		break;
 	default:
-		std::stringstream s;
-		s << "Only Cartridges which use ROM only are supported."
+		std::cout << "Only Cartridges which use ROM only are supported."
 			<< "The inserted cartridge type is 0x"
 			<< std::hex << (int)Header->CartType << ".";
 		std::exit(1);

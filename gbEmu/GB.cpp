@@ -245,10 +245,14 @@ void GB::write(uint16_t addr, uint8_t data)
 		IE->reg = data;
 		IE->reg |= 0xE0;
 	}
-	else if (addr == 0xFF80)	// Debugging
+	else if (addr == 0xFF44) // LY is read-only
 	{
-		RAM[addr] = data;
+		
 	}
+	//else if (addr == 0xFF44)	// Debugging
+	//{
+	//	RAM[addr] = data;
+	//}
 	else
 	{
 		RAM[addr] = data;
