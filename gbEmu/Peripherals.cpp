@@ -22,6 +22,15 @@ void GB::gameLoop()
 		unsigned int a, b = 0, delta, i = 0;
 		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, ppu.GridWidth, ppu.GridHeight);
 
+		// Setup controllers if any
+		int nControllers = SDL_NumJoysticks();
+
+		for (int i = 0; i < nControllers; ++i) {
+			if (SDL_IsGameController(i)) {
+				SDL_GameController* controller = SDL_GameControllerOpen(i);
+			}
+		}
+
 		while (IsRunning)
 		{
 			a = SDL_GetTicks();
@@ -127,6 +136,82 @@ void GB::handleEvents()
 			break;
 		case SDLK_x:	// START
 			ButtonState[1] |= 0b1000;
+			break;
+		}
+		break;
+	case SDL_CONTROLLERBUTTONDOWN:
+		// Handle controller button down events
+		switch (event.cbutton.button)
+		{
+		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+			ButtonState[0] &= ~0b0001;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+			ButtonState[0] &= ~0b0010;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_UP:
+			ButtonState[0] &= ~0b0100;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+			ButtonState[0] &= ~0b1000;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_A:	// A
+			ButtonState[1] &= ~0b0001;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_B:	// B
+			ButtonState[1] &= ~0b0010;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_BACK:	// SELECT
+			ButtonState[1] &= ~0b0100;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_START:	// START
+			ButtonState[1] &= ~0b1000;
+			IE->PNegEdge = 1;
+			break;
+		}
+		break;
+	case SDL_CONTROLLERBUTTONUP:
+		// Handle controller button up events
+		switch (event.cbutton.button)
+		{
+		case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+			ButtonState[0] |= 0b0001;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+			ButtonState[0] |= 0b0010;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_UP:
+			ButtonState[0] |= 0b0100;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+			ButtonState[0] |= 0b1000;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_A:	// A
+			ButtonState[1] |= 0b0001;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_B:	// B
+			ButtonState[1] |= 0b0010;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_BACK:	// SELECT
+			ButtonState[1] |= 0b0100;
+			IE->PNegEdge = 1;
+			break;
+		case SDL_CONTROLLER_BUTTON_START:	// START
+			ButtonState[1] |= 0b1000;
+			IE->PNegEdge = 1;
 			break;
 		}
 		break;
