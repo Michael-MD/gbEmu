@@ -87,6 +87,6 @@ Contributing is easy! Here's how you can get started:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
 
-### Disclaimer
+## Disclaimer
 
-Please note that this project is created by independent developers and is not affiliated with or endorsed by Nintendo. All trademarks, registered trademarks, product names, and company names mentioned herein are the property of their respective owners.
+Please note that this project is created by myself and is not affiliated with or endorsed by Nintendo. All trademarks, registered trademarks, product names, and company names mentioned herein are the property of their respective owners.
