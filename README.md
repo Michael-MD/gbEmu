@@ -20,7 +20,7 @@ Welcome to the Simple Monochrome GameBoy Emulator! This project is a straightfor
 
 - **Easy-to-Understand Code**: The emulator is designed with clarity in mind, with extensive comments throughout the codebase to explain its functionality.
 - **Basic Emulation**: While not cycle-accurate, the emulator accurately reproduces the behavior of the monochrome GameBoy, providing a solid foundation for learning and experimentation.
-- **Controller SUpport**: Supports xbox and PS controller as well as keyboard, click [here](#controls) for mapping.
+- **Controller Support**: Supports xbox and PS controller as well as keyboard, click [here](#controls) for mapping.
 
 ## Controls
 | Action       | Keyboard  | PlayStation Controller | Xbox Controller |
