@@ -22,6 +22,9 @@ GB::GB(std::string gbFilename)
 	// Connect DMA
 	dma.connectGB(this);
 
+	// Connect APU
+	apu.connectGB(this);
+
 	// ============== Initilizes Registers ==============
 	// CPU Internal Registers
 	cpu.AF = 0x01B0;
@@ -59,6 +62,7 @@ void GB::clock()
 	ppu.clock();
 	timer.clock();
 	dma.clock();
+	apu.clock();
 
 	nClockCycles++;
 }

@@ -1,12 +1,16 @@
 #pragma once
+#include "SoundChannel.hpp"
 #include <cstdint>
 
 class GB;
 
-class Pulse
+class Pulse : SoundChannel
 {
 public:
 	GB* gb;
+	Pulse();
+
+	virtual void GetSample() override;
 
 	// Sweep
 	union NR10Register

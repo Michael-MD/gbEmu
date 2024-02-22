@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "Pulse.hpp"
+#include "SDL.h"
 
 class GB;
 
@@ -11,6 +12,9 @@ public:
 	Pulse pulse1;
 
 	void connectGB(GB* gb);
+	void clock();
+	// Static so it can referenced as callback function
+	static void AudioSample(void* userdata, Uint8* stream, int len);
 
 	// Audio Master Control
 	union NR52Register

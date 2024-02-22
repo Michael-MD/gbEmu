@@ -22,6 +22,8 @@ public:
 	DMA dma;
 	APU apu;
 
+	SDL_AudioDeviceID device;
+
 	uint32_t nClockCycles;
 
 	uint8_t read(uint16_t addr);

@@ -31,6 +31,27 @@ void GB::gameLoop()
 			}
 		}
 
+		// Setup audio
+		SDL_AudioSpec spec;
+		// The gameboy technically outputs samples at
+		// the same rate as the internal oscillator.
+		// However this is extremely expensive and a modern
+		// sound card probabally cannot keep up so we will go
+		// with the nominal 44.1kHz which is above nyquist for 
+		// all sounds.
+		spec.freq = 44100;
+		spec.format = AUDIO_S16SYS;
+		spec.channels = 2;
+		spec.samples = 4 * 1024;
+		spec.callback = &APU::AudioSample; // We will push our own data
+		device = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
+
+		if (device == 0) {
+			// Audio device not turned on
+		}
+
+		SDL_PauseAudioDevice(device, 0); // Start playing audio
+
 		while (IsRunning)
 		{
 			a = SDL_GetTicks();
@@ -72,6 +93,7 @@ void GB::handleEvents()
 	{
 	case SDL_QUIT:
 		IsRunning = false;
+		clean();
 		break;
 	case SDL_KEYDOWN:
 		switch (event.key.keysym.sym)
@@ -237,4 +259,6 @@ void GB::clean()
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
 	SDL_Quit();
+	// TODO: Figure out why this function causes access violation
+	//SDL_CloseAudioDevice(device);
 }
