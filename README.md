@@ -1,4 +1,4 @@
-# Monochrome Gameboy Emuulator in C++
+# Monochrome Gameboy Emulator in C++
 
 Welcome to the Simple Monochrome GameBoy Emulator! This project is a straightforward C++ emulator aimed at simplicity and ease of understanding, making it ideal for learning about emulation concepts or experimenting with GameBoy development.
 
@@ -19,8 +19,8 @@ Welcome to the Simple Monochrome GameBoy Emulator! This project is a straightfor
 ## Features
 
 - **Easy-to-Understand Code**: The emulator is designed with clarity in mind, with extensive comments throughout the codebase to explain its functionality.
-- **Basic Emulation**: While not cycle-accurate, the emulator accurately reproduces the behavior of the monochrome GameBoy, providing a solid foundation for learning and experimentation.
-- **Controller SUpport**: Supports xbox and PS controller as well as keyboard, click [here](#controls) for mapping.
+- **Efficient**: Consumes very low memory through the use of things like bitfields and can run at very high FPS.
+- **Controller Support**: Supports xbox and PS controller as well as keyboard, click [here](#controls) for mapping.
 
 ## Controls
 | Action       | Keyboard  | PlayStation Controller | Xbox Controller |
@@ -68,11 +68,11 @@ The emulator supports the following Memory Bank Controllers (MBCs):
   - [ ] HuC1
   - [ ] HuC-3
 
-Most of these are for other gameboy models anyway so not they aren't relavent here. 
+Most of these are for other gameboy models anyway so they aren't relavent here anyway. 
 
 ## Contributing
 
-Welcome to the team! We're thrilled that you're interested in contributing to our project. Collaboration is at the heart of what we do, and we value the unique perspectives and skills that each contributor brings to the table.
+Welcome! I'm thrilled that you're interested in contributing to our project. Collaboration is at the heart of what we do, and we value the unique perspectives and skills that each contributor brings to the table.
 
 ### How to Contribute
 
@@ -85,7 +85,7 @@ Contributing is easy! Here's how you can get started:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.
+This project is licensed under the GNU GENERAL PUBLIC LICENSE - see the [LICENSE](LICENSE.txt) file for details.
 
 ## Disclaimer
 
