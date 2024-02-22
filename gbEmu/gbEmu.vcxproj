@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="APU.cpp" />
     <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="DMA.cpp" />
     <ClCompile Include="MBC.cpp" />
@@ -147,11 +148,14 @@
     <ClCompile Include="PPU.cpp" />
     <ClCompile Include="GB.cpp" />
     <ClCompile Include="Peripherals.cpp" />
+    <ClCompile Include="Pulse.cpp" />
     <ClCompile Include="SM83.cpp" />
     <ClCompile Include="gbEmu.cpp" />
+    <ClCompile Include="SoundChannel.cpp" />
     <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="APU.hpp" />
     <ClInclude Include="Cartridge.hpp" />
     <ClInclude Include="DMA.hpp" />
     <ClInclude Include="MBC.hpp" />
@@ -161,7 +165,10 @@
     <ClInclude Include="NoMBC.hpp" />
     <ClInclude Include="PPU.hpp" />
     <ClInclude Include="GB.hpp" />
+    <ClInclude Include="Pulse.hpp" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="SM83.hpp" />
+    <ClInclude Include="SoundChannel.hpp" />
     <ClInclude Include="Timer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -7,6 +7,7 @@
 #include "DMA.hpp"
 #include <string>
 #include "SDL.h"
+#include "APU.hpp"
 
 class GB
 {
@@ -19,6 +20,7 @@ public:
 	PPU ppu;
 	Timer timer;
 	DMA dma;
+	APU apu;
 
 	uint32_t nClockCycles;
 
