@@ -7,8 +7,8 @@
 class Cartridge
 {
 public:
-	Cartridge() {};
 	Cartridge(std::string gbFilename);
+	~Cartridge();
 
 	MBC *mbc;
 

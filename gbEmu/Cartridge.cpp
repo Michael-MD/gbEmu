@@ -82,3 +82,8 @@ uint8_t Cartridge::read(uint16_t addr)
 {
 	return mbc->read(addr);
 }
+
+Cartridge::~Cartridge()
+{
+	delete mbc;
+}

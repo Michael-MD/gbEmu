@@ -258,3 +258,8 @@ void GB::write(uint16_t addr, uint8_t data)
 		RAM[addr] = data;
 	}
 }
+
+GB::~GB()
+{
+	delete cart;
+}

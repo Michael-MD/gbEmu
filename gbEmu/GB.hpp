@@ -12,6 +12,7 @@ class GB
 {
 public:
 	GB(std::string gbFilename);
+	~GB();
 
 	SM83 cpu;
 	Cartridge* cart;
