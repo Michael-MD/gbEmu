@@ -1,4 +1,4 @@
-# Monochrome Gameboy Emuulator in C++
+# Monochrome Gameboy Emulator in C++
 
 Welcome to the Simple Monochrome GameBoy Emulator! This project is a straightforward C++ emulator aimed at simplicity and ease of understanding, making it ideal for learning about emulation concepts or experimenting with GameBoy development.
 
