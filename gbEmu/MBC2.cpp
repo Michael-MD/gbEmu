@@ -31,7 +31,7 @@ void MBC2::write(uint16_t addr, uint8_t data)
 	}
 	else if (addr >= 0xA000 && addr < 0xC000) // RAM write
 	{
-		if (RAMEnable)
+		if (RAMEnable && nRAMBanks != 0)
 		{
 			RAM[addr % 0x0200] = data;
 		}

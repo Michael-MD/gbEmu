@@ -45,9 +45,9 @@ void MBC1::write(uint16_t addr, uint8_t data)
 	}
 	else if (addr >= 0xA000 && addr < 0xC000)	// RAM
 	{
-		if (RAMEnable)
+		if (RAMEnable && nRAMBanks != 0)
 		{
-			if (bBankingMode == 0 && nRAMBanks != 0)
+			if (bBankingMode == 0)
 			{
 				RAM[addr % 0xA000] = data;
 			}
