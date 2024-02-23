@@ -220,6 +220,16 @@ void GB::write(uint16_t addr, uint8_t data)
 		IF->reg = data;
 		IF->reg |= 0xE0;
 	}
+	else if (addr == 0xFF13)
+	{
+		*apu.pulse1.NR13 = data;
+		apu.pulse1.PeriodValue = ((apu.pulse1.NR14->Period << 8) | *apu.pulse1.NR13) & 0x7FF;
+	}
+	else if (addr == 0xFF14)
+	{
+		*apu.pulse1.NR14 = data;
+		apu.pulse1.PeriodValue = ((apu.pulse1.NR14->Period << 8) | *apu.pulse1.NR13) & 0x7FF;
+	}
 	else if (addr == 0xFF40)	// LCDC Register
 	{
 		ppu.LCDC->reg = data;

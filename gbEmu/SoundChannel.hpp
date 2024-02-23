@@ -1,7 +1,9 @@
 #pragma once
+#include <cstdint>
+
 class SoundChannel
 {
 public:
-	virtual void GetSample() = 0;
+	virtual uint8_t GetSample() = 0;
 };
 

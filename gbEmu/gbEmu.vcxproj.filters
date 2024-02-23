@@ -106,5 +106,8 @@
     <ClInclude Include="Pulse.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Divider.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

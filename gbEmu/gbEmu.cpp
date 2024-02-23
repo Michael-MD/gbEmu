@@ -10,9 +10,14 @@
 
 int main(int argc, char* argv[])
 {
-    GB gb("C:/Users/61481/Desktop/tetris.gb");
-    //GB gb("C:/Users/61481/Desktop/mb.gb");
-    //GB gb("C:/Users/61481/Desktop/Dr. Mario (World).gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/games/tetris.gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/games/Boxxle (USA, Europe) (Rev 1).gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/games/kdl.gb");
+    GB gb("C:/Users/61481/Documents/code/gb/games/F-1 Race (JUE) (V1.1) [!].gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/games/Pokemon Red (UE) [S][!].gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/games/mb.gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/games/PR.gb");
+    //GB gb("C:/Users/61481/Documents/code/gb/games/Dr. Mario (World).gb");
  
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/01-special.gb");
     //GB gb("C:/Users/61481/Documents/code/gb/gb-test-roms-master/cpu_instrs/individual/02-interrupts.gb");
@@ -38,3 +43,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+

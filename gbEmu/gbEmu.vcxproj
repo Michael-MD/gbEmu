@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="APU.hpp" />
     <ClInclude Include="Cartridge.hpp" />
+    <ClInclude Include="Divider.hpp" />
     <ClInclude Include="DMA.hpp" />
     <ClInclude Include="MBC.hpp" />
     <ClInclude Include="MBC1.hpp" />

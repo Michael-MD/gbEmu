@@ -1,6 +1,9 @@
 #include "APU.hpp"
 #include "GB.hpp"
 
+#include <iostream>
+using namespace std;
+
 void APU::connectGB(GB* gb)
 {
 	this->gb = gb;
@@ -20,14 +23,55 @@ void APU::connectGB(GB* gb)
 
 void APU::AudioSample(void* userdata, Uint8* stream, int len)
 {
+
 	static uint64_t i = 0;
+	APU* apu = static_cast<APU*>(userdata);
 
 	Sint16* buffer = reinterpret_cast<Sint16*>(stream);
 	int nSamples = len / sizeof(Sint16);
 
-	for (int j = 0; j < nSamples; j += 2) {
-		buffer[j] = 28000 * sin(2 * M_PI * 440 * (i++) / 44100);
-		buffer[j+1] = buffer[j];
+	// Place holder for digital value output
+	// by waveform generator.
+	uint8_t DigitalVal;
+
+	// Place holder for analog value output
+	// by DAC.
+	Sint16 AnalogVal = 0;
+
+	// Mixer
+	Sint16 RightChannel = 0, LeftChannel = 0;
+
+	for (int j = 0; j < nSamples; j += 2) 
+	{
+		LeftChannel = 0;
+		RightChannel = 0;
+
+		// Check if channel is on
+		{
+			// Get sample
+			DigitalVal = apu->pulse1.GetSample();
+
+			// Convert to analog
+			AnalogVal = DigitalVal == 0xF ? -1 : 1;
+		
+			// Mixer
+			if (apu->NR51->CH1R)
+			{
+				RightChannel += AnalogVal;
+			}
+			else if (apu->NR51->CH1L)
+			{
+				LeftChannel += AnalogVal;
+			}
+		}
+		
+		buffer[j] = 28000 * LeftChannel;
+		buffer[j + 1] = 28000 * RightChannel;
+
+		//cout << RightChannel << endl;
+
+		//buffer[j] = 28000 * sin(2 * M_PI * 440 * (i++) / 44100);
+		//buffer[j+1] = buffer[j];
 	}
 }
 
@@ -38,5 +82,9 @@ void APU::clock()
 		return;
 	}
 
-
+	// Increment Dividers
+	if (gb->nClockCycles % 4 == 0)
+	{
+		pulse1.clock();
+	}
 }

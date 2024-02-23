@@ -1,5 +1,7 @@
 #pragma once
 #include "SoundChannel.hpp"
+#include "Divider.hpp"
+
 #include <cstdint>
 
 class GB;
@@ -9,8 +11,13 @@ class Pulse : SoundChannel
 public:
 	GB* gb;
 	Pulse();
+	~Pulse();
 
-	virtual void GetSample() override;
+	virtual uint8_t GetSample() override;
+	void clock();
+
+	// Dividers
+	Divider<uint16_t>* PeriodDiv;
 
 	// Sweep
 	union NR10Register
@@ -88,6 +95,11 @@ public:
 		};
 	} *NR14;
 
+	// Keeps track of the period which is 
+	// broken up between registers NR13 and NR14.
+	uint16_t PeriodValue;
+
+private:
 
 };
 

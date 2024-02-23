@@ -19,7 +19,6 @@ void GB::gameLoop()
 			//throw ;
 		}
 
-		unsigned int a, b = 0, delta, i = 0;
 		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, ppu.GridWidth, ppu.GridHeight);
 
 		// Setup controllers if any
@@ -33,6 +32,7 @@ void GB::gameLoop()
 
 		// Setup audio
 		SDL_AudioSpec spec;
+		SDL_zero(spec);
 		// The gameboy technically outputs samples at
 		// the same rate as the internal oscillator.
 		// However this is extremely expensive and a modern
@@ -44,6 +44,7 @@ void GB::gameLoop()
 		spec.channels = 2;
 		spec.samples = 4 * 1024;
 		spec.callback = &APU::AudioSample; // We will push our own data
+		spec.userdata = &apu;
 		device = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
 
 		if (device == 0) {
@@ -52,33 +53,30 @@ void GB::gameLoop()
 
 		SDL_PauseAudioDevice(device, 0); // Start playing audio
 
+		Uint32 a, b, delta;
+		b = SDL_GetTicks();
+
 		while (IsRunning)
 		{
 			a = SDL_GetTicks();
 			delta = a - b;
 
-			// FOR DEBUGGING
-
-			//if (delta > 1000 / (4.19e6 * 4.))	// 4.19 * 4 MHz
+			if (delta > 1000 / 60.0)
 			{
+				for (int j = 0; j < 70'000; j++)	// ~60Hz
+				{
+					// Clock System
+					clock();
+				}
+
+				handleEvents();
+				update();
+				render();
+
 				b = a;
-
-				i++;
-
-				if (i % 10'000 == 0)
-				{
-					handleEvents();
-				}
-
-				// Clock System
-				clock();
-
-				if (i % 70'000 == 0)	// Update Screen at ~60Hz
-				{
-					update();
-					render();
-				}
 			}
+
+			
 
 		}
 
@@ -93,7 +91,7 @@ void GB::handleEvents()
 	{
 	case SDL_QUIT:
 		IsRunning = false;
-		clean();
+		//clean();
 		break;
 	case SDL_KEYDOWN:
 		switch (event.key.keysym.sym)
@@ -259,6 +257,5 @@ void GB::clean()
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
 	SDL_Quit();
-	// TODO: Figure out why this function causes access violation
 	//SDL_CloseAudioDevice(device);
 }
