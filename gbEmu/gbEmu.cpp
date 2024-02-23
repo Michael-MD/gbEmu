@@ -10,7 +10,8 @@
 
 int main(int argc, char* argv[])
 {
-    GB gb("C:/Users/61481/Desktop/tetris.gb");
+    //GB gb("C:/Users/61481/Desktop/tetris.gb");
+    GB gb("C:/Users/61481/Documents/code/gb/games/F-1 Race (JUE) (V1.1) [!].gb");
     //GB gb("C:/Users/61481/Desktop/mb.gb");
     //GB gb("C:/Users/61481/Desktop/Dr. Mario (World).gb");
  
