@@ -89,24 +89,19 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			//if (nMachineCycles > 0xA000)
+			//if (PC-1 == 0xFFFF)
 			{
-				nMachineCycles = 0;
-
 				std::cout << std::hex
 					<< (int)(PC - 1)
 					<< std::dec << ' ' << CurrentInstruction.mnemonic()
-					<< ' ' << std::hex << (int)data << std::endl;
-				
-				std::cout << "LCDC = $" << (int)gb->ppu.LCDC->reg << std::endl;
-				std::cout << "STAT = $" << (int)gb->ppu.STAT->reg << std::endl;
-				std::cout << "SCY = $" << (int)*gb->ppu.SCY << std::endl;
-				std::cout << "SCX = $" << (int)*gb->ppu.SCX << std::endl;
-				std::cout << "LY = $" << (int)*gb->ppu.LY << std::endl;
-				std::cout << "LYC = $" << (int)*gb->ppu.LYC << std::endl;
-				std::cout << "BGP = $" << (int)*gb->ppu.BGP << std::endl;
+					<< ' ' << std::hex << (int)data;
 
-				//std::cout << std::dec << "Debug Message: " << std::hex << gb->SerialOut << std::endl;
+				std::cout << std::endl << std::hex << "AF = $" << (int)AF << std::endl;
+				std::cout << "BC = $" << (int)BC << std::endl;
+				std::cout << "DE = $" << (int)DE << std::endl;
+				std::cout << "HL = $" << (int)HL << std::endl;
+
+				std::cout << std::endl;
 			}
 #endif
 
