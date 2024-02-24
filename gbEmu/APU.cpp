@@ -27,6 +27,8 @@ void APU::connectGB(GB* gb)
 	pulse1.NR13 = gb->RAM + 0xFF13;
 	pulse1.NR14 = reinterpret_cast<Pulse::NR14Register*>(gb->RAM + 0xFF14);
 
+	*pulse1.NR13 = 0xC1;
+
 	pulse1.connectGB(gb);
 }
 
@@ -72,8 +74,8 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		// Volume control
 		// Maps 0 -> 3 in master volume register to 
 		// range 1 - 6000.
-		LeftChannel = LeftChannel * (16 + apu->NR50->VolL * (6000 - 16) / 4);
-		RightChannel = RightChannel * (16 + apu->NR50->VolR * (6000 - 16) / 4);
+		LeftChannel = LeftChannel * 1000;
+		RightChannel = RightChannel * 1000;
 
 
 		buffer[j] = LeftChannel;

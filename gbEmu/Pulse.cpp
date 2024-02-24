@@ -1,6 +1,9 @@
 #include "Pulse.hpp"
 #include "GB.hpp"
 
+#include <iostream>
+using namespace std;
+
 Pulse::Pulse() : SoundChannel()
 {
 	PeriodValue = 0;
@@ -27,7 +30,12 @@ void Pulse::clock()
 		LenCounterOn = true;
 	}
 
-	if (gb->nClockCycles % 16 == 0 && NR14->LenEnable)	// Called at 256Hz
+	if (!NR14->LenEnable)
+	{
+		LenCounterOn = false;
+	}
+
+	if (gb->nClockCycles % (1 << 14) == 0 && NR14->LenEnable)	// Called at 256Hz
 	{
 		if (LenCount++ == 64)
 		{
@@ -37,10 +45,10 @@ void Pulse::clock()
 		}
 	}
 
-	//// ================= Sweep Unit ================= 
+	// ================= Sweep Unit ================= 
 
 	// Check if sweep unit just turned on
-	if (SweepOn == 0 && NR10->Pace != 0)
+	if (!SweepOn && NR10->Pace != 0)
 	{
 		SweepOn = true;
 		CurrentPace = NR10->Pace;
@@ -48,24 +56,26 @@ void Pulse::clock()
 
 	// If Pace is set to 0 then immediately stop 
 	// the sweep.
-	if (CurrentPace == 0)
+	if (NR10->Pace == 0)
 	{
 		SweepOn = false;
 	}
 
 	// If sweep is on then increment period value at pace
-	if (SweepOn && (gb->nClockCycles % (32 * NR10->Pace)) == 0)	// Called at 128Hz * NR10->Pace
+	if (SweepOn && (gb->nClockCycles % (1 << (15 + CurrentPace))) == 0)	// Called at 128Hz / NR10->Pace
 	{
+		uint16_t DeltaP = PeriodValue >> NR10->Step;
+
 		if(NR10->Direction == 0)	// Addition
 		{
-			PeriodValue += PeriodValue >> NR10->Step;
+			PeriodValue += DeltaP;
 
 		}
 		else	// Subtraction
 		{
-			if(PeriodValue != 0)
+			if(PeriodValue >= DeltaP)
 			{
-				PeriodValue -= PeriodValue >> NR10->Step;
+				PeriodValue -= DeltaP;
 			}
 		}
 
@@ -102,12 +112,12 @@ void Pulse::clock()
 		gb->apu.NR52->bCH1 = 0;
 	}
 
-	if (EnvelopeOn && gb->nClockCycles % (64 * NR12->SweepPace) == 0)	// Called at 64Hz * NR12->SweepPace
+	if (EnvelopeOn && gb->nClockCycles % (1 << (16 + NR12->SweepPace)) == 0)	// Called at 64Hz / NR12->SweepPace
 	{
 		if (NR12->EnvDir == 0)	// Decrease volume
 		{
 			// Avoid underflow
-			if (Volume >= 0)
+			if (Volume > 0)
 			{
 				Volume -= 1;
 			}
