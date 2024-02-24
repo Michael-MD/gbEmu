@@ -62,14 +62,8 @@ void GB::gameLoop()
 			a = SDL_GetTicks();
 			delta = a - b;
 
-			if (delta > 1000 / 60.0)
+			if (delta > 1000 / 20.0)
 			{
-				//for (int j = 0; j < 70'000; j++)	// ~60Hz
-				//{
-				//	// Clock System
-				//	clock();
-				//}
-
 				handleEvents();
 				update();
 				render();

@@ -11,6 +11,8 @@ public:
 	GB* gb;
 	Pulse pulse1;
 
+	APU();
+	~APU();
 	void connectGB(GB* gb);
 	void clock();
 	// Static so it can referenced as callback function

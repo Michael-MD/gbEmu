@@ -228,6 +228,11 @@ void GB::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF14)
 	{
 		*apu.pulse1.NR14 = data;
+		// Check if channel 1 should be turned on
+		if(apu.pulse1.NR14->Trigger == 1)
+		{
+			apu.pulse1.Mute = false;
+		}
 		apu.pulse1.PeriodValue = ((apu.pulse1.NR14->Period << 8) | *apu.pulse1.NR13) & 0x7FF;
 	}
 	else if (addr == 0xFF40)	// LCDC Register

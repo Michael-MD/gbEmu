@@ -4,20 +4,26 @@
 
 #include <cstdint>
 
-class GB;
-
-class Pulse : SoundChannel
+class Pulse : public SoundChannel
 {
 public:
-	GB* gb;
 	Pulse();
 	~Pulse();
 
-	virtual uint8_t GetSample() override;
+	virtual int16_t GetSample() override;
 	void clock();
 
 	// Dividers
 	Divider<uint16_t>* PeriodDiv;
+
+	// Length Counter
+	uint8_t LenCount;
+	bool LenCounterOn = false;
+
+	// Sweep
+	// Latches sweep at the start of sweep
+	uint8_t CurrentPace = 0;
+	bool SweepOn = false;
 
 	// Sweep
 	union NR10Register

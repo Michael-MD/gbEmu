@@ -1,8 +1,15 @@
 #include "APU.hpp"
 #include "GB.hpp"
 
-#include <iostream>
-using namespace std;
+APU::APU()
+{
+
+}
+
+APU::~APU()
+{
+
+}
 
 void APU::connectGB(GB* gb)
 {
@@ -19,20 +26,17 @@ void APU::connectGB(GB* gb)
 	pulse1.NR12 = reinterpret_cast<Pulse::NR12Register*>(gb->RAM + 0xFF12);
 	pulse1.NR13 = gb->RAM + 0xFF13;
 	pulse1.NR14 = reinterpret_cast<Pulse::NR14Register*>(gb->RAM + 0xFF14);
+
+	pulse1.connectGB(gb);
 }
 
 void APU::AudioSample(void* userdata, Uint8* stream, int len)
 {
 
-	//static uint64_t i = 0;
 	APU* apu = static_cast<APU*>(userdata);
 
 	Sint16* buffer = reinterpret_cast<Sint16*>(stream);
 	int nSamples = len / sizeof(Sint16);
-
-	// Place holder for digital value output
-	// by waveform generator.
-	uint8_t DigitalVal;
 
 	// Place holder for analog value output
 	// by DAC.
@@ -52,32 +56,30 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		LeftChannel = 0;
 		RightChannel = 0;
 
-		// Check if channel is on
-		{
-			// Get sample
-			DigitalVal = apu->pulse1.GetSample();
-
-			// Convert to analog
-			AnalogVal = DigitalVal == 0xF ? -1 : 1;
+		// Get sample
+		AnalogVal = apu->pulse1.GetSample();
 		
-			// Mixer
-			if (apu->NR51->CH1R)
-			{
-				RightChannel += AnalogVal;
-			}
-			else if (apu->NR51->CH1L)
-			{
-				LeftChannel += AnalogVal;
-			}
+		// Mixer
+		if (apu->NR51->CH1R)
+		{
+			RightChannel += AnalogVal;
+		}
+		else if (apu->NR51->CH1L)
+		{
+			LeftChannel += AnalogVal;
 		}
 		
-		buffer[j] = 28000 * LeftChannel;
-		buffer[j + 1] = 28000 * RightChannel;
+		// Volume control
+		// Maps 0 -> 3 in master volume register to 
+		// range 1 - 6000.
+		LeftChannel = LeftChannel * (1 + apu->NR50->VolL * (6000 - 1) / 4);
+		RightChannel = RightChannel * (1 + apu->NR50->VolR * (6000 - 1) / 4);
 
-		//cout << RightChannel << endl;
 
-		//buffer[j] = 28000 * sin(2 * M_PI * 440 * (i++) / 44100);
-		//buffer[j+1] = buffer[j];
+		buffer[j] = LeftChannel;
+		buffer[j + 1] = RightChannel;
+
+
 	}
 }
 
@@ -89,8 +91,12 @@ void APU::clock()
 	}
 
 	// Increment Dividers
-	if (gb->nClockCycles % 4 == 0)
-	{
-		pulse1.clock();
-	}
+	pulse1.clock();
+
+	// The APU has an internal divider
+	// which ticks on the falling edge of
+	// the fourth bit. So if clocked in increments
+	// at 4.19MHz then the counter increments at
+	// 4.19MHz / 2^3 ~= 512Hz.
+	
 }
