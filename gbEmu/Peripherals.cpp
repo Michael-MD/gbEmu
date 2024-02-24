@@ -8,15 +8,15 @@ void GB::gameLoop()
 	if (SDL_Init(SDL_INIT_EVERYTHING) == 0)
 	{
 		window = SDL_CreateWindow("gbEmu", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, ScreenWidth, ScreenHeight, 0);
-		if (window)
+		if (window == NULL)
 		{
-			//throw;
+			return;
 		}
 
 		renderer = SDL_CreateRenderer(window, -1, 0);
-		if (renderer)
+		if (renderer == NULL)
 		{
-			//throw ;
+			return;
 		}
 
 		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STATIC, ppu.GridWidth, ppu.GridHeight);
@@ -42,13 +42,14 @@ void GB::gameLoop()
 		spec.freq = 44100;
 		spec.format = AUDIO_S16SYS;
 		spec.channels = 2;
-		spec.samples = 4 * 1024;
+		spec.samples = 512;
 		spec.callback = &APU::AudioSample; // We will push our own data
 		spec.userdata = &apu;
 		device = SDL_OpenAudioDevice(NULL, 0, &spec, NULL, 0);
 
 		if (device == 0) {
 			// Audio device not turned on
+			return;
 		}
 
 		SDL_PauseAudioDevice(device, 0); // Start playing audio
@@ -63,11 +64,11 @@ void GB::gameLoop()
 
 			if (delta > 1000 / 60.0)
 			{
-				for (int j = 0; j < 70'000; j++)	// ~60Hz
-				{
-					// Clock System
-					clock();
-				}
+				//for (int j = 0; j < 70'000; j++)	// ~60Hz
+				//{
+				//	// Clock System
+				//	clock();
+				//}
 
 				handleEvents();
 				update();
@@ -91,7 +92,7 @@ void GB::handleEvents()
 	{
 	case SDL_QUIT:
 		IsRunning = false;
-		//clean();
+		clean();
 		break;
 	case SDL_KEYDOWN:
 		switch (event.key.keysym.sym)
@@ -256,6 +257,6 @@ void GB::clean()
 {
 	SDL_DestroyWindow(window);
 	SDL_DestroyRenderer(renderer);
+	SDL_CloseAudioDevice(device);
 	SDL_Quit();
-	//SDL_CloseAudioDevice(device);
 }

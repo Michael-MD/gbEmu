@@ -24,7 +24,7 @@ void APU::connectGB(GB* gb)
 void APU::AudioSample(void* userdata, Uint8* stream, int len)
 {
 
-	static uint64_t i = 0;
+	//static uint64_t i = 0;
 	APU* apu = static_cast<APU*>(userdata);
 
 	Sint16* buffer = reinterpret_cast<Sint16*>(stream);
@@ -43,6 +43,12 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 
 	for (int j = 0; j < nSamples; j += 2) 
 	{
+		// Run emulation until next sample
+		for (int k = 0; k < 1000 * 4.19 / 44.1; k++)
+		{
+			apu->gb->clock();
+		}
+
 		LeftChannel = 0;
 		RightChannel = 0;
 

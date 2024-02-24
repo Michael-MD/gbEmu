@@ -1,6 +1,6 @@
 #pragma once
-#include "SoundChannel.hpp"
 #include "Divider.hpp"
+#include "SoundChannel.hpp"
 
 #include <cstdint>
 

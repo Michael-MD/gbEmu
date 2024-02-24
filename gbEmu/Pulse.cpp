@@ -16,7 +16,7 @@ uint8_t Pulse::GetSample()
 {
 	// We check if the part of the period reached is 
 	// less than the duty cycle value.
-	if ((PeriodDiv->nOverflows % 8) <= 4)
+	if ((PeriodDiv->nOverflows % 8) <= NR11->Duty << 1)
 	{
 		// If within high part of waveform
 		return 0x00;
