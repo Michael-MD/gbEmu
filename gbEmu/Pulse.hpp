@@ -10,20 +10,23 @@ public:
 	Pulse();
 	~Pulse();
 
-	virtual int16_t GetSample() override;
+	virtual int8_t GetSample() override;
 	void clock();
 
 	// Dividers
 	Divider<uint16_t>* PeriodDiv;
 
 	// Length Counter
-	uint8_t LenCount;
 	bool LenCounterOn = false;
+	uint8_t LenCount;
 
 	// Sweep
 	// Latches sweep at the start of sweep
-	uint8_t CurrentPace = 0;
 	bool SweepOn = false;
+	uint8_t CurrentPace = 0;
+
+	// Envelope
+	bool EnvelopeOn = false;
 
 	// Sweep
 	union NR10Register
@@ -68,7 +71,7 @@ public:
 		{
 			uint8_t SweepPace : 3;
 			uint8_t EnvDir : 1;
-			uint8_t InitVar : 4;
+			uint8_t InitVol : 4;
 		};
 
 		uint8_t reg;

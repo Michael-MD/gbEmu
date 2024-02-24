@@ -232,6 +232,7 @@ void GB::write(uint16_t addr, uint8_t data)
 		if(apu.pulse1.NR14->Trigger == 1)
 		{
 			apu.pulse1.Mute = false;
+			apu.NR52->bCH1 = 1;
 		}
 		apu.pulse1.PeriodValue = ((apu.pulse1.NR14->Period << 8) | *apu.pulse1.NR13) & 0x7FF;
 	}

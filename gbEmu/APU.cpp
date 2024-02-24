@@ -43,7 +43,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 	Sint16 AnalogVal = 0;
 
 	// Mixer
-	Sint16 RightChannel = 0, LeftChannel = 0;
+	Sint32 RightChannel = 0, LeftChannel = 0;
 
 	for (int j = 0; j < nSamples; j += 2) 
 	{
@@ -72,13 +72,12 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		// Volume control
 		// Maps 0 -> 3 in master volume register to 
 		// range 1 - 6000.
-		LeftChannel = LeftChannel * (1 + apu->NR50->VolL * (6000 - 1) / 4);
-		RightChannel = RightChannel * (1 + apu->NR50->VolR * (6000 - 1) / 4);
+		LeftChannel = LeftChannel * (16 + apu->NR50->VolL * (6000 - 16) / 4);
+		RightChannel = RightChannel * (16 + apu->NR50->VolR * (6000 - 16) / 4);
 
 
 		buffer[j] = LeftChannel;
 		buffer[j + 1] = RightChannel;
-
 
 	}
 }

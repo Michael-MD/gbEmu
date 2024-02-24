@@ -13,6 +13,8 @@ Pulse::Pulse() : SoundChannel()
 
 void Pulse::clock()
 {
+	// Increments divider which controls 
+	// period duration of wave.
 	if (gb->nClockCycles % 4 == 0)
 	{
 		PeriodDiv->clock();
@@ -31,10 +33,11 @@ void Pulse::clock()
 		{
 			LenCount = NR11->InitLenTimer;
 			Mute = true;
+			gb->apu.NR52->bCH1 = 0;
 		}
 	}
 
-	// ================= Sweep Unit ================= 
+	//// ================= Sweep Unit ================= 
 
 	// Check if sweep unit just turned on
 	if (SweepOn == 0 && NR10->Pace != 0)
@@ -50,8 +53,8 @@ void Pulse::clock()
 		SweepOn = false;
 	}
 
-	// If sweep is on then increment period value
-	if (SweepOn && gb->nClockCycles % (32 * NR10->Pace) == 0)	// Called at 128Hz * NR10->Pace
+	// If sweep is on then increment period value at pace
+	if (SweepOn && (gb->nClockCycles % (32 * NR10->Pace)) == 0)	// Called at 128Hz * NR10->Pace
 	{
 		if(NR10->Direction == 0)	// Addition
 		{
@@ -60,22 +63,67 @@ void Pulse::clock()
 		}
 		else	// Subtraction
 		{
-			PeriodValue -= PeriodValue >> NR10->Step;
+			if(PeriodValue != 0)
+			{
+				PeriodValue -= PeriodValue >> NR10->Step;
+			}
 		}
 
-		// Disable the channel immediately if value under or overflows
+		// Disable the channel immediately if overflows
 		if (PeriodValue > 0x7FF)
 		{
-			Mute = false;
+			Mute = true;
+			gb->apu.NR52->bCH1 = 0;
 		}
 
 		// Update NR13 and NR14
 		*NR13 = PeriodValue & 0xFF;
 		NR14->Period = PeriodValue >> 8;
 	}
+
+	// ================= Envelope ================= 
+	// Disables envelope if sweep pace is zero
+	if (NR12->SweepPace == 0)
+	{
+		EnvelopeOn = false;
+	}
+
+	// Switch envelope on
+	if (NR12->SweepPace != 0 && !EnvelopeOn)
+	{
+		EnvelopeOn = true;
+		Volume = NR12->InitVol;
+	}
+
+	// Disables channel if bits 3-7 are all zero.
+	if (NR12->InitVol == 0 && NR12->EnvDir == 0)
+	{
+		Mute = true;
+		gb->apu.NR52->bCH1 = 0;
+	}
+
+	if (EnvelopeOn && gb->nClockCycles % (64 * NR12->SweepPace) == 0)	// Called at 64Hz * NR12->SweepPace
+	{
+		if (NR12->EnvDir == 0)	// Decrease volume
+		{
+			// Avoid underflow
+			if (Volume >= 0)
+			{
+				Volume -= 1;
+			}
+		}
+		else	// Increase volume
+		{
+			// Avoid overflow
+			if (Volume < 16)
+			{
+				Volume += 1;
+			}
+		}
+	}
 }
 
-int16_t Pulse::GetSample()
+int8_t Pulse::GetSample()
 {
 	if (Mute)
 	{
@@ -87,11 +135,11 @@ int16_t Pulse::GetSample()
 	if ((PeriodDiv->nOverflows % 8) <= (NR11->Duty << 1))
 	{
 		// If within high part of waveform
-		return 1;
+		return Volume;
 	}
 	else
 	{
-		return -1;
+		return -Volume;
 	}
 }
 
