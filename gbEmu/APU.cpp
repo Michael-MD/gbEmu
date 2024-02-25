@@ -23,20 +23,20 @@ void APU::connectGB(GB* gb)
 	NR50 = reinterpret_cast<NR50Register*>(gb->RAM + 0xFF24);
 
 	// Channel 1 - Pulse 1
-	pulse1.NRx0 = reinterpret_cast<Pulse::NR10Register*>(gb->RAM + 0xFF10);
-	pulse1.NRx1 = reinterpret_cast<Pulse::NR11Register*>(gb->RAM + 0xFF11);
-	pulse1.NRx2 = reinterpret_cast<Pulse::NR12Register*>(gb->RAM + 0xFF12);
+	pulse1.NRx0 = reinterpret_cast<Pulse::NRx0Register*>(gb->RAM + 0xFF10);
+	pulse1.NRx1 = reinterpret_cast<Pulse::NRx1Register*>(gb->RAM + 0xFF11);
+	pulse1.NRx2 = reinterpret_cast<Pulse::NRx2Register*>(gb->RAM + 0xFF12);
 	pulse1.NRx3 = gb->RAM + 0xFF13;
-	pulse1.NRx4 = reinterpret_cast<Pulse::NR14Register*>(gb->RAM + 0xFF14);
+	pulse1.NRx4 = reinterpret_cast<Pulse::NRx4Register*>(gb->RAM + 0xFF14);
 
 	// Channel 2 - Pulse 2
 	// Pulse channel 2 doesn't have a sweep to we simply map it
 	// to a random fixed memory location to avoid memory leaks.
-	pulse2.NRx0 = reinterpret_cast<Pulse::NR10Register*>(&NRx20);
-	pulse2.NRx1 = reinterpret_cast<Pulse::NR11Register*>(gb->RAM + 0xFF16);
-	pulse2.NRx2 = reinterpret_cast<Pulse::NR12Register*>(gb->RAM + 0xFF17);
+	pulse2.NRx0 = reinterpret_cast<Pulse::NRx0Register*>(&NRx20);
+	pulse2.NRx1 = reinterpret_cast<Pulse::NRx1Register*>(gb->RAM + 0xFF16);
+	pulse2.NRx2 = reinterpret_cast<Pulse::NRx2Register*>(gb->RAM + 0xFF17);
 	pulse2.NRx3 = gb->RAM + 0xFF18;
-	pulse2.NRx4 = reinterpret_cast<Pulse::NR14Register*>(gb->RAM + 0xFF19);
+	pulse2.NRx4 = reinterpret_cast<Pulse::NRx4Register*>(gb->RAM + 0xFF19);
 
 	Channels[0] = &pulse1;
 	Channels[1] = &pulse2;
@@ -95,8 +95,8 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		// a scale value for the left and right channels.
 		// Note we have added 1 since 0 should not mute the
 		// channel.
-		LeftChannel *= 100 * (apu->NR50->VolL + 1);
-		RightChannel *= 100 * (apu->NR50->VolR + 1);
+		LeftChannel *= 50 * (apu->NR50->VolL + 1);
+		RightChannel *= 50 * (apu->NR50->VolR + 1);
 
 
 		buffer[j] = LeftChannel;
@@ -111,8 +111,9 @@ void APU::clock()
 		return;
 	}
 
-	// Increment Dividers
+	// Pass clock signal to each channel
 	pulse1.clock();
+	pulse2.clock();
 
 	// The APU has an internal divider
 	// which ticks on the falling edge of
