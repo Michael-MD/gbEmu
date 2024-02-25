@@ -89,6 +89,10 @@ uint8_t GB::read(uint16_t addr)
 	{
 		return cart->read(addr);
 	}
+	else if (addr >= 0xFF10 && addr <= 0xFF3F)	// Intended for APU
+	{
+		return apu.read(addr);
+	}
 
 	return RAM[addr];
 }
@@ -111,7 +115,7 @@ void GB::write(uint16_t addr, uint8_t data)
 	{
 		cart->write(addr, data);
 	}
-	//else if (addr == 0xFF10)	// Debugging
+	//else if (addr == 0xFF12)	// Debugging
 	//{
 	//	RAM[addr] = data;
 	//}
@@ -224,21 +228,9 @@ void GB::write(uint16_t addr, uint8_t data)
 		IF->reg = data;
 		IF->reg |= 0xE0;
 	}
-	else if (addr == 0xFF13)	// NR13 - Pulse channel 1 Period value low byte
+	else if (addr >= 0xFF10 && addr <= 0xFF3F)	// Intended for APU
 	{
-		*apu.pulse1.NR13 = data;
-		apu.pulse1.PeriodValue = ((apu.pulse1.NR14->Period << 8) | *apu.pulse1.NR13) & 0x7FF;
-	}
-	else if (addr == 0xFF14)	// NR14 - Pulse channel 1 various control bits
-	{
-		*apu.pulse1.NR14 = data;
-		// Check if channel 1 should be turned on
-		if(apu.pulse1.NR14->Trigger == 1)
-		{
-			apu.pulse1.Mute = false;
-			apu.NR52->bCH1 = 1;
-		}
-		apu.pulse1.PeriodValue = ((apu.pulse1.NR14->Period << 8) | *apu.pulse1.NR13) & 0x7FF;
+		apu.write(addr, data);
 	}
 	else if (addr == 0xFF40)	// LCDC Register
 	{

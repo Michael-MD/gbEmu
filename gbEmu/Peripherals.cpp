@@ -62,7 +62,7 @@ void GB::gameLoop()
 			a = SDL_GetTicks();
 			delta = a - b;
 
-			if (delta > 1000 / 20.0)
+			if (delta > 1000 / 60.0)
 			{
 				handleEvents();
 				update();

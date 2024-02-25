@@ -11,7 +11,6 @@ Pulse::Pulse() : SoundChannel()
 
 	// Length Counter
 	LenCount = 0;
-
 }
 
 void Pulse::clock()
@@ -52,6 +51,7 @@ void Pulse::clock()
 	{
 		SweepOn = true;
 		CurrentPace = NR10->Pace;
+		SweepEntrances = 0;
 	}
 
 	// If Pace is set to 0 then immediately stop 
@@ -62,7 +62,7 @@ void Pulse::clock()
 	}
 
 	// If sweep is on then increment period value at pace
-	if (SweepOn && (gb->nClockCycles % (1 << (15 + CurrentPace))) == 0)	// Called at 128Hz / NR10->Pace
+	if (SweepOn && (gb->nClockCycles % (1 << 15)) == 0 && (++SweepEntrances % CurrentPace == 0))	// Called at 128Hz / NR10->Pace
 	{
 		uint16_t DeltaP = PeriodValue >> NR10->Step;
 
@@ -102,6 +102,7 @@ void Pulse::clock()
 	if (NR12->SweepPace != 0 && !EnvelopeOn)
 	{
 		EnvelopeOn = true;
+		EnvelopeEntrances = 0;
 		Volume = NR12->InitVol;
 	}
 
@@ -112,8 +113,9 @@ void Pulse::clock()
 		gb->apu.NR52->bCH1 = 0;
 	}
 
-	if (EnvelopeOn && gb->nClockCycles % (1 << (16 + NR12->SweepPace)) == 0)	// Called at 64Hz / NR12->SweepPace
+	if (EnvelopeOn && gb->nClockCycles % (1 << 16) == 0 && (++EnvelopeEntrances % NR12->SweepPace == 0))	// Called at 64Hz
 	{
+		// Based on the pace we increment the volume
 		if (NR12->EnvDir == 0)	// Decrease volume
 		{
 			// Avoid underflow
@@ -125,12 +127,18 @@ void Pulse::clock()
 		else	// Increase volume
 		{
 			// Avoid overflow
-			if (Volume < 16)
+			if (Volume < 15)
 			{
 				Volume += 1;
 			}
 		}
 	}
+
+	if ((gb->nClockCycles % (1 << 20)) == 0)
+	{
+		cout << hex << (int)(NR12->SweepPace) << endl;
+	}
+
 }
 
 int8_t Pulse::GetSample()

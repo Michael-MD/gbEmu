@@ -14,7 +14,11 @@ public:
 	APU();
 	~APU();
 	void connectGB(GB* gb);
+
+	uint8_t read(uint16_t addr);
+	void write(uint16_t addr, uint8_t data);
 	void clock();
+	
 	// Static so it can referenced as callback function
 	static void AudioSample(void* userdata, Uint8* stream, int len);
 

@@ -24,9 +24,13 @@ public:
 	// Latches sweep at the start of sweep
 	bool SweepOn = false;
 	uint8_t CurrentPace = 0;
+	// Keeps track of how the pace
+	uint8_t SweepEntrances = 0;
 
 	// Envelope
 	bool EnvelopeOn = false;
+	// Keeps track of how the pace
+	uint8_t EnvelopeEntrances = 0;
 
 	// Sweep
 	union NR10Register
