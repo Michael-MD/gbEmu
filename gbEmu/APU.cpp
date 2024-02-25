@@ -72,7 +72,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		RightChannel = 0;
 
 		// Loop over all channels
-		for (int i = 0; i < 2; i++)
+		for (int i = 0; i < nChannels; i++)
 		{
 			// Get sample
 			AnalogVal = apu->Channels[i]->GetSample();
@@ -112,14 +112,10 @@ void APU::clock()
 	}
 
 	// Pass clock signal to each channel
-	pulse1.clock();
-	pulse2.clock();
-
-	// The APU has an internal divider
-	// which ticks on the falling edge of
-	// the fourth bit. So if clocked in increments
-	// at 4.19MHz then the counter increments at
-	// 4.19MHz / 2^3 ~= 512Hz.
+	for (int i = 0; i < nChannels; i++)
+	{
+		Channels[i]->clock();
+	}
 	
 }
 

@@ -11,6 +11,7 @@ public:
 
 	void connectGB(GB* gb);
 	virtual int8_t GetSample() = 0;
+	virtual void clock() = 0;
 
 	// Default volume will be 7.
 	// Volume should always remain within the range

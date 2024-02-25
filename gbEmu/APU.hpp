@@ -12,7 +12,8 @@ public:
 	GB* gb;
 
 	// Channels
-	SoundChannel* Channels[4];
+	const static uint8_t nChannels = 2;
+	SoundChannel* Channels[nChannels];
 
 	Pulse pulse1;
 	Pulse pulse2;
