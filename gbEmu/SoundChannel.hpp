@@ -12,7 +12,7 @@ public:
 	void connectGB(GB* gb);
 	virtual int8_t GetSample() = 0;
 
-	// Default volume will be 0.
+	// Default volume will be 7.
 	// Volume should always remain within the range
 	// 0 to 15 (inclusive).
 	uint8_t Volume;
@@ -38,7 +38,7 @@ public:
 	uint8_t EnvelopeEntrances = 0;
 
 	// Sweep
-	union NR10Register
+	union NRx0Register
 	{
 		struct
 		{
@@ -57,7 +57,7 @@ public:
 	} *NRx0;
 
 	// Length Timer and Duty Cycle
-	union NR11Register
+	union NRx1Register
 	{
 		struct
 		{
@@ -74,7 +74,7 @@ public:
 	} *NRx1;
 
 	// Volume and Envelope
-	union NR12Register
+	union NRx2Register
 	{
 		struct
 		{
@@ -95,7 +95,7 @@ public:
 	uint8_t* NRx3;
 
 	// Period High and Control
-	union NR14Register
+	union NRx4Register
 	{
 		struct
 		{

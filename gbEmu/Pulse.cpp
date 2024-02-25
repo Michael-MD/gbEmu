@@ -18,7 +18,7 @@ Pulse::Pulse() : SoundChannel()
 	EnvelopeOn = false;
 	LenCounterOn = false;
 
-	Volume = 0;
+	Volume = 7;
 }
 
 void Pulse::clock()
