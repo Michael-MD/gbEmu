@@ -11,6 +11,14 @@ Pulse::Pulse() : SoundChannel()
 
 	// Length Counter
 	LenCount = 0;
+
+	// Turn everything off by default
+	Mute = true;
+	SweepOn = false;
+	EnvelopeOn = false;
+	LenCounterOn = false;
+
+	Volume = 0;
 }
 
 void Pulse::clock()
@@ -22,23 +30,32 @@ void Pulse::clock()
 		PeriodDiv->clock();
 	}
 
-	// ================= Length Counter ================= 
-	if (!LenCounterOn && NR14->LenEnable)
+	// Check if DAC is off, according to 
+	// PanDocs it is off if and only if
+	// NRx2 & 0xF8 != 0.
+	if ((NRx2->reg & 0xF8) == 0)
 	{
-		LenCount = NR11->InitLenTimer;
+		Mute = true;
+		gb->apu.NR52->bCH1 = 0;
+	}
+
+	// ================= Length Counter ================= 
+	if (!LenCounterOn && NRx4->LenEnable)
+	{
+		LenCount = NRx1->InitLenTimer;
 		LenCounterOn = true;
 	}
 
-	if (!NR14->LenEnable)
+	if (!NRx4->LenEnable)
 	{
 		LenCounterOn = false;
 	}
 
-	if (gb->nClockCycles % (1 << 14) == 0 && NR14->LenEnable)	// Called at 256Hz
+	if (gb->nClockCycles % (1 << 14) == 0 && NRx4->LenEnable)	// Called at 256Hz
 	{
 		if (LenCount++ == 64)
 		{
-			LenCount = NR11->InitLenTimer;
+			LenCount = NRx1->InitLenTimer;
 			Mute = true;
 			gb->apu.NR52->bCH1 = 0;
 		}
@@ -47,26 +64,26 @@ void Pulse::clock()
 	// ================= Sweep Unit ================= 
 
 	// Check if sweep unit just turned on
-	if (!SweepOn && NR10->Pace != 0)
+	if (!SweepOn && NRx0->Pace != 0)
 	{
 		SweepOn = true;
-		CurrentPace = NR10->Pace;
+		CurrentPace = NRx0->Pace;
 		SweepEntrances = 0;
 	}
 
 	// If Pace is set to 0 then immediately stop 
 	// the sweep.
-	if (NR10->Pace == 0)
+	if (NRx0->Pace == 0)
 	{
 		SweepOn = false;
 	}
 
 	// If sweep is on then increment period value at pace
-	if (SweepOn && (gb->nClockCycles % (1 << 15)) == 0 && (++SweepEntrances % CurrentPace == 0))	// Called at 128Hz / NR10->Pace
+	if (SweepOn && (gb->nClockCycles % (1 << 15)) == 0 && (++SweepEntrances % CurrentPace == 0))	// Called at 128Hz / NRx0->Pace
 	{
-		uint16_t DeltaP = PeriodValue >> NR10->Step;
+		uint16_t DeltaP = PeriodValue >> NRx0->Step;
 
-		if(NR10->Direction == 0)	// Addition
+		if(NRx0->Direction == 0)	// Addition
 		{
 			PeriodValue += DeltaP;
 
@@ -86,37 +103,37 @@ void Pulse::clock()
 			gb->apu.NR52->bCH1 = 0;
 		}
 
-		// Update NR13 and NR14
-		*NR13 = PeriodValue & 0xFF;
-		NR14->Period = PeriodValue >> 8;
+		// Update NRx3 and NRx4
+		*NRx3 = PeriodValue & 0xFF;
+		NRx4->Period = PeriodValue >> 8;
 	}
 
 	// ================= Envelope ================= 
 	// Disables envelope if sweep pace is zero
-	if (NR12->SweepPace == 0)
+	if (NRx2->SweepPace == 0)
 	{
 		EnvelopeOn = false;
 	}
 
 	// Switch envelope on
-	if (NR12->SweepPace != 0 && !EnvelopeOn)
+	if (NRx2->SweepPace != 0 && !EnvelopeOn)
 	{
 		EnvelopeOn = true;
 		EnvelopeEntrances = 0;
-		Volume = NR12->InitVol;
+		Volume = NRx2->InitVol;
 	}
 
 	// Disables channel if bits 3-7 are all zero.
-	if (NR12->InitVol == 0 && NR12->EnvDir == 0)
+	if (NRx2->InitVol == 0 && NRx2->EnvDir == 0)
 	{
 		Mute = true;
 		gb->apu.NR52->bCH1 = 0;
 	}
 
-	if (EnvelopeOn && gb->nClockCycles % (1 << 16) == 0 && (++EnvelopeEntrances % NR12->SweepPace == 0))	// Called at 64Hz
+	if (EnvelopeOn && gb->nClockCycles % (1 << 16) == 0 && (++EnvelopeEntrances % NRx2->SweepPace == 0))	// Called at 64Hz
 	{
 		// Based on the pace we increment the volume
-		if (NR12->EnvDir == 0)	// Decrease volume
+		if (NRx2->EnvDir == 0)	// Decrease volume
 		{
 			// Avoid underflow
 			if (Volume > 0)
@@ -134,11 +151,6 @@ void Pulse::clock()
 		}
 	}
 
-	if ((gb->nClockCycles % (1 << 20)) == 0)
-	{
-		cout << hex << (int)(NR12->SweepPace) << endl;
-	}
-
 }
 
 int8_t Pulse::GetSample()
@@ -150,7 +162,7 @@ int8_t Pulse::GetSample()
 
 	// We check if the part of the period reached is 
 	// less than the duty cycle value.
-	if ((PeriodDiv->nOverflows % 8) <= (NR11->Duty << 1))
+	if ((PeriodDiv->nOverflows % 8) <= (NRx1->Duty << 1))
 	{
 		// If within high part of waveform
 		return Volume;

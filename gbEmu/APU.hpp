@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "Pulse.hpp"
 #include "SDL.h"
+#include "SoundChannel.hpp"
 
 class GB;
 
@@ -9,7 +10,12 @@ class APU
 {
 public:
 	GB* gb;
+
+	// Channels
+	SoundChannel* Channels[4];
+
 	Pulse pulse1;
+	Pulse pulse2;
 
 	APU();
 	~APU();
@@ -21,6 +27,10 @@ public:
 	
 	// Static so it can referenced as callback function
 	static void AudioSample(void* userdata, Uint8* stream, int len);
+
+	// Dummy memory location for channel 2's non-existant
+	// sweep register (NRx20)
+	uint8_t NRx20 = 0x00;
 
 	// Audio Master Control
 	union NR52Register

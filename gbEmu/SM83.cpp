@@ -89,7 +89,7 @@ void SM83::clock()
 			b = CurrentInstruction.b;
 
 #if DEBUG_MODE
-			//if (PC-1 == 0xFFFF)
+			//if (PC-1 == 0xC07f)
 			{
 				std::cout << std::hex
 					<< (int)(PC - 1)

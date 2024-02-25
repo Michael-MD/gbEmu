@@ -23,13 +23,27 @@ void APU::connectGB(GB* gb)
 	NR50 = reinterpret_cast<NR50Register*>(gb->RAM + 0xFF24);
 
 	// Channel 1 - Pulse 1
-	pulse1.NR10 = reinterpret_cast<Pulse::NR10Register*>(gb->RAM + 0xFF10);
-	pulse1.NR11 = reinterpret_cast<Pulse::NR11Register*>(gb->RAM + 0xFF11);
-	pulse1.NR12 = reinterpret_cast<Pulse::NR12Register*>(gb->RAM + 0xFF12);
-	pulse1.NR13 = gb->RAM + 0xFF13;
-	pulse1.NR14 = reinterpret_cast<Pulse::NR14Register*>(gb->RAM + 0xFF14);
+	pulse1.NRx0 = reinterpret_cast<Pulse::NR10Register*>(gb->RAM + 0xFF10);
+	pulse1.NRx1 = reinterpret_cast<Pulse::NR11Register*>(gb->RAM + 0xFF11);
+	pulse1.NRx2 = reinterpret_cast<Pulse::NR12Register*>(gb->RAM + 0xFF12);
+	pulse1.NRx3 = gb->RAM + 0xFF13;
+	pulse1.NRx4 = reinterpret_cast<Pulse::NR14Register*>(gb->RAM + 0xFF14);
 
+	// Channel 2 - Pulse 2
+	// Pulse channel 2 doesn't have a sweep to we simply map it
+	// to a random fixed memory location to avoid memory leaks.
+	pulse2.NRx0 = reinterpret_cast<Pulse::NR10Register*>(&NRx20);
+	pulse2.NRx1 = reinterpret_cast<Pulse::NR11Register*>(gb->RAM + 0xFF16);
+	pulse2.NRx2 = reinterpret_cast<Pulse::NR12Register*>(gb->RAM + 0xFF17);
+	pulse2.NRx3 = gb->RAM + 0xFF18;
+	pulse2.NRx4 = reinterpret_cast<Pulse::NR14Register*>(gb->RAM + 0xFF19);
+
+	Channels[0] = &pulse1;
+	Channels[1] = &pulse2;
+
+	// Pass gb pointer to channels
 	pulse1.connectGB(gb);
+	pulse2.connectGB(gb);
 }
 
 void APU::AudioSample(void* userdata, Uint8* stream, int len)
@@ -40,11 +54,10 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 	Sint16* buffer = reinterpret_cast<Sint16*>(stream);
 	int nSamples = len / sizeof(Sint16);
 
-	// Place holder for analog value output
+	// Placeholder for analog value output
 	// by DAC.
 	Sint16 AnalogVal = 0;
 
-	// Mixer
 	Sint32 RightChannel = 0, LeftChannel = 0;
 
 	for (int j = 0; j < nSamples; j += 2) 
@@ -58,29 +71,36 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		LeftChannel = 0;
 		RightChannel = 0;
 
-		// Get sample
-		AnalogVal = apu->pulse1.GetSample();
-		
-		// Mixer
-		if (apu->NR51->CH1R)
+		// Loop over all channels
+		for (int i = 0; i < 2; i++)
 		{
-			RightChannel += AnalogVal;
-		}
-		else if (apu->NR51->CH1L)
-		{
-			LeftChannel += AnalogVal;
+			// Get sample
+			AnalogVal = apu->Channels[i]->GetSample();
+
+			// =========== Mixer =========== 
+			// Channel right sterio output
+			if ((apu->NR51->reg >> i) & 1)
+			{
+				RightChannel += AnalogVal;
+			}
+
+			// Channel left sterio output
+			if ((apu->NR51->reg >> (i + 4)) & 1)
+			{
+				LeftChannel += AnalogVal;
+			}
 		}
 		
-		// TODO: Volume control
-		// Maps 0 -> 3 in master volume register to 
-		// range 1 - 6000.
-		LeftChannel *= 500;
-		RightChannel *= 500;
+		// The master volume register NR50 contains
+		// a scale value for the left and right channels.
+		// Note we have added 1 since 0 should not mute the
+		// channel.
+		LeftChannel *= 100 * (apu->NR50->VolL + 1);
+		RightChannel *= 100 * (apu->NR50->VolR + 1);
 
 
 		buffer[j] = LeftChannel;
 		buffer[j + 1] = RightChannel;
-
 	}
 }
 
@@ -107,16 +127,16 @@ uint8_t APU::read(uint16_t addr)
 {
 	// addr >= 0xFF10 && addr <= 0xFF3F
 
-	if (addr == 0xFF10)		// NR11: Channel 1 length timer & duty cycle
+	if (addr == 0xFF10)		// NRx1: Channel 1 length timer & duty cycle
 	{
 		// Initial length timer cannot be read
-		return ~(11 << 6) ^ (pulse1.NR11->Duty << 6);
+		return ~(11 << 6) ^ (pulse1.NRx1->Duty << 6);
 	}
-	else if (addr == 0xFF14)	// NR14: Channel 1 period high & control
+	else if (addr == 0xFF14)	// NRx4: Channel 1 period high & control
 	{
 		// Only length enable bit can be read.
 		// Everything else is 1.
-		return ~(1 << 6) ^ (pulse1.NR14->LenEnable << 6);
+		return ~(1 << 6) ^ (pulse1.NRx4->LenEnable << 6);
 	}
 
 	return gb->RAM[addr];
@@ -124,30 +144,37 @@ uint8_t APU::read(uint16_t addr)
 
 void APU::write(uint16_t addr, uint8_t data)
 {
+	// APU registers cannot be written to 
+	// while it is off except NR52 to turn
+	// it on.
+	if (NR52->bAPU == 0 && addr != 0xFF26)
+	{
+		return;
+	}
+
 	// addr >= 0xFF10 && addr <= 0xFF3F
 
 	if (addr == 0xFF12)	// NR12: Channel 1 volume & envelope
 	{
 		// If initial volume is changed then we want to restart the sweep unit
 		// so that it can latch this new value
-		if (data >> 4 != pulse1.NR12->InitVol)
+		if (data >> 4 != pulse1.NRx2->InitVol)
 		{
-			pulse1.SweepOn = false;
+			pulse1.EnvelopeOn = false;
 		}
 
-		*pulse1.NR12 = data;
-		
+		*pulse1.NRx2 = data;
 	}
 	else if (addr == 0xFF13)	// NR13 - Pulse channel 1 Period value low byte
 	{
-		*pulse1.NR13 = data;
-		pulse1.PeriodValue = ((pulse1.NR14->Period << 8) | *pulse1.NR13) & 0x7FF;
+		*pulse1.NRx3 = data;
+		pulse1.PeriodValue = ((pulse1.NRx4->Period << 8) | *pulse1.NRx3) & 0x7FF;
 	}
 	else if (addr == 0xFF14)	// NR14 - Pulse channel 1 various control bits
 	{
-		*pulse1.NR14 = data;
+		*pulse1.NRx4 = data;
 		// Check if channel 1 should be turned on
-		if (pulse1.NR14->Trigger == 1)
+		if (pulse1.NRx4->Trigger == 1)
 		{
 			pulse1.Mute = false;
 			pulse1.SweepOn = false;
@@ -155,7 +182,37 @@ void APU::write(uint16_t addr, uint8_t data)
 			pulse1.LenCounterOn = false;
 			NR52->bCH1 = 1;
 		}
-		pulse1.PeriodValue = ((pulse1.NR14->Period << 8) | *pulse1.NR13) & 0x7FF;
+		pulse1.PeriodValue = ((pulse1.NRx4->Period << 8) | *pulse1.NRx3) & 0x7FF;
+	}
+	if (addr == 0xFF17)	// NR22: Channel 2 volume & envelope
+	{
+		// If initial volume is changed then we want to restart the sweep unit
+		// so that it can latch this new value
+		if (data >> 4 != pulse2.NRx2->InitVol)
+		{
+			pulse2.EnvelopeOn = false;
+		}
+
+		*pulse2.NRx2 = data;
+	}
+	else if (addr == 0xFF18)	// NR23 - Pulse channel 2 Period value low byte
+	{
+		*pulse2.NRx3 = data;
+		pulse2.PeriodValue = ((pulse2.NRx4->Period << 8) | *pulse2.NRx3) & 0x7FF;
+	}
+	else if (addr == 0xFF19)	// NR24 - Pulse channel 2 various control bits
+	{
+		*pulse2.NRx4 = data;
+		// Check if channel 1 should be turned on
+		if (pulse2.NRx4->Trigger == 1)
+		{
+			pulse2.Mute = false;
+			pulse2.SweepOn = false;
+			pulse2.EnvelopeOn = false;
+			pulse2.LenCounterOn = false;
+			NR52->bCH1 = 1;
+		}
+		pulse2.PeriodValue = ((pulse2.NRx4->Period << 8) | *pulse2.NRx3) & 0x7FF;
 	}
 	else if (addr == 0xFF26)	// Audio master control
 	{
