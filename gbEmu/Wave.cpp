@@ -46,7 +46,7 @@ void Wave::clock()
 		{
 			LenCount = *NR31;
 			Mute = true;
-			gb->apu.NR52->bCH1 = 0;
+			gb->apu.NR52->bCH3 = 0;
 		}
 	}
 }
