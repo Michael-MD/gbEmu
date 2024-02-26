@@ -59,7 +59,7 @@ void Noise::clock()
 		{
 			LenCount = NR41->InitLenTimer;
 			Mute = true;
-			gb->apu.NR52->bCH1 = 0;
+			gb->apu.NR52->bCH4 = 0;
 		}
 	}
 
