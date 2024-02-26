@@ -3,7 +3,7 @@
 
 Noise::Noise() : SoundChannel()
 {
-	LFSR = 0x0000;
+	LFSR = 0xFFFF;
 }
 
 void Noise::clock()
@@ -110,6 +110,11 @@ void Noise::clock()
 
 uint8_t Noise::GetSample()
 {
+	if (Mute)
+	{
+		return 0;
+	}
+
 	if (LFSR.Bit0 == 1)
 	{
 		return Volume;
