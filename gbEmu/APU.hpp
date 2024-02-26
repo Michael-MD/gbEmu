@@ -1,9 +1,10 @@
 #pragma once
 #include <cstdint>
+#include "SoundChannel.hpp"
 #include "Pulse.hpp"
 #include "Wave.hpp"
+#include "Noise.hpp"
 #include "SDL.h"
-#include "SoundChannel.hpp"
 
 class GB;
 
@@ -25,12 +26,13 @@ public:
 	static void AudioSample(void* userdata, Uint8* stream, int len);
 	
 	// Channels
-	const static uint8_t nChannels = 3;
+	const static uint8_t nChannels = 4;
 	SoundChannel* Channels[nChannels];
 
 	Pulse pulse1;
 	Pulse pulse2;
 	Wave wave;
+	Noise noise;
 
 	// Dummy memory location for channel 2's non-existant
 	// sweep register (NRx20)

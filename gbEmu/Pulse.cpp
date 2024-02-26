@@ -3,19 +3,7 @@
 
 Pulse::Pulse() : SoundChannel()
 {
-	PeriodValue = 0;
-	PeriodDiv = new Divider<uint16_t>(&PeriodValue, 0x7FF);
-
-	// Length Counter
-	LenCount = 0;
-
-	// Turn everything off by default
-	Mute = true;
-	SweepOn = false;
-	EnvelopeOn = false;
-	LenCounterOn = false;
-
-	Volume = 7;
+	
 }
 
 void Pulse::clock()
@@ -172,5 +160,5 @@ uint8_t Pulse::GetSample()
 
 Pulse::~Pulse()
 {
-	delete PeriodDiv;
+
 }

@@ -3,9 +3,7 @@
 
 Wave::Wave() : SoundChannel()
 {
-	// TODO: Move to SoundChannel constructor
-	PeriodValue = 0;
-	PeriodDiv = new Divider<uint16_t>(&PeriodValue, 0x7FF);
+
 }
 
 void Wave::clock()
@@ -88,5 +86,5 @@ uint8_t Wave::GetSample()
 
 Wave::~Wave()
 {
-	delete PeriodDiv;
+
 }

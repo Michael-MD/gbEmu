@@ -46,10 +46,16 @@ void APU::connectGB(GB* gb)
 	wave.NR34 = reinterpret_cast<Wave::NR34Register*>(gb->RAM + 0xFF1E);
 	wave.PatternRAM = gb->RAM + 0xFF30;
 
+	// Channel 4 - Noise
+	noise.NR41 = reinterpret_cast<Noise::NR41Register*>(gb->RAM + 0xFF20);
+	noise.NR42 = reinterpret_cast<Noise::NR42Register*>(gb->RAM + 0xFF21);
+	noise.NR43 = reinterpret_cast<Noise::NR43Register*>(gb->RAM + 0xFF22);
+	noise.NR44 = reinterpret_cast<Noise::NR44Register*>(gb->RAM + 0xFF23);
 
 	Channels[0] = &pulse1;
 	Channels[1] = &pulse2;
 	Channels[2] = &wave;
+	Channels[3] = &noise;
 
 	// Pass gb pointer to channels
 	for (size_t i = 0; i < nChannels; i++)
@@ -73,7 +79,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 
 	Sint32 RightChannel = 0, LeftChannel = 0;
 
-	for (int j = 0; j < nSamples; j += 2) 
+	for (int j = 0; j < nSamples; j += 2)
 	{
 		// Run emulation until next sample
 		for (int k = 0; k < 1000 * 4.19 / 44.1; k++)
@@ -103,7 +109,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 				LeftChannel += AnalogVal;
 			}
 		}
-		
+
 		// The master volume register NR50 contains
 		// a scale value for the left and right channels.
 		// Note we have added 1 since 0 should not mute the
@@ -129,7 +135,7 @@ void APU::clock()
 	{
 		Channels[i]->clock();
 	}
-	
+
 }
 
 
@@ -234,6 +240,30 @@ void APU::write(uint16_t addr, uint8_t data)
 		}
 		pulse2.PeriodValue = ((pulse2.NRx4->Period << 8) | *pulse2.NRx3) & 0x7FF;
 	}
+	else if (addr == 0xFF21)	// NR42: Channel 4 volume & envelope
+	{
+		// If initial volume is changed then we want to restart the sweep unit
+		// so that it can latch this new value
+		if (data >> 4 != noise.NR42->InitVol)
+		{
+			noise.EnvelopeOn = false;
+		}
+
+		*noise.NR42 = data;
+	}
+	else if (addr == 0xFF23)	// NR44: Channel 4 control
+	{
+		*noise.NR44 = data;
+		// Check if channel 1 should be turned on
+		if (pulse2.NRx4->Trigger == 1)
+		{
+			noise.Mute = false;
+			noise.SweepOn = false;
+			noise.EnvelopeOn = false;
+			noise.LenCounterOn = false;
+			NR52->bCH4 = 1;
+		}
+	}
 	else if (addr == 0xFF26)	// Audio master control
 	{
 		NR52->bAPU = data >> 7;
@@ -247,7 +277,7 @@ void APU::write(uint16_t addr, uint8_t data)
 	{
 		*wave.NR34 = data;
 
-		// Check if channel 1 should be turned on
+		// Check if channel 3 should be turned on
 		if (wave.NR34->Trigger == 1)
 		{
 			wave.Mute = false;
@@ -255,7 +285,7 @@ void APU::write(uint16_t addr, uint8_t data)
 			wave.PatternInd = 0;
 			NR52->bCH3 = 1;
 		}
-		
+
 		// Update upper 3 bits of period value
 		wave.PeriodValue = ((wave.NR34->Period << 8) | *wave.NR33) & 0x7FF;
 	}
