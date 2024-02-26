@@ -9,6 +9,9 @@ class SoundChannel
 public:
 	GB* gb;
 
+	SoundChannel();
+	~SoundChannel();
+
 	void connectGB(GB* gb);
 	virtual uint8_t GetSample() = 0;
 	virtual void clock() = 0;
