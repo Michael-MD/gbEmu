@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include "Pulse.hpp"
+#include "Wave.hpp"
 #include "SDL.h"
 #include "SoundChannel.hpp"
 
@@ -11,13 +12,6 @@ class APU
 public:
 	GB* gb;
 
-	// Channels
-	const static uint8_t nChannels = 2;
-	SoundChannel* Channels[nChannels];
-
-	Pulse pulse1;
-	Pulse pulse2;
-
 	APU();
 	~APU();
 	void connectGB(GB* gb);
@@ -26,8 +20,17 @@ public:
 	void write(uint16_t addr, uint8_t data);
 	void clock();
 	
+
 	// Static so it can referenced as callback function
 	static void AudioSample(void* userdata, Uint8* stream, int len);
+	
+	// Channels
+	const static uint8_t nChannels = 3;
+	SoundChannel* Channels[nChannels];
+
+	Pulse pulse1;
+	Pulse pulse2;
+	Wave wave;
 
 	// Dummy memory location for channel 2's non-existant
 	// sweep register (NRx20)

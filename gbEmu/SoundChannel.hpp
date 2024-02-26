@@ -10,12 +10,12 @@ public:
 	GB* gb;
 
 	void connectGB(GB* gb);
-	virtual int8_t GetSample() = 0;
+	virtual uint8_t GetSample() = 0;
 	virtual void clock() = 0;
 
 	// Default volume will be 7.
 	// Volume should always remain within the range
-	// 0 to 15 (inclusive).
+	// 0 to 16 (inclusive).
 	uint8_t Volume;
 
 	// Keeps track of whether the channel
@@ -38,80 +38,12 @@ public:
 	// Keeps track of how the pace
 	uint8_t EnvelopeEntrances = 0;
 
-	// Sweep
-	union NRx0Register
-	{
-		struct
-		{
-			uint8_t Step : 3;
-			uint8_t Direction : 1;
-			uint8_t Pace : 3;
-			uint8_t _ : 1;
-		};
+	// Dividers
+	Divider<uint16_t>* PeriodDiv;
 
-		uint8_t reg;
+	// Keeps track of the period which is 
+	// broken up between registers NRx3 and NRx4.
+	uint16_t PeriodValue;
 
-		void operator=(uint8_t reg_)
-		{
-			reg = reg_;
-		};
-	} *NRx0;
-
-	// Length Timer and Duty Cycle
-	union NRx1Register
-	{
-		struct
-		{
-			uint8_t InitLenTimer : 6;
-			uint8_t Duty : 2;
-		};
-
-		uint8_t reg;
-
-		void operator=(uint8_t reg_)
-		{
-			reg = reg_;
-		};
-	} *NRx1;
-
-	// Volume and Envelope
-	union NRx2Register
-	{
-		struct
-		{
-			uint8_t SweepPace : 3;
-			uint8_t EnvDir : 1;
-			uint8_t InitVol : 4;
-		};
-
-		uint8_t reg;
-
-		void operator=(uint8_t reg_)
-		{
-			reg = reg_;
-		};
-	} *NRx2;
-
-	// Specifies low byte of period
-	uint8_t* NRx3;
-
-	// Period High and Control
-	union NRx4Register
-	{
-		struct
-		{
-			uint8_t Period : 3;
-			uint8_t _ : 3;
-			uint8_t LenEnable : 1;
-			uint8_t Trigger : 1;
-		};
-
-		uint8_t reg;
-
-		void operator=(uint8_t reg_)
-		{
-			reg = reg_;
-		};
-	} *NRx4;
 };
 

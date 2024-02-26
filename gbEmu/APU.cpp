@@ -38,12 +38,25 @@ void APU::connectGB(GB* gb)
 	pulse2.NRx3 = gb->RAM + 0xFF18;
 	pulse2.NRx4 = reinterpret_cast<Pulse::NRx4Register*>(gb->RAM + 0xFF19);
 
+	// Channel 3 - Wave Output
+	wave.NR30 = reinterpret_cast<Wave::NR30Register*>(gb->RAM + 0xFF1A);
+	wave.NR31 = gb->RAM + 0xFF1B;
+	wave.NR32 = reinterpret_cast<Wave::NR32Register*>(gb->RAM + 0xFF1C);
+	wave.NR33 = gb->RAM + 0xFF1D;
+	wave.NR34 = reinterpret_cast<Wave::NR34Register*>(gb->RAM + 0xFF1E);
+	wave.PatternRAM = gb->RAM + 0xFF30;
+
+
 	Channels[0] = &pulse1;
 	Channels[1] = &pulse2;
+	Channels[2] = &wave;
 
 	// Pass gb pointer to channels
-	pulse1.connectGB(gb);
-	pulse2.connectGB(gb);
+	for (size_t i = 0; i < nChannels; i++)
+	{
+		Channels[i]->connectGB(gb);
+	}
+
 }
 
 void APU::AudioSample(void* userdata, Uint8* stream, int len)
@@ -56,7 +69,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 
 	// Placeholder for analog value output
 	// by DAC.
-	Sint16 AnalogVal = 0;
+	uint8_t AnalogVal = 0;
 
 	Sint32 RightChannel = 0, LeftChannel = 0;
 
@@ -72,7 +85,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		RightChannel = 0;
 
 		// Loop over all channels
-		for (int i = 0; i < nChannels; i++)
+		for (size_t i = 0; i < nChannels; i++)
 		{
 			// Get sample
 			AnalogVal = apu->Channels[i]->GetSample();
@@ -112,7 +125,7 @@ void APU::clock()
 	}
 
 	// Pass clock signal to each channel
-	for (int i = 0; i < nChannels; i++)
+	for (size_t i = 0; i < nChannels; i++)
 	{
 		Channels[i]->clock();
 	}
@@ -135,12 +148,24 @@ uint8_t APU::read(uint16_t addr)
 		// Everything else is 1.
 		return ~(1 << 6) ^ (pulse1.NRx4->LenEnable << 6);
 	}
+	else if (addr == 0xFF1D)	// NR33: Channel 3 period low [write-only]
+	{
+		return 0xFF;
+	}
+	else if (addr == 0xFF1E)	// NR34: Channel 3 period high & control
+	{
+		// Only length enable bit can be read.
+		// Everything else is 1.
+		return ~(1 << 6) ^ (pulse1.NRx4->LenEnable << 6);
+	}
 
 	return gb->RAM[addr];
 }
 
 void APU::write(uint16_t addr, uint8_t data)
 {
+	// addr >= 0xFF10 && addr <= 0xFF3F
+
 	// APU registers cannot be written to 
 	// while it is off except NR52 to turn
 	// it on.
@@ -148,8 +173,6 @@ void APU::write(uint16_t addr, uint8_t data)
 	{
 		return;
 	}
-
-	// addr >= 0xFF10 && addr <= 0xFF3F
 
 	if (addr == 0xFF12)	// NR12: Channel 1 volume & envelope
 	{
@@ -181,7 +204,7 @@ void APU::write(uint16_t addr, uint8_t data)
 		}
 		pulse1.PeriodValue = ((pulse1.NRx4->Period << 8) | *pulse1.NRx3) & 0x7FF;
 	}
-	if (addr == 0xFF17)	// NR22: Channel 2 volume & envelope
+	else if (addr == 0xFF17)	// NR22: Channel 2 volume & envelope
 	{
 		// If initial volume is changed then we want to restart the sweep unit
 		// so that it can latch this new value
@@ -207,13 +230,34 @@ void APU::write(uint16_t addr, uint8_t data)
 			pulse2.SweepOn = false;
 			pulse2.EnvelopeOn = false;
 			pulse2.LenCounterOn = false;
-			NR52->bCH1 = 1;
+			NR52->bCH2 = 1;
 		}
 		pulse2.PeriodValue = ((pulse2.NRx4->Period << 8) | *pulse2.NRx3) & 0x7FF;
 	}
 	else if (addr == 0xFF26)	// Audio master control
 	{
 		NR52->bAPU = data >> 7;
+	}
+	else if (addr == 0xFF1D)	// NR33: Channel 3 period low [write-only]
+	{
+		*wave.NR33 = data;
+		wave.PeriodValue = ((wave.NR34->Period << 8) | *wave.NR33) & 0x7FF;
+	}
+	else if (addr == 0xFF1E)	// NR34 - Channel 3 period high & control
+	{
+		*wave.NR34 = data;
+
+		// Check if channel 1 should be turned on
+		if (wave.NR34->Trigger == 1)
+		{
+			wave.Mute = false;
+			wave.LenCounterOn = false;
+			wave.PatternInd = 0;
+			NR52->bCH3 = 1;
+		}
+		
+		// Update upper 3 bits of period value
+		wave.PeriodValue = ((wave.NR34->Period << 8) | *wave.NR33) & 0x7FF;
 	}
 	else
 	{

@@ -1,9 +1,6 @@
 #include "Pulse.hpp"
 #include "GB.hpp"
 
-#include <iostream>
-using namespace std;
-
 Pulse::Pulse() : SoundChannel()
 {
 	PeriodValue = 0;
@@ -144,7 +141,7 @@ void Pulse::clock()
 		else	// Increase volume
 		{
 			// Avoid overflow
-			if (Volume < 15)
+			if (Volume < 16)
 			{
 				Volume += 1;
 			}
@@ -153,7 +150,7 @@ void Pulse::clock()
 
 }
 
-int8_t Pulse::GetSample()
+uint8_t Pulse::GetSample()
 {
 	if (Mute)
 	{
@@ -169,7 +166,7 @@ int8_t Pulse::GetSample()
 	}
 	else
 	{
-		return -Volume;
+		return 0;
 	}
 }
 

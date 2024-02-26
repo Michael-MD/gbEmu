@@ -59,6 +59,9 @@
     <ClCompile Include="Pulse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Wave.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SM83.hpp">
@@ -107,6 +110,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Divider.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Wave.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

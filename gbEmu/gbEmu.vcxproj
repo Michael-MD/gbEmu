@@ -153,6 +153,7 @@
     <ClCompile Include="gbEmu.cpp" />
     <ClCompile Include="SoundChannel.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="Wave.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="APU.hpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="SM83.hpp" />
     <ClInclude Include="SoundChannel.hpp" />
     <ClInclude Include="Timer.hpp" />
+    <ClInclude Include="Wave.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
