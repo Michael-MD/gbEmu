@@ -6,7 +6,7 @@
 class Noise : public SoundChannel
 {
 public:
-	Noise();
+	Noise(uint8_t ChannelNum);
 	~Noise();
 
 	virtual uint8_t GetSample() override;

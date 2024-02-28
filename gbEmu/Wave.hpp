@@ -6,7 +6,7 @@
 class Wave : public SoundChannel
 {
 public:
-	Wave();
+	Wave(uint8_t ChannelNum);
 	~Wave();
 
 	virtual uint8_t GetSample() override;

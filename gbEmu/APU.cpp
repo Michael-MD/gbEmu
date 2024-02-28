@@ -204,7 +204,6 @@ void APU::write(uint16_t addr, uint8_t data)
 		if (pulse1.NRx4->Trigger == 1)
 		{
 			pulse1.trigger();
-			NR52->bCH1 = 1;
 		}
 	}
 	else if (addr == 0xFF17)	// NR22: Channel 2 volume & envelope
@@ -230,7 +229,6 @@ void APU::write(uint16_t addr, uint8_t data)
 		if (pulse2.NRx4->Trigger == 1)
 		{
 			pulse2.trigger();
-			NR52->bCH2 = 1;
 		}
 	}
 	else if (addr == 0xFF21)	// NR42: Channel 4 volume & envelope
@@ -248,7 +246,7 @@ void APU::write(uint16_t addr, uint8_t data)
 	{
 		*noise.NR44 = data;
 		// Check if channel 1 should be turned on
-		if (pulse2.NRx4->Trigger == 1)
+		if (noise.NR44->Trigger == 1)
 		{
 			noise.Mute = false;
 			noise.SweepOn = false;

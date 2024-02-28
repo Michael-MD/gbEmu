@@ -29,10 +29,10 @@ public:
 	const static uint8_t nChannels = 4;
 	SoundChannel* Channels[nChannels];
 
-	Pulse pulse1;
-	Pulse pulse2;
-	Wave wave;
-	Noise noise;
+	Pulse pulse1{0};
+	Pulse pulse2{1};
+	Wave wave{2};
+	Noise noise{3};
 
 	// Dummy memory location for channel 2's non-existant
 	// sweep register (NRx20)
