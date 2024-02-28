@@ -16,12 +16,17 @@ void Pulse::clock()
 	}
 
 	// Check if DAC is off, according to 
-	// PanDocs it is off if and only if
-	// NRx2 & 0xF8 != 0.
-	if ((NRx2->reg & 0xF8) == 0)
+	// PanDocs it is on if and only if
+	// NRx2 & 0xF8 != 0. 
+	DACon = (NRx2->reg & 0xF8) != 0;
+	
+	// Turning the DAC back on doesn't
+	// automatically enable the channel
+	// again. 
+	if(!DACon)
 	{
-		Mute = true;
 		gb->apu.NR52->bCH1 = 0;
+		Mute = false;
 	}
 
 	// ================= Length Counter ================= 
@@ -81,16 +86,16 @@ void Pulse::clock()
 			}
 		}
 
-		// Disable the channel immediately if overflows
-		if (PeriodValue > 0x7FF)
-		{
-			Mute = true;
-			gb->apu.NR52->bCH1 = 0;
-		}
-
 		// Update NRx3 and NRx4
 		*NRx3 = PeriodValue & 0xFF;
 		NRx4->Period = PeriodValue >> 8;
+	}
+
+	// Disable the channel immediately if overflows
+	if (PeriodValue > 0x7FF)
+	{
+		Mute = true;
+		gb->apu.NR52->bCH1 = 0;
 	}
 
 	// ================= Envelope ================= 
@@ -140,7 +145,7 @@ void Pulse::clock()
 
 uint8_t Pulse::GetSample()
 {
-	if (Mute)
+	if (Mute || !DACon)
 	{
 		return 0;
 	}

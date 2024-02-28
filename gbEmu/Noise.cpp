@@ -110,6 +110,8 @@ void Noise::clock()
 
 uint8_t Noise::GetSample()
 {
+	return 0;
+
 	if (Mute)
 	{
 		return 0;

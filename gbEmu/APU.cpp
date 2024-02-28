@@ -199,16 +199,13 @@ void APU::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF14)	// NR14 - Pulse channel 1 various control bits
 	{
 		*pulse1.NRx4 = data;
-		// Check if channel 1 should be turned on
+		// Check if channel 1 should be turned on if
+		// DAC is switched on.
 		if (pulse1.NRx4->Trigger == 1)
 		{
-			pulse1.Mute = false;
-			pulse1.SweepOn = false;
-			pulse1.EnvelopeOn = false;
-			pulse1.LenCounterOn = false;
+			pulse1.trigger();
 			NR52->bCH1 = 1;
 		}
-		pulse1.PeriodValue = ((pulse1.NRx4->Period << 8) | *pulse1.NRx3) & 0x7FF;
 	}
 	else if (addr == 0xFF17)	// NR22: Channel 2 volume & envelope
 	{
@@ -229,16 +226,12 @@ void APU::write(uint16_t addr, uint8_t data)
 	else if (addr == 0xFF19)	// NR24 - Pulse channel 2 various control bits
 	{
 		*pulse2.NRx4 = data;
-		// Check if channel 1 should be turned on
+		// Check if channel 2 should be turned on
 		if (pulse2.NRx4->Trigger == 1)
 		{
-			pulse2.Mute = false;
-			pulse2.SweepOn = false;
-			pulse2.EnvelopeOn = false;
-			pulse2.LenCounterOn = false;
+			pulse2.trigger();
 			NR52->bCH2 = 1;
 		}
-		pulse2.PeriodValue = ((pulse2.NRx4->Period << 8) | *pulse2.NRx3) & 0x7FF;
 	}
 	else if (addr == 0xFF21)	// NR42: Channel 4 volume & envelope
 	{

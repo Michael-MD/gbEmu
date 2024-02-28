@@ -53,6 +53,8 @@ void Wave::clock()
 
 uint8_t Wave::GetSample()
 {
+	return 0;
+
 	// Don't output anything if 
 	//		- channel muted,
 	//		- the volume is 0
