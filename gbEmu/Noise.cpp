@@ -1,7 +1,7 @@
 #include "Noise.hpp"
 #include "GB.hpp"
 
-Noise::Noise() : SoundChannel()
+Noise::Noise(uint8_t ChannelNum) : SoundChannel(ChannelNum)
 {
 	LFSR = 0xFFFF;
 }
