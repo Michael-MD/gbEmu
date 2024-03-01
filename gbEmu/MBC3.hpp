@@ -4,8 +4,6 @@
 #include <chrono>
 #include "MBC.hpp"
 
-using namespace std::chrono;
-
 class MBC3 : public MBC
 {
 public:
@@ -33,7 +31,7 @@ public:
 	uint8_t RTCSelect;
 
 	// Stores unix timestamp since last reset or halt
-	std::chrono::time_point<system_clock> StartTime;
+	std::chrono::time_point<std::chrono::system_clock> StartTime;
 
 	// Timer Halt
 	bool HaltTimer;

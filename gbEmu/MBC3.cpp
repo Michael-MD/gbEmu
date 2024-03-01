@@ -14,7 +14,7 @@ MBC3::MBC3(std::string gbFilename, uint8_t ROMSize, uint8_t RAMSize) : MBC(gbFil
 	RTCSelect = 0x00;
 	HaltTimer = false;
 
-	StartTime = system_clock::now();
+	StartTime = std::chrono::system_clock::now();
 }
 
 void MBC3::write(uint16_t addr, uint8_t data)
@@ -68,17 +68,17 @@ void MBC3::write(uint16_t addr, uint8_t data)
 			if(!HaltTimer)
 			{
 				// Get time elapsed since last write
-				auto ElapsedTime = system_clock::now() - StartTime;
+				auto ElapsedTime = std::chrono::system_clock::now() - StartTime;
 
 				// Convert time stored into chrono object
-				seconds RTCTime(RTC[0] * 1 + RTC[1] * 60 + RTC[2] * 3600 + RTC[3] * 86400);
+				std::chrono::seconds RTCTime(RTC[0] * 1 + RTC[1] * 60 + RTC[2] * 3600 + RTC[3] * 86400);
 
 				// Add time elapsed to time in RTC
 				auto UpdatedTime = RTCTime + ElapsedTime;
 
-				RTC[0] = duration_cast<seconds>(UpdatedTime).count() % 60; // Seconds 0-59
-				RTC[1] = duration_cast<minutes>(UpdatedTime).count() % 60; // Minutes 0-59
-				RTC[2] = duration_cast<hours>(UpdatedTime).count(); // Hours 0-23
+				RTC[0] = std::chrono::duration_cast<std::chrono::seconds>(UpdatedTime).count() % 60; // Seconds 0-59
+				RTC[1] = std::chrono::duration_cast<std::chrono::minutes>(UpdatedTime).count() % 60; // Minutes 0-59
+				RTC[2] = std::chrono::duration_cast<std::chrono::hours>(UpdatedTime).count(); // Hours 0-23
 				RTC[2] %= 24;
 				RTC[3] /= 24;	// days 0x00-0xFF
 
@@ -87,7 +87,7 @@ void MBC3::write(uint16_t addr, uint8_t data)
 				RTC[3] = 0x00; // Days low 0x00 - 0xFF;
 				RTC[4] = HaltTimer << 6;
 				
-				StartTime = system_clock::now();
+				StartTime = std::chrono::system_clock::now();
 			}
 		}
 		
@@ -101,7 +101,7 @@ void MBC3::write(uint16_t addr, uint8_t data)
 			RAM[(RAMBankCode * 0x2000) + (addr % 0xA000)] = data;
 		}
 		else {
-			StartTime = system_clock::now();
+			StartTime = std::chrono::system_clock::now();
 
 			RTC[RTCSelect] = data;
 
@@ -132,7 +132,7 @@ void MBC3::write(uint16_t addr, uint8_t data)
 					HaltTimer = (data >> 6) == 1;
 					if (HaltTimer == 0)
 					{
-						StartTime = system_clock::now();
+						StartTime = std::chrono::system_clock::now();
 					}
 				}
 				else
