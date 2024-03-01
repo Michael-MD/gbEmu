@@ -10,9 +10,13 @@ void Wave::clock()
 {
 	// Increments divider which controls 
 	// period duration of wave.
-	if (gb->nClockCycles % 2 == 0)	// Clocked at 4.19Mhz/2
+	if (gb->nClockCycles % 2 == 0)	// Clocked at 4.19MHz/2
 	{
-		PeriodDiv->clock();
+		if (PeriodDiv->clock())
+		{
+			PatternInd++;
+			PatternInd %= 32;
+		}
 	}
 
 	// Checks if DAC is enabled or disabled 
@@ -42,7 +46,7 @@ void Wave::clock()
 
 	if (gb->nClockCycles % (1 << 14) == 0 && NR34->LenEnable)	// Called at 256Hz
 	{
-		if (LenCount++ == 64)
+		if (LenCount++ == 255)
 		{
 			LenCount = *NR31;
 			Mute = true;
@@ -53,13 +57,11 @@ void Wave::clock()
 
 uint8_t Wave::GetSample()
 {
-	return 0;
-
 	// Don't output anything if 
 	//		- channel muted,
 	//		- the volume is 0
 	//		- the wave has been played
-	if (Mute || NR32->OutLvl == 0 || PatternInd >= 32)
+	if (Mute || NR32->OutLvl == 0)
 	{
 		return 0;
 	}
@@ -70,7 +72,7 @@ uint8_t Wave::GetSample()
 	// Now since pattern RAM contains two samples in the 
 	// low and high nybbles of the byte we need
 	// to determine which byte we need.
-	uint8_t NybbleSample = ByteSample >> (PatternInd % 2) * 4;
+	uint8_t NybbleSample = ByteSample >> (1 - (PatternInd % 2)) * 4;
 	NybbleSample &= 0x0F;
 
 	// The sample volume needs to be modulated, here is this 
@@ -80,10 +82,49 @@ uint8_t Wave::GetSample()
 
 	// NybbleSample will be within 0x0 - 0xF
 	return NybbleSample;
+}
 
-	// Finally increment the index of the pattern RAM for
-	// next time.
-	PatternInd++;
+void Wave::trigger()
+{
+	// Turn channel on
+	Mute = false;
+
+	// Set channel on bit
+	gb->apu.NR52->bCH3 = 1;
+
+	// Set length counter
+	if (*NR31 == 0)
+	{
+		*NR31 = 255;
+	}
+
+	// TODO: Reset frequency timer with period
+
+	// Reload period value
+	PeriodValue = ((NR34->Period << 8) | *NR33) & 0x7FF;
+
+	// TODO: Volume envelope timer reloaded with period
+
+	// Channel volume reloaded from NR32
+	Volume = NR32->OutLvl;
+
+	// Turn all internal units off. Although this isn't
+	// what actually happens, it will produce similar 
+	// behaviour based on the way we have done things here.
+	LenCounterOn = false;
+
+	// Reset period index
+	PatternInd = 0;
+
+	// If DAC is off the channel will immediately be turned
+	// back off.
+	if (!DACon)
+	{
+		Mute = true;
+
+		// Reset channel on bit
+		gb->apu.NR52->bCH3 = 0;
+	}
 }
 
 Wave::~Wave()

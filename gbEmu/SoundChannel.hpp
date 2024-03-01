@@ -18,7 +18,7 @@ public:
 
 	// Contains series of events to occur on
 	// channel triggering.
-	virtual void trigger() {};
+	virtual void trigger() = 0;
 
 	// Default volume will be 7.
 	// Volume should always remain within the range

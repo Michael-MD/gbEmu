@@ -91,7 +91,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		RightChannel = 0;
 
 		// Loop over all channels
-		for (size_t i = 0; i < nChannels; i++)
+		for (size_t i = 2; i < 3; i++)
 		{
 			// Get sample
 			AnalogVal = apu->Channels[i]->GetSample();
@@ -271,10 +271,7 @@ void APU::write(uint16_t addr, uint8_t data)
 		// Check if channel 3 should be turned on
 		if (wave.NR34->Trigger == 1)
 		{
-			wave.Mute = false;
-			wave.LenCounterOn = false;
-			wave.PatternInd = 0;
-			NR52->bCH3 = 1;
+			wave.trigger();
 		}
 
 		// Update upper 3 bits of period value

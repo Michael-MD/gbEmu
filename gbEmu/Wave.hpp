@@ -11,6 +11,7 @@ public:
 
 	virtual uint8_t GetSample() override;
 	void clock();
+	void trigger() override;
 
 	// Registers
 

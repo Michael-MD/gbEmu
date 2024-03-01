@@ -125,6 +125,11 @@ uint8_t Noise::GetSample()
 	return 0;
 }
 
+void Noise::trigger()
+{
+
+}
+
 Noise::~Noise()
 {
 

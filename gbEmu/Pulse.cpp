@@ -188,9 +188,6 @@ void Pulse::trigger()
 	// Channel volume reloaded from NRx2
 	Volume = NRx2->InitVol;
 
-	// TODO: Noise LFSR are all set to 1
-	// TODO: Wave channel's position is set to 0 but sample buffer is NOT refilled.
-
 	// Turn all internal units off. Although this isn't
 	// what actually happens, it will produce similar 
 	// behaviour based on the way we have done things here.
