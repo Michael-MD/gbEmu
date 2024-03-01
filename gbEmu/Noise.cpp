@@ -8,6 +8,20 @@ Noise::Noise(uint8_t ChannelNum) : SoundChannel(ChannelNum)
 
 void Noise::clock()
 {
+	// Check if DAC is off, according to 
+	// PanDocs it is on if and only if
+	// NRx2 & 0xF8 != 0. 
+	DACon = (NR42->reg & 0xF8) != 0;
+
+	// Turning the DAC back on doesn't
+	// automatically enable the channel
+	// again. 
+	if (!DACon)
+	{
+		gb->apu.NR52->bCH4 = 0;
+		Mute = false;
+	}
+
 	// Increments divider which controls 
 	// period duration of wave.
 
@@ -110,13 +124,14 @@ void Noise::clock()
 
 uint8_t Noise::GetSample()
 {
-	return 0;
-
 	if (Mute)
 	{
 		return 0;
 	}
 
+	// If the least-significant
+	// bit is one then use the 
+	// volume, otherwise output 0.
 	if (LFSR.Bit0 == 1)
 	{
 		return Volume;
@@ -127,7 +142,42 @@ uint8_t Noise::GetSample()
 
 void Noise::trigger()
 {
+	// Turn channel on
+	Mute = false;
 
+	// Set channel on bit
+	gb->apu.NR52->bCH4 = 1;
+
+	// Set length counter
+	// TODO: Set to 256 for wave channel
+	if (NR41->InitLenTimer == 0)
+	{
+		NR41->InitLenTimer = 64;
+	}
+
+	// TODO: Volume envelope timer reloaded with period
+
+	// Channel volume reloaded from NRx2
+	Volume = NR42->InitVol;
+
+	// Set LFSR
+	LFSR = 0xFFFF;
+
+	// Turn all internal units off. Although this isn't
+	// what actually happens, it will produce similar 
+	// behaviour based on the way we have done things here.
+	EnvelopeOn = false;
+	LenCounterOn = false;
+
+	// If DAC is off the channel will immediately be turned
+	// back off.
+	if (!DACon)
+	{
+		Mute = true;
+
+		// Reset channel on bit
+		gb->apu.NR52->bCH4 = 0;
+	}
 }
 
 Noise::~Noise()

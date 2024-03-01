@@ -91,7 +91,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		RightChannel = 0;
 
 		// Loop over all channels
-		for (size_t i = 2; i < 3; i++)
+		for (size_t i = 0; i < 4; i++)
 		{
 			// Get sample
 			AnalogVal = apu->Channels[i]->GetSample();
@@ -248,11 +248,7 @@ void APU::write(uint16_t addr, uint8_t data)
 		// Check if channel 1 should be turned on
 		if (noise.NR44->Trigger == 1)
 		{
-			noise.Mute = false;
-			noise.SweepOn = false;
-			noise.EnvelopeOn = false;
-			noise.LenCounterOn = false;
-			NR52->bCH4 = 1;
+			noise.trigger();
 		}
 	}
 	else if (addr == 0xFF26)	// Audio master control
