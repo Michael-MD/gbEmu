@@ -98,13 +98,13 @@ void GB::startGame(std::string gbFilename)
 	else
 	{
 		SDL_PauseAudioDevice(device, 1); // Stop playing audio
-		std::this_thread::sleep_for(std::chrono::microseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
 		delete gbInternal;
 		gbInternal = new GBInternal(gbFilename);
 		spec.userdata = &(gbInternal->apu);
 
-		std::this_thread::sleep_for(std::chrono::microseconds(100));
+		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 		SDL_PauseAudioDevice(device, 0); // Start playing audio
 
 	}

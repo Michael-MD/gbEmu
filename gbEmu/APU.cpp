@@ -99,9 +99,13 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 
 			// The digitial value is then passed through
 			// a DAC which maps 0x0 to 0xF to the range 1 to -1
-			// in arbitrary units which we will make 500 to -500.
-			// Not the gradient is negative.
-			AnalogVal = 500 + - (1000 / 0xF) * DigitalVal;
+			// in arbitrary units. This is then high pass filtered
+			// to remove the DC offset incurred. Otherwise you might
+			// hear some static since the speakers need to remain 
+			// displaced. What I do here avoids all these issues without
+			// low pass filtering at the cost of killing half the dynamic 
+			// range.
+			AnalogVal = 500 * DigitalVal;
 
 			// =========== Mixer =========== 
 			// Channel right sterio output
