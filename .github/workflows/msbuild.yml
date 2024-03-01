@@ -30,8 +30,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install SDL2
-      run: choco install sdl2 -y --source="'https://chocolatey.org/api/v2/' https://community.chocolatey.org/api/v2/"
+    - name: Download and Extract SDL2
+      run: |
+        Invoke-WebRequest -Uri https://www.libsdl.org/release/SDL2-devel-2.0.16-VC.zip -OutFile SDL2.zip
+        Expand-Archive -Path SDL2.zip -DestinationPath SDL2
+        
+    - name: Set SDL2 Environment Variables
+      run: |
+        $env:SDL2DIR = "$(pwd)/SDL2"
+        $env:PATH += ";$(pwd)/SDL2"
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.0.2
