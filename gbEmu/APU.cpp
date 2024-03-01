@@ -75,9 +75,10 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 
 	// Placeholder for analog value output
 	// by DAC.
-	uint8_t AnalogVal = 0;
+	uint8_t DigitalVal;
+	Sint16 AnalogVal;
 
-	Sint32 RightChannel = 0, LeftChannel = 0;
+	Sint16 RightChannel = 0, LeftChannel = 0;
 
 	for (int j = 0; j < nSamples; j += 2)
 	{
@@ -94,7 +95,13 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		for (size_t i = 0; i < 4; i++)
 		{
 			// Get sample
-			AnalogVal = apu->Channels[i]->GetSample();
+			DigitalVal = apu->Channels[i]->GetSample();
+
+			// The digitial value is then passed through
+			// a DAC which maps 0x0 to 0xF to the range 1 to -1
+			// in arbitrary units which we will make 500 to -500.
+			// Not the gradient is negative.
+			AnalogVal = 500 + - (1000 / 0xF) * DigitalVal;
 
 			// =========== Mixer =========== 
 			// Channel right sterio output
@@ -114,8 +121,8 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 		// a scale value for the left and right channels.
 		// Note we have added 1 since 0 should not mute the
 		// channel.
-		LeftChannel *= 50 * (apu->NR50->VolL + 1);
-		RightChannel *= 50 * (apu->NR50->VolR + 1);
+		LeftChannel *= apu->NR50->VolL + 1;
+		RightChannel *= apu->NR50->VolR + 1;
 
 
 		buffer[j] = LeftChannel;

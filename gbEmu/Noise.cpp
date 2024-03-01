@@ -149,7 +149,6 @@ void Noise::trigger()
 	gb->apu.NR52->bCH4 = 1;
 
 	// Set length counter
-	// TODO: Set to 256 for wave channel
 	if (NR41->InitLenTimer == 0)
 	{
 		NR41->InitLenTimer = 64;
