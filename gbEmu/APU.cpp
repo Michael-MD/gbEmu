@@ -105,7 +105,7 @@ void APU::AudioSample(void* userdata, Uint8* stream, int len)
 			// displaced. What I do here avoids all these issues without
 			// low pass filtering at the cost of killing half the dynamic 
 			// range.
-			AnalogVal = 500 * DigitalVal;
+			AnalogVal = 50 * DigitalVal;
 
 			// =========== Mixer =========== 
 			// Channel right sterio output
