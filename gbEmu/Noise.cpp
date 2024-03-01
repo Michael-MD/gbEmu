@@ -1,5 +1,5 @@
 #include "Noise.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
 Noise::Noise(uint8_t ChannelNum) : SoundChannel(ChannelNum)
 {

@@ -3,7 +3,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "GB.hpp"
+#include "GBInternal.hpp"
 #include "NoMBC.hpp"
 #include "MBC1.hpp"
 #include "MBC2.hpp"

@@ -2,17 +2,17 @@
 #include <cstdint>
 #include "Divider.hpp"
 
-class GB;
+class GBInternal;
 
 class SoundChannel
 {
 public:
-	GB* gb;
+	GBInternal* gb;
 
 	SoundChannel(uint8_t ChannelNum);
 	~SoundChannel();
 
-	void connectGB(GB* gb);
+	void connectGB(GBInternal* gb);
 	virtual uint8_t GetSample() = 0;
 	virtual void clock() = 0;
 

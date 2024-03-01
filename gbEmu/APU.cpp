@@ -1,5 +1,5 @@
 #include "APU.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
 APU::APU()
 {
@@ -11,7 +11,7 @@ APU::~APU()
 
 }
 
-void APU::connectGB(GB* gb)
+void APU::connectGB(GBInternal* gb)
 {
 	this->gb = gb;
 

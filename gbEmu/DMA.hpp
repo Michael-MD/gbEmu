@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 
-class GB;
+class GBInternal;
 
 
 /// <summary>
@@ -15,9 +15,9 @@ class GB;
 class DMA
 {
 public:
-	GB* gb;
+	GBInternal* gb;
 
-	void connectGB(GB* gb);
+	void connectGB(GBInternal* gb);
 	void clock();
 
 	uint8_t* DMAReg;

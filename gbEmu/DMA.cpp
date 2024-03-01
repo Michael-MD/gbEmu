@@ -1,7 +1,7 @@
 #include "DMA.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
-void DMA::connectGB(GB* gb)
+void DMA::connectGB(GBInternal* gb)
 {
 	this->gb = gb;
 

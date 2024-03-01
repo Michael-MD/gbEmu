@@ -1,5 +1,5 @@
 #include "SoundChannel.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
 SoundChannel::SoundChannel(uint8_t ChannelNum)
 {
@@ -27,7 +27,7 @@ SoundChannel::~SoundChannel()
 	delete PeriodDiv;
 }
 
-void SoundChannel::connectGB(GB* gb)
+void SoundChannel::connectGB(GBInternal* gb)
 {
 	this->gb = gb;
 }

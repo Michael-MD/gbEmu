@@ -1,9 +1,9 @@
 #include "PPU.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
 #include <algorithm>
 
-void PPU::connectGB(GB* gb)
+void PPU::connectGB(GBInternal* gb)
 {
 	this->gb = gb;
 

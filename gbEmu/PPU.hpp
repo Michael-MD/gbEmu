@@ -1,14 +1,14 @@
 #pragma once
 #include <cstdint>
 
-class GB;
+class GBInternal;
 
 class PPU
 {
 public:
-	GB* gb;
+	GBInternal* gb;
 
-	void connectGB(GB* gb);
+	void connectGB(GBInternal* gb);
 	void clock();
 	void reset();
 
@@ -24,8 +24,6 @@ public:
 	} Mode;
 
 	// ================== LCD PPU Registers ==================
-	const int GridWidth = 20 * 8;
-	const int GridHeight = 18 * 8;
 	uint8_t DotMatrix[18 * 8][20 * 8][4];		// ABGR
 
 	// Line of data being copied to LCD Driver

@@ -4,21 +4,21 @@
 #include <string>
 #include <functional>
 
-class GB;
+class GBInternal;
 
 class SM83
 {
-	friend GB;
+	friend GBInternal;
 
 public:
 	SM83();
 	void reset();
 
-	void connectGB(GB *gb);
+	void connectGB(GBInternal *gb);
 
 	void clock();	// Clocks SM83
 
-	GB* gb;
+	GBInternal* gb;
 
 	uint32_t nMachineCycles = 0;
 

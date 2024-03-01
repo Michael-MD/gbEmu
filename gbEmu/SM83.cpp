@@ -1,5 +1,5 @@
 #include "SM83.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
 #define DEBUG_MODE 0
 
@@ -8,7 +8,7 @@
 #endif
 #include <sstream>
 
-void SM83::connectGB(GB* gb)
+void SM83::connectGB(GBInternal* gb)
 {
 	this->gb = gb;
 }

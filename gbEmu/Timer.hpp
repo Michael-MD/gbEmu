@@ -1,14 +1,14 @@
 #pragma once
 #include <cstdint>
 
-class GB;
+class GBInternal;
 
 class Timer
 {
 public:
-	GB* gb;
+	GBInternal* gb;
 
-	void connectGB(GB* gb);
+	void connectGB(GBInternal* gb);
 	void clock();
 	void incrementTimer();
 

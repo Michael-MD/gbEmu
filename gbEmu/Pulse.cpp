@@ -1,5 +1,5 @@
 #include "Pulse.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
 Pulse::Pulse(uint8_t ChannelNum) : SoundChannel(ChannelNum)
 {

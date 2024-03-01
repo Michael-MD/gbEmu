@@ -1,7 +1,7 @@
 #include "Timer.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
-void Timer::connectGB(GB* gb)
+void Timer::connectGB(GBInternal* gb)
 {
 	this->gb = gb;
 

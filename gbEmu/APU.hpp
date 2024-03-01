@@ -11,11 +11,11 @@ class GB;
 class APU
 {
 public:
-	GB* gb;
+	GBInternal* gb;
 
 	APU();
 	~APU();
-	void connectGB(GB* gb);
+	void connectGB(GBInternal* gb);
 
 	uint8_t read(uint16_t addr);
 	void write(uint16_t addr, uint8_t data);

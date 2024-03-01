@@ -17,7 +17,7 @@
     <ClCompile Include="SM83.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GB.cpp">
+    <ClCompile Include="GBInternal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Cartridge.cpp">
@@ -36,9 +36,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="MBC1.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Peripherals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DMA.cpp">
@@ -65,12 +62,15 @@
     <ClCompile Include="Noise.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GB.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SM83.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GB.hpp">
+    <ClInclude Include="GBInternal.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Cartridge.hpp">
@@ -119,6 +119,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Noise.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GB.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

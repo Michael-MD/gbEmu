@@ -1,5 +1,5 @@
 #include "Wave.hpp"
-#include "GB.hpp"
+#include "GBInternal.hpp"
 
 Wave::Wave(uint8_t ChannelNum) : SoundChannel(ChannelNum)
 {

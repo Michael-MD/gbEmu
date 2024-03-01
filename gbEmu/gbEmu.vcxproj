@@ -140,6 +140,7 @@
     <ClCompile Include="APU.cpp" />
     <ClCompile Include="Cartridge.cpp" />
     <ClCompile Include="DMA.cpp" />
+    <ClCompile Include="GB.cpp" />
     <ClCompile Include="MBC.cpp" />
     <ClCompile Include="MBC1.cpp" />
     <ClCompile Include="MBC2.cpp" />
@@ -147,8 +148,7 @@
     <ClCompile Include="Noise.cpp" />
     <ClCompile Include="NoMBC.cpp" />
     <ClCompile Include="PPU.cpp" />
-    <ClCompile Include="GB.cpp" />
-    <ClCompile Include="Peripherals.cpp" />
+    <ClCompile Include="GBInternal.cpp" />
     <ClCompile Include="Pulse.cpp" />
     <ClCompile Include="SM83.cpp" />
     <ClCompile Include="gbEmu.cpp" />
@@ -161,6 +161,7 @@
     <ClInclude Include="Cartridge.hpp" />
     <ClInclude Include="Divider.hpp" />
     <ClInclude Include="DMA.hpp" />
+    <ClInclude Include="GB.hpp" />
     <ClInclude Include="MBC.hpp" />
     <ClInclude Include="MBC1.hpp" />
     <ClInclude Include="MBC2.hpp" />
@@ -168,7 +169,7 @@
     <ClInclude Include="Noise.hpp" />
     <ClInclude Include="NoMBC.hpp" />
     <ClInclude Include="PPU.hpp" />
-    <ClInclude Include="GB.hpp" />
+    <ClInclude Include="GBInternal.hpp" />
     <ClInclude Include="Pulse.hpp" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="SM83.hpp" />
