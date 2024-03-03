@@ -19,7 +19,6 @@ Welcome to the Simple Monochrome GameBoy Emulator! This project is a straightfor
 ## Features
 
 - **Easy-to-Understand Code**: The emulator is designed with clarity in mind, with extensive comments throughout the codebase to explain its functionality.
-- **Efficient**: Consumes very low memory through the use of things like bitfields and can run at very high FPS.
 - **Controller Support**: Supports xbox and PS controller as well as keyboard, click [here](#controls) for mapping.
 
 ## Controls
@@ -37,18 +36,18 @@ Welcome to the Simple Monochrome GameBoy Emulator! This project is a straightfor
 
 ## Getting Started
 
+### Running as Windows App
+This can simply be done by downloading the executable under Releases. I've also included the necessary dll's which will need to be in the same folder. Simply drag a rom file into the window and the game will start up. Enjoy!
+
 ### Running in Visual Studio
 
 Ensure you have SDL2 installed on your system. Follow the instructions below based on your operating system:
 
 ##### Windows:
 
-1. Download the SDL2 development libraries for Visual Studio from [here](https://github.com/libsdl-org/SDL/releases/tag/release-2.30.0).
-2. Extract the downloaded files and copy the contents to a directory on your system.
-3. In Visual Studio, open your project and navigate to `Project Properties` > `Configuration Properties` > `VC++ Directories`.
-4. Add the directory containing the SDL2 header files to the "Include Directories" field.
-5. Add the directory containing the SDL2 `.lib` files to the "Library Directories" field.
-6. Finally, add `SDL2.lib` and `SDL2main.lib` to the "Additional Dependencies" field under `Linker` > `Input`.
+1. Download the SDL2 development libraries for Visual Studio from [here](https://github.com/libsdl-org/SDL/releases/tag/release-2.30.0). It will be named similar to 'SDL2-devel-X.XX.X-VC.zip'.
+2. Extract the downloaded files and copy the contents to the gbEmu directory where all the source files are located.
+3. Rename the folder to SDL2.
 
 ## Compatibility
 
